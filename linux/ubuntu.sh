@@ -10,7 +10,7 @@ echo "Starting..."
 sleep 1
 
 # Check for sudo access
-echo "Checking for sudo access..."
+echo "Checking for \`sudo\` access (which may request your password)..."
 if sudo -n true 2>/dev/null; then
     echo "Sudo access confirmed. Proceeding..."
     sleep 1
