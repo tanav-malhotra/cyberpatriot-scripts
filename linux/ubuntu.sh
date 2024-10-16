@@ -1,6 +1,7 @@
 #!/bin/bash
 #GPL3 Licence 
 #Copyright (c) Tanav Malhotra
+unalias -a
 clear
 echo "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
@@ -18,10 +19,6 @@ else
     echo "\`sudo\` access is required. Please run \`sudo !!\`"
     exit 1
 fi
-
-# Removing Aliases
-echo "Removing existing aliases (if any)..."
-unalias -a
 
 # Updating system
 echo "Updating system..."
