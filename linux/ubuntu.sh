@@ -226,7 +226,7 @@ echo "Please manually check the world-writable files and the no-user files."
 echo;echo;echo
 echo "Thank you for using this script. Good luck for the competition!"
 echo
-echo "=============================="
+echo "==================================="
 echo "Copyright (c) 2024 Tanav Malhotra"
 echo "GPL3 License"
-echo "=============================="
+echo "==================================="
