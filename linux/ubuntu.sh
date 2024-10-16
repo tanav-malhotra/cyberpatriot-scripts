@@ -128,11 +128,9 @@ apt-get purge -y wireshark wireshark-qt wireshark-common telnet vsftpd proftpd s
 
 # Setting up fail2ban
 echo "Ban IPs with too many incorrect login attempts..."
-systemctl restart fail2ban.service
-
-# Preventing IP Spoofing
-echo "Preventing IP Spoofing in /etc/host.conf..."
-grep -qF 'multi on' && sed 's/multi/nospoof/' || echo 'nospoof on' >> /etc/host.conf
+#systemctl reload-or-restart fail2ban.service
+systemctl enable fail2ban.service
+systemctl start fail2ban.service
 
 # Finding backdoors
 echo "Finding backdoors/rootkits..."
@@ -203,6 +201,15 @@ else
 fi
 
 echo "Please manually check the world-writable files and the no-user files."
+
+# Preventing IP Spoofing
+echo "Preventing IP Spoofing in /etc/host.conf..."
+#grep -qF 'multi on' && sed 's/multi/nospoof/' || echo 'nospoof on' >> /etc/host.conf
+if grep -qF 'multi on' /etc/host.conf; then
+    sed -i 's/multi/nospoof/' /etc/host.conf
+else
+    echo 'nospoof on' | sudo tee -a /etc/host.conf > /dev/null
+fi
 
 # User Management
 echo "Wierd Admins (saved to \`/weird_admins.txt\`):"
