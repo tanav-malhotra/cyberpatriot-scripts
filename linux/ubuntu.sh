@@ -80,7 +80,7 @@ fi
 
 # Ask if the user wants to change the SSH port
 read -p "Do you want to change the SSH port? (y/N): " change_port
-if [[ $change_port == y* ]]; then
+if [[ $change_port == y* || $change_port == Y* ]]; then
     while true; do
         read -p "Enter the new SSH port (1-65535): " new_port
         
