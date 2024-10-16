@@ -4,7 +4,7 @@
 clear
 echo "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
-echo "Ubuntu Linux Script v1.0.0"
+echo "Ubuntu Linux Script v1.0.2"
 sleep 1
 echo "Starting..."
 sleep 1
