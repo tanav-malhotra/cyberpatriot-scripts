@@ -13,11 +13,11 @@ sleep 1
 # Check for sudo access
 echo "Checking for \`sudo\` access (which may request your password)..." > /ubuntu_script.log
 if [[ $EUID -ne 0 ]]; then
-    echo "\`sudo\` access confirmed. Proceeding..." >> /ubuntu_script.log
-    sleep 1
-else
     echo "\`sudo\` access is required. Please run \`sudo !!\`" >> /ubuntu_script.log
     exit 1
+else
+    echo "\`sudo\` access confirmed. Proceeding..." >> /ubuntu_script.log
+    sleep 1
 fi
 
 # Updating system
