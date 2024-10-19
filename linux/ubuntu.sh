@@ -3,6 +3,7 @@
 #Copyright (c) Tanav Malhotra
 unalias -a
 clear
+cd
 echo "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
 echo "Ubuntu Linux Script v1.0.6"
@@ -22,6 +23,16 @@ else
     echo "\`sudo\` access confirmed. Proceeding..."
     sleep 1
 fi
+
+# Installing nala
+echo "Installing nala..." >> /ubuntu_script.log
+echo "Installing nala..."
+apt install git python3-pip
+git clone https://gitlab.com/volian/nala.git
+cd nala
+make install
+cd
+alias apt="nala -y"
 
 # Updating system
 echo "Updating system..." >> /ubuntu_script.log
@@ -149,7 +160,11 @@ fi
 # Removing Software
 echo "Removing prohibited software and hacking tools..." >> /ubuntu_script.log
 echo "Removing prohibited software and hacking tools..."
-dpkg --purge *wireshark* *telnet* *vsftpd* *proftpd* *snmpd* *mysql* *postgresql* *xrdp* *tightvncserver* .*samba.* .*smb.* *nmap* *zenmap* *apache2* *nginx* *lighttpd* *tcpdump* *netcat-traditional* *nikto* *ophcrack*
+apps=("*wireshark*" "*telnet*" "*vsftpd*" "*proftpd*" "*snmpd*" "*mysql*" "*postgresql*" "*xrdp*" "*tightvncserver*" ".*samba.*" ".*smb.*" "*nmap*" "*zenmap*" "*apache2*" "*nginx*" "*lighttpd*" "*tcpdump*" "*netcat-traditional*" "*nikto*" "*ophcrack*")
+for app in "${apps[@]}"; do
+    echo "Purging $app..."
+    apt purge -y "$app"
+done
 
 # Setting up fail2ban
 echo "Ban IPs with too many incorrect login attempts..." >> /ubuntu_script.log
@@ -215,10 +230,10 @@ auditctl -e 1
 # Finding & Removing Files
 echo "Finding & saving media files to \`/media_files.txt\`..." >> /ubuntu_script.log
 echo "Finding & saving media files to \`/media_files.txt\`..."
-find / -type f \( -name "*.mp3" -o -name "*.mp4" -o -name "*.wav" -o -name "*.avi" -o -name "*.mkv" -o -name "*.flac" -o -name "*.mov" \) -print > /media_files.txt
+find /home/ -type f \( -name "*.mp3" -o -name "*.mp4" -o -name "*.wav" -o -name "*.avi" -o -name "*.mkv" -o -name "*.flac" -o -name "*.mov" \) -print > /media_files.txt
 echo "Finding & saving possible hacking tools as packages to \`/packages.txt\`..." >> /ubuntu_script.log
 echo "Finding & saving possible hacking tools as packages to \`/packages.txt\`..."
-find / -type f \( -name "*.tar.gz" -o -name "*.tgz" -o -name "*.zip" -o -name "*.deb" \) -print > /packages.txt
+find /home/ -type f \( -name "*.tar.gz" -o -name "*.tgz" -o -name "*.zip" -o -name "*.deb" \) -print > /packages.txt
 echo "Finding & saving World Writable files to \`/world_writable.txt\`..." >> /ubuntu_script.log
 echo "Finding & saving World Writable files to \`/world_writable.txt\`..."
 find /dir -xdev -type d \( -perm -0002 -a ! -perm -1000 \) -print > /world_writable.txt
@@ -230,7 +245,7 @@ echo "Removing media files..." >> /ubuntu_script.log
 echo "Removing media files..."
 echo "The following files will be removed:" >> /ubuntu_script.log
 echo "The following files will be removed:"
-xargs echo rm < /media_files.txt 2>/dev/null
+cat /media_files.txt
 # Prompt the user for confirmation
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
 if [[ $choice == n* || $choice == N* ]]; then
@@ -238,7 +253,7 @@ if [[ $choice == n* || $choice == N* ]]; then
     echo "No files were removed."
 else
     # Proceed with removal
-    xargs -0 rm < /media_files.txt
+    cat /media_files.txt | xargs rm -rf
     echo "Files have been removed." >> /ubuntu_script.log
     echo "Files have been removed."
 fi
@@ -247,7 +262,7 @@ echo "Removing packages..." >> /ubuntu_script.log
 echo "Removing packages..."
 echo "The following files will be removed:" >> /ubuntu_script.log
 echo "The following files will be removed:"
-xargs echo rm < /packages.txt 2>/dev/null
+cat /packages.txt
 # Prompt the user for confirmation
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
 if [[ $choice == n* || $choice == N* ]]; then
@@ -255,7 +270,7 @@ if [[ $choice == n* || $choice == N* ]]; then
     echo "No files were removed."
 else
     # Proceed with removal
-    xargs -0 rm < /packages.txt
+    cat /packages.txt | xargs rm -rf
     echo "Files have been removed." >> /ubuntu_script.log
     echo "Files have been removed."
 fi
