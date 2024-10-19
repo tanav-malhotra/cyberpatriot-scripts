@@ -6,7 +6,7 @@ clear
 cd
 echo "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
-echo "Ubuntu Linux Script v1.0.9"
+echo "Ubuntu Linux Script v1.1.2"
 sleep 1
 echo "Starting..."
 sleep 1
@@ -43,7 +43,8 @@ nala autoremove -y
 # Checking for updates daily
 echo "Checking for updates daily..." >> /ubuntu_script.log
 echo "Checking for updates daily..."
-(crontab -l 2>/dev/null; echo "0 12 * * * /usr/bin/nala -y update && /usr/bin/nala -y full-upgrade && /usr/bin/nala -y autoremove >> /auto_update.log 2>&1") | crontab -
+cp /etc/apt/apt.conf.d/10periodic /etc/apt/apt.conf.d/10periodic.bak
+sed -i 's/APT::Periodic::Update-Package-Lists "0";/APT::Periodic::Update-Package-Lists "1";/' /etc/apt/apt.conf.d/10periodic
 
 # Lock Root
 echo "Locking root account..." >> /ubuntu_script.log
