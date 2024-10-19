@@ -1,6 +1,6 @@
 # Scripts for CyberPatriot
 
-## Running the script(s):
+## Running a script:
 ```
 sudo chmod +x [script].sh && sudo ./[script].sh
 ```
