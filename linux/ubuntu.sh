@@ -53,7 +53,7 @@ passwd -l root
 # Installing Software
 echo "Installing software..." >> /ubuntu_script.log
 echo "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "libpam-cracklib" "auditd" "vim" "neovim" "ufw")
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw") # "libpam-cracklib"
 for app in "${apps[@]}"; do
     echo "Installing $app..."
     nala install -y "$app"
