@@ -6,7 +6,7 @@ clear
 cd
 echo "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
-echo "Ubuntu Linux Script v1.1.3"
+echo "Ubuntu Linux Script v1.1.7"
 sleep 1
 echo "Starting..."
 sleep 1
