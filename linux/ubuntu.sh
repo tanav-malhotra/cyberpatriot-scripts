@@ -29,10 +29,10 @@ echo "Updating system..."
 apt update -y && apt full-upgrade -y
 apt autoremove -y
 
-# Firewall
-echo "Setting up firewall..." >> /ubuntu_script.log
-echo "Setting up firewall..."
-apt install -y ufw && ufw enable
+# Checking for updates daily
+echo "Checking for updates daily..." >> /ubuntu_script.log
+echo "Checking for updates daily..."
+(crontab -l 2>/dev/null; echo "0 12 * * * /usr/bin/apt -y update && /usr/bin/apt -y full-upgrade && /usr/bin/apt -y autoremove >> /auto_update.log 2>&1") | crontab -
 
 # Lock Root
 echo "Locking root account..." >> /ubuntu_script.log
@@ -42,7 +42,12 @@ passwd -l root
 # Installing Software
 echo "Installing software..." >> /ubuntu_script.log
 echo "Installing software..."
-apt install -y openssh-server fail2ban bum mawk chkrootkit rkhunter libpam-cracklib auditd vim neovim
+apt install -y openssh-server fail2ban bum mawk chkrootkit rkhunter libpam-cracklib auditd vim neovim ufw 
+
+# Firewall
+echo "Setting up firewall..." >> /ubuntu_script.log
+echo "Setting up firewall..."
+ufw enable
 
 # Configuring SSH
 echo "Configuring SSH..." >> /ubuntu_script.log
@@ -144,7 +149,7 @@ fi
 # Removing Software
 echo "Removing prohibited software and hacking tools..." >> /ubuntu_script.log
 echo "Removing prohibited software and hacking tools..."
-apt purge -y *wireshark* *telnet* *vsftpd* *proftpd* *snmpd* *mysql* *postgresql* *xrdp* *tightvncserver* .*samba.* .*smb.* *nmap* *zenmap* *apache2* *nginx* *lighttpd* *tcpdump* *netcat-traditional* *nikto* *ophcrack*
+dpkg --purge *wireshark* *telnet* *vsftpd* *proftpd* *snmpd* *mysql* *postgresql* *xrdp* *tightvncserver* .*samba.* .*smb.* *nmap* *zenmap* *apache2* *nginx* *lighttpd* *tcpdump* *netcat-traditional* *nikto* *ophcrack*
 
 # Setting up fail2ban
 echo "Ban IPs with too many incorrect login attempts..." >> /ubuntu_script.log
@@ -261,12 +266,8 @@ echo "Please manually check the world-writable files and the no-user files."
 # Preventing IP Spoofing
 echo "Preventing IP Spoofing in /etc/host.conf..." >> /ubuntu_script.log
 echo "Preventing IP Spoofing in /etc/host.conf..."
-#grep -qF 'multi on' && sed 's/multi/nospoof/' || echo 'nospoof on' >> /etc/host.conf
-if grep -qF 'multi on' /etc/host.conf; then
-    sed -i 's/multi/nospoof/' /etc/host.conf
-else
-    echo 'nospoof on' | sudo tee -a /etc/host.conf > /dev/null
-fi
+echo "failed: no code for preventing IP spoofing written..." >> /ubuntu_script.log
+echo "failed: no code for preventing IP spoofing written..."
 
 # User Management
 mawk -F: '$1 == "sudo"' /etc/group > /admins.txt
@@ -289,6 +290,10 @@ echo >> /ubuntu_script.log
 echo
 echo "Please manually check the world-writable files and the no-user files." >> /ubuntu_script.log
 echo "Please manually check the world-writable files and the no-user files."
+echo;
+echo "Launching settings..." >> /ubuntu_script.log
+echo "Launching settings..."
+gnome-control-center
 
 echo;echo;echo
 echo "Thank you for using this script. Good luck for the competition!"
