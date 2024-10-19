@@ -35,7 +35,7 @@ passwd -l root
 
 # Installing Software
 echo "Installing software..." >> /ubuntu_script.log
-apt install -y openssh-server fail2ban bum mawk chkrootkit rkhunter libpam-cracklib auditd
+apt install -y openssh-server fail2ban bum mawk chkrootkit rkhunter libpam-cracklib auditd vim neovim
 
 # Configuring SSH
 echo "Configuring SSH..." >> /ubuntu_script.log
