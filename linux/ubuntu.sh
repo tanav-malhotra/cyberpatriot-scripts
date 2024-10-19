@@ -1,12 +1,12 @@
 #!/bin/bash
 #GPL3 Licence 
-#Copyright (c) Tanav Malhotra
+#Copyright (c) 2024 Tanav Malhotra
 unalias -a
 clear
 cd
 echo "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
-echo "Ubuntu Linux Script v1.0.6"
+echo "Ubuntu Linux Script v1.0.8"
 sleep 1
 echo "Starting..."
 sleep 1
