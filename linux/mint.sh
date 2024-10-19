@@ -304,6 +304,7 @@ echo "Non-root UID 0 users (saved to \`/non-root_uid0.txt\`):"
 NEW_PASSWORD="L1nux!"
 echo "Changing Passwords of all users, admins, and root to \`$NEW_PASSWORD\`..." >> /ubuntu_script.log
 echo "Changing Passwords of all users, admins, and root to \`$NEW_PASSWORD\`..."
+
 for user in $(cut -f1 -d: /etc/passwd); do
     if [[ "$user" != "root" && "$user" != "nobody" && "$user" != "daemon" && "$user" != "systemd-timesync" ]]; then
         if id -nG "$user" | grep -qw 'sudo'; then
@@ -335,7 +336,6 @@ echo "Please manually check the world-writable files and the no-user files."
 echo;
 echo "Launching settings..." >> /ubuntu_script.log
 echo "Launching settings..."
-# gnome-control-center > /dev/null 2>&1 &
 cinnamon-settings > /dev/null 2>&1 &
 
 echo;echo;echo
