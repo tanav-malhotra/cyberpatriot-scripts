@@ -6,7 +6,7 @@ clear
 cd
 echo "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
-echo "Ubuntu Linux Script v1.1.2"
+echo "Ubuntu Linux Script v1.1.3"
 sleep 1
 echo "Starting..."
 sleep 1
@@ -177,13 +177,6 @@ echo "Ban IPs with too many incorrect login attempts..."
 systemctl enable fail2ban.service
 systemctl start fail2ban.service
 
-# Finding backdoors
-echo "Finding backdoors/rootkits..." >> /ubuntu_script.log
-echo "Finding backdoors/rootkits..."
-chkrootkit
-rkhunter --update
-rkhunter --check
-
 # Disabling Certain Interfaces
 #echo "Disabling USB..."
 #echo 'install usb-storage /bin/true' >> /etc/modprobe.d/disable-usb-storage.conf
@@ -257,7 +250,10 @@ if [[ $choice == n* || $choice == N* ]]; then
     echo "No files were removed."
 else
     # Proceed with removal
-    cat /media_files.txt | xargs rm -rf
+    while IFS= read -r file; do
+        rm -rf "$file"
+    done < /media_files.txt
+
     echo "Files have been removed." >> /ubuntu_script.log
     echo "Files have been removed."
 fi
@@ -274,7 +270,9 @@ if [[ $choice == n* || $choice == N* ]]; then
     echo "No files were removed."
 else
     # Proceed with removal
-    cat /packages.txt | xargs rm -rf
+    while IFS= read -r file; do
+        rm -rf "$file"
+    done < /packages.txt
     echo "Files have been removed." >> /ubuntu_script.log
     echo "Files have been removed."
 fi
@@ -302,6 +300,32 @@ mawk -F: '$3 == 0 && $1 != "root"' /etc/passwd > /non-root_uid0.txt
 echo "Non-root UID 0 users (saved to \`/non-root_uid0.txt\`):" >> /ubuntu_script.log
 echo "Non-root UID 0 users (saved to \`/non-root_uid0.txt\`):"
 
+# Changing Passwords
+NEW_PASSWORD="L1nux!"
+echo "Changing Passwords of all users, admins, and root to \`$NEW_PASSWORD\`..." >> /ubuntu_script.log
+echo "Changing Passwords of all users, admins, and root to \`$NEW_PASSWORD\`..."
+
+for user in $(cut -f1 -d: /etc/passwd); do
+    if [[ "$user" != "root" && "$user" != "nobody" && "$user" != "daemon" && "$user" != "systemd-timesync" ]]; then
+        if id -nG "$user" | grep -qw 'sudo'; then
+            ROLE="admin"
+        else
+            ROLE="user"
+        fi
+        echo "$user:$NEW_PASSWORD" | chpasswd
+        echo "Password for $ROLE $user changed."
+    fi
+done
+echo "root:$NEW_PASSWORD" | chpasswd
+echo "Password for admin root changed."
+
+# Finding vulnerabilities
+echo "Finding vulnerabilities..." >> /ubuntu_script.log
+echo "Finding vulnerabilities..."
+chkrootkit
+rkhunter --update
+rkhunter --check
+
 # Final Notes
 echo "Final Notes:" >> /ubuntu_script.log
 echo "Final Notes:"
@@ -312,11 +336,11 @@ echo "Please manually check the world-writable files and the no-user files."
 echo;
 echo "Launching settings..." >> /ubuntu_script.log
 echo "Launching settings..."
-gnome-control-center
+gnome-control-center > /dev/null 2>&1 &
 
 echo;echo;echo
 echo "Thank you for using this script. Good luck for the competition!"
-echo
+echo;
 echo "==================================="
 echo "Copyright (c) 2024 Tanav Malhotra"
 echo "GPL3 License"
