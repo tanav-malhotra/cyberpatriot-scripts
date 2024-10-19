@@ -2,5 +2,5 @@
 
 ## Running a script:
 ```
-sudo chmod +x [script].sh && sudo ./[script].sh
+sudo chmod +x [script_name].sh && sudo ./[script_name].sh
 ```
