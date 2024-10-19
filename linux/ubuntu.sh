@@ -6,7 +6,7 @@ clear
 cd
 echo "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
-echo "Ubuntu Linux Script v1.0.8"
+echo "Ubuntu Linux Script v1.0.9"
 sleep 1
 echo "Starting..."
 sleep 1
@@ -37,13 +37,13 @@ alias apt="nala -y"
 # Updating system
 echo "Updating system..." >> /ubuntu_script.log
 echo "Updating system..."
-apt update -y && apt full-upgrade -y
-apt autoremove -y
+nala update -y && nala full-upgrade -y
+nala autoremove -y
 
 # Checking for updates daily
 echo "Checking for updates daily..." >> /ubuntu_script.log
 echo "Checking for updates daily..."
-(crontab -l 2>/dev/null; echo "0 12 * * * /usr/bin/apt -y update && /usr/bin/apt -y full-upgrade && /usr/bin/apt -y autoremove >> /auto_update.log 2>&1") | crontab -
+(crontab -l 2>/dev/null; echo "0 12 * * * /usr/bin/nala -y update && /usr/bin/nala -y full-upgrade && /usr/bin/nala -y autoremove >> /auto_update.log 2>&1") | crontab -
 
 # Lock Root
 echo "Locking root account..." >> /ubuntu_script.log
@@ -53,7 +53,11 @@ passwd -l root
 # Installing Software
 echo "Installing software..." >> /ubuntu_script.log
 echo "Installing software..."
-apt install -y openssh-server fail2ban bum mawk chkrootkit rkhunter libpam-cracklib auditd vim neovim ufw 
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "libpam-cracklib" "auditd" "vim" "neovim" "ufw")
+for app in "${apps[@]}"; do
+    echo "Installing $app..."
+    nala install -y "$app"
+done
 
 # Firewall
 echo "Setting up firewall..." >> /ubuntu_script.log
@@ -163,7 +167,7 @@ echo "Removing prohibited software and hacking tools..."
 apps=("*wireshark*" "*telnet*" "*vsftpd*" "*proftpd*" "*snmpd*" "*mysql*" "*postgresql*" "*xrdp*" "*tightvncserver*" ".*samba.*" ".*smb.*" "*nmap*" "*zenmap*" "*apache2*" "*nginx*" "*lighttpd*" "*tcpdump*" "*netcat-traditional*" "*nikto*" "*ophcrack*")
 for app in "${apps[@]}"; do
     echo "Purging $app..."
-    apt purge -y "$app"
+    nala purge -y "$app"
 done
 
 # Setting up fail2ban
