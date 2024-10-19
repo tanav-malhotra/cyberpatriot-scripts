@@ -37,8 +37,7 @@ alias apt="nala -y"
 # Updating system
 echo "Updating system..." >> /ubuntu_script.log
 echo "Updating system..."
-nala update -y && nala full-upgrade -y
-nala autoremove -y
+nala upgrade -y && nala autoremove -y
 
 # Checking for updates daily
 echo "Checking for updates daily..." >> /ubuntu_script.log
