@@ -335,8 +335,8 @@ echo "Please manually check the world-writable files and the no-user files."
 echo;
 echo "Launching settings..." >> /ubuntu_script.log
 echo "Launching settings..."
-gnome-control-center > /dev/null 2>&1 &
-# cinnamon-settings > /dev/null 2>&1 &
+# gnome-control-center > /dev/null 2>&1 &
+cinnamon-settings > /dev/null 2>&1 &
 
 echo;echo;echo
 echo "Thank you for using this script. Good luck for the competition!"
