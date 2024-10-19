@@ -218,7 +218,7 @@ sed -i 's/PASS_MAX_DAYS.*$/PASS_MAX_DAYS 90/;s/PASS_MIN_DAYS.*$/PASS_MIN_DAYS 10
 # Change PAM (Pluggable Authentication Modules) settings
 echo "Changing PAM settings (setting max password attempts, minimum password langths, etc.)..." >> /linux_script.log
 echo "Changing PAM settings (setting max password attempts, minimum password langths, etc.)..."
-# echo 'auth required pam_tally2.so deny=5 onerr=fail unlock_time=1800' >> /etc/pam.d/common-auth
+echo 'auth required pam_tally2.so deny=5 onerr=fail unlock_time=1800' >> /etc/pam.d/common-auth
 cp /etc/pam.d/common-auth /etc/pam.d/common-auth.bak
 cp /etc/pam.d/common-password /etc/pam.d/common-password.bak
 sed -i 's/nullok//g' /etc/pam.d/common-auth
