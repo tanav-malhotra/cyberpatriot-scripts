@@ -348,6 +348,10 @@ if [[ "$DESKTOP_SESSION" == "gnome" ]]; then
     gnome-control-center > /dev/null 2>&1 &
 elif [[ "$DESKTOP_SESSION" == "cinnamon" ]]; then
     cinnamon-settings > /dev/null 2>&1 &
+elif [[ "$DESKTOP_SESSION" == "xfce" ]]; then
+    xfce4-settings-manager > /dev/null 2>&1 &
+elif [[ "$DESKTOP_SESSION" == "kde" ]]; then
+    systemsettings5 > /dev/null 2>&1 &
 fi
 
 echo;echo;echo
