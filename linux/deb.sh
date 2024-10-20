@@ -27,8 +27,8 @@ fi
 # Installing nala
 echo "Installing nala..." >> /linux_script.log
 echo "Installing nala..."
-apt install git python3-pip
-apt-get install bum
+apt install -y git python3-pip
+apt-get install -y bum
 git clone https://gitlab.com/volian/nala.git
 cd nala
 make install
