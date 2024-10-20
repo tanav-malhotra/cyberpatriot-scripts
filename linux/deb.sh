@@ -32,7 +32,7 @@ apt-get install bum
 git clone https://gitlab.com/volian/nala.git
 cd nala
 make install
-cd
+cd ..
 alias apt="nala -y"
 
 # Updating system
