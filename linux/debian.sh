@@ -45,11 +45,11 @@ nala --install-completion bash
 # Updating system
 echo "Updating system..." >> /linux_script.log
 echo "Updating system..."
-nala full-upgrade -y
+nala full-upgrade -y --install-recommends --install-suggests
 if [[ $? -ne 0 ]]; then
-    nala upgrade -y --full
+    nala upgrade -y --full --install-recommends --install-suggests
     if [[ $? -ne 0 ]]; then
-        nala upgrade -y
+        nala upgrade -y --install-recommends --install-suggests
     fi
 fi
 
