@@ -6,7 +6,7 @@ clear
 cd
 echo "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
-echo "Ubuntu Linux Script v1.1.9"
+echo "Ubuntu Linux Script v1.2.1"
 sleep 1
 echo "Starting..."
 sleep 1
@@ -180,7 +180,7 @@ fi
 # Removing Software
 echo "Removing prohibited software and hacking tools..." >> /linux_script.log
 echo "Removing prohibited software and hacking tools..."
-apps=("*wireshark*" "*telnet*" "*vsftpd*" "*proftpd*" "*snmpd*" "*mysql*" "*postgresql*" "*xrdp*" "*tightvncserver*" ".*samba.*" ".*smb.*" "*nmap*" "*zenmap*" "*apache2*" "*nginx*" "*lighttpd*" "*tcpdump*" "*netcat-traditional*" "*nikto*" "*ophcrack*" "*ettercap*")
+apps=("*wireshark*" "*telnet*" "*vsftpd*" "*proftpd*" "*snmpd*" "*mysql*" "*postgresql*" "*xrdp*" "*tightvncserver*" ".*samba.*" ".*smb.*" "*nmap*" "*zenmap*" "*apache2*" "*nginx*" "*lighttpd*" "*tcpdump*" "*netcat-traditional*" "*nikto*" "*ophcrack*" "*ettercap*" "*deluge*")
 for app in "${apps[@]}"; do
     echo "Purging $app..." >> /linux_script.log
     echo "Purging $app..."
