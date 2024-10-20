@@ -6,7 +6,7 @@ clear
 cd
 echo "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
-echo "Ubuntu Linux Script v1.1.7"
+echo "Ubuntu Linux Script v1.1.9"
 sleep 1
 echo "Starting..."
 sleep 1
@@ -34,11 +34,21 @@ cd nala
 make install
 cd ..
 alias apt="nala -y"
+apt install -y nala
+apt-get install -y nala
+
+# Installing bash completion
+echo "Installing bash completion..." >> /linux_script.log
+echo "Installing bash completion..."
+nala --install-completion bash
 
 # Updating system
 echo "Updating system..." >> /linux_script.log
 echo "Updating system..."
-nala upgrade -y && nala autoremove -y
+nala update -y && nala full-upgrade -y && nala autoremove -y
+if [[ $? -ne 0 ]]; then
+    nala update -y && nala upgrade -y --full && nala autoremove -y
+fi
 
 # Checking for updates daily
 echo "Checking for updates daily..." >> /linux_script.log
@@ -219,7 +229,7 @@ sed -i 's/PASS_MAX_DAYS.*$/PASS_MAX_DAYS 90/;s/PASS_MIN_DAYS.*$/PASS_MIN_DAYS 10
 # Change PAM (Pluggable Authentication Modules) settings
 echo "Changing PAM settings (setting max password attempts, minimum password langths, etc.)..." >> /linux_script.log
 echo "Changing PAM settings (setting max password attempts, minimum password langths, etc.)..."
-echo 'auth required pam_tally2.so deny=5 onerr=fail unlock_time=1800' >> /etc/pam.d/common-auth
+#echo 'auth required pam_tally2.so deny=5 onerr=fail unlock_time=1800' >> /etc/pam.d/common-auth
 cp /etc/pam.d/common-auth /etc/pam.d/common-auth.bak
 cp /etc/pam.d/common-password /etc/pam.d/common-password.bak
 sed -i 's/nullok//g' /etc/pam.d/common-auth
