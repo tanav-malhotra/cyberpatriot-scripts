@@ -308,7 +308,7 @@ echo "Non-root UID 0 users (saved to \`/non-root_uid0.txt\`):" >> /linux_script.
 echo "Non-root UID 0 users (saved to \`/non-root_uid0.txt\`):"
 
 # Changing Passwords
-NEW_PASSWORD="L1nux!"
+NEW_PASSWORD="CyberPatr!0t"
 echo "Changing Passwords of all users, admins, and root to \`$NEW_PASSWORD\`..." >> /linux_script.log
 echo "Changing Passwords of all users, admins, and root to \`$NEW_PASSWORD\`..."
 
