@@ -6,6 +6,7 @@ start_time = $(date +"%Y-%m-%d, %I:%M:%S %p")
 start_secs = $(date +%s)
 log_file = "/linux_script.log"
 # Make log file
+touch "$log_file"
 echo > "$log_file"
 
 #TODO: use log function for printing msg
@@ -43,7 +44,7 @@ sleep 1
 clear
 log "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
-$version = "v1.2.2"
+version = "v1.2.2"
 log "CyberPatriot Linux Script $version"
 sleep 1
 log "Starting..."
@@ -95,7 +96,7 @@ sed -i 's/APT::Periodic::Update-Package-Lists "0";/APT::Periodic::Update-Package
 
 # Installing Software
 log "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2go" "deborphan" "libpam-cracklib")
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2go" "deborphan" "libpam-cracklib" "unattended-upgrades")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     nala install -y "$app"
