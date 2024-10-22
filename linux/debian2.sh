@@ -2,18 +2,19 @@
 #GPL3 Licence 
 #Copyright (c) 2024 Tanav Malhotra
 unalias -a
-$start_time = date +"%Y-%m-%d, %I:%M:%S %p"
-$log_file = /linux_script.log
+start_time = $(date +"%Y-%m-%d, %I:%M:%S %p")
+start_secs = $(date +%s)
+log_file = "/linux_script.log"
 # Make log file
-echo > $log_file
+echo > "$log_file"
 
 #TODO: use log function for printing msg
 log() {
-    echo $@ >> $log_file
+    echo $@ >> "$log_file"
     echo $@
 }
 log_info() { # does not print out to terminal
-    echo $@ >> $log_file
+    echo $@ >> "$log_file"
 }
 
 # Check for sudo access
@@ -29,11 +30,11 @@ fi
 # Check for debug mode
 if [ $# -gt 0 ]; then
     if [ "$1" == "--debug" ]; then
-        $debug = 1
+        debug = 1
         log "Debug mode is enabled."
         log "Current Directory: " pwd
         log "Start: $start_time"
-    else; then
+    else
         log_info "Start: $start_time"
     fi
 fi
@@ -69,7 +70,6 @@ git clone https://gitlab.com/volian/nala.git
 cd nala
 make install
 cd ..
-alias apt="nala -y"
 apt install -y nala
 apt-get install -y nala
 
@@ -93,13 +93,9 @@ log "Checking for updates daily..."
 cp /etc/apt/apt.conf.d/10periodic /etc/apt/apt.conf.d/10periodic.bak
 sed -i 's/APT::Periodic::Update-Package-Lists "0";/APT::Periodic::Update-Package-Lists "1";/' /etc/apt/apt.conf.d/10periodic
 
-# Lock Root
-log "Locking root account..."
-passwd -l root
-
 # Installing Software
 log "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2go" "deborphan") # "libpam-cracklib"
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2go" "deborphan" "libpam-cracklib")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     nala install -y "$app"
@@ -108,6 +104,20 @@ done
 # Firewall
 log "Setting up firewall..."
 ufw enable
+
+# Enabling syn cookie protection
+log "Enabling syn cookie protection..."
+sysctl -n net.ipv4.tcp_syncookies
+
+# Disabling IPv6
+log "Disabling IPv6..."
+cp /etc/sysctl.conf /etc/sysctl.conf.bak
+echo "net.ipv6.conf.all.disable_ipv6 = 1" | tee -a /etc/sysctl.conf
+
+# Disable IP Forwarding
+log "Disabling IP Forwarding..."
+cp /proc/sys/net/ipv4/ip_forward /proc/sys/net/ipv4/ip_forward.bak
+echo 0 | tee /proc/sys/net/ipv4/ip_forward
 
 # Configuring SSH
 log "Configuring SSH..."
@@ -145,9 +155,9 @@ set_sshd_setting "ClientAliveCountMax" "0"
 set_sshd_setting "IgnoreRhosts" "yes"
 
 # Extract the current port from the configuration
-current_port=$(grep -Eo '^Port [0-9]+' "$sshd_config" | awk '{print $2}')
+current_port = $(grep -Eo '^Port [0-9]+' "$sshd_config" | awk '{print $2}')
 if [[ -z "$current_port" ]]; then
-    current_port=22  # Default to 22 if no port is found
+    current_port = 22  # Default to 22 if no port is found
 fi
 
 # Ask if the user wants to change the SSH port
@@ -253,13 +263,25 @@ cp /etc/pam.d/common-auth /etc/pam.d/common-auth.bak
 #echo 'auth required pam_tally2.so deny=5 onerr=fail unlock_time=1800' >> /etc/pam.d/common-auth
 #echo 'auth required pam_unix.so' >> /etc/pam.d/common-auth
 sed -i 's/nullok//g' /etc/pam.d/common-auth
+sed -i 's/\(pam_tally2\.so.*\)$/\1 deny=5 audit unlock_time=1800/' /etc/pam.d/common-auth # lockout policy
 cp /etc/pam.d/common-password /etc/pam.d/common-password.bak
 sed -i 's/\(pam_unix\.so.*\)$/\1 remember=5 minlen=8/' /etc/pam.d/common-password
-sed -i 's/\(pam_cracklib\.so.*\)$/\1 ucredit=-1 lcredit=-1 dcredit=-1 ocredit=-1/' /etc/pam.d/common-password
+sed -i 's/\(pam_cracklib\.so.*\)$/\1 ucredit=-1 lcredit=-1 dcredit=-1 ocredit=-/' /etc/pam.d/common-password
+cp /etc/default/useradd /etc/default/useradd.bak
+sed -i 's/^EXPIRE=[0-9]\+/EXPIRE=30/' /etc/default/useradd
+sed -i 's/^INACTIVE=[0-9]\+/INACTIVE=30/' /etc/default/useradd
 
 # Setting up auditing
 log "Setting up auditing..."
 auditctl -e 1
+
+# Finding and saving open ports
+log "Finding and saving open ports to \`/open_ports.txt\`..."
+ss -ln > /open_ports.txt
+
+# Finding and saving running services
+log "Finding and saving running services to \`/services.txt\`..."
+service --status-all > /services.txt
 
 # Finding unused software
 log "Finding & saving unused software to \`/unused_software.txt\`..."
@@ -329,6 +351,21 @@ log "failed: no code for preventing IP spoofing written..."
 #TODO: fix IP spoofing
 
 # User Management
+log "User Management..."
+# Lock Root
+log "Locking root account..."
+passwd -l root
+# log "Setting default shell for users..."
+# chsh -s /bin/bash
+cp /etc/sudoers /etc/sudoers.bak
+cp /etc/sudoers.d /etc/sudoers.d.bak
+cp /etc/passwd /etc/passwd.bak
+cp /etc/lightdm/lightdm.conf /etc/lightdm/lightdm.conf.bak
+cp /etc/lightdm/users.conf /etc/lightdm/users.conf.bak
+sed -i 's/nopasswd//g' /etc/sudoers
+sed -i 's/!authenticate//g' /etc/sudoers
+sed -i 's/nopasswd//g' /etc/sudoers.d
+sed -i 's/!authenticate//g' /etc/sudoers.d
 log "Turning off guest login..."
 sed -i 's/allow-guest=true/allow-guest=false/' /etc/lightdm/lightdm.conf
 echo "allow-guest=false" >> /etc/lightdm/users.conf
@@ -378,10 +415,21 @@ clamscan -r --bell -i /
 # Saving list of installed software
 apt list --installed > /software_installed.txt
 
+# Calculate time
+$end_time = $(date +"%Y-%m-%d, %I:%M:%S %p")
+$end_secs = $(date +%s)
+log_info "End time: " $end_time
+$duration = $(( $end_secs - $start_secs ))
+$final_min = $(( $duration / 60 ))
+$final_sec = $(( $duration % 60 ))
+
 # Final Notes
+log "Finished! in $final_min minutes and $final_sec seconds..."
+log
 log "Final Notes:"
 log
 log "Please manually check the world-writable files and the no-user files."
+log "Please run \`sudo restart lightdm\`"
 log;
 # log "Launching settings..."
 # if [[ "$DESKTOP_SESSION" == "gnome" ]]; then
@@ -393,9 +441,6 @@ log;
 # elif [[ "$DESKTOP_SESSION" == "kde" ]]; then
 #     systemsettings5 > /dev/null 2>&1 &
 # fi
-
-# Print Finished in Log
-log "Finished! in _s..." # TODO: calculate time
 
 # Wishing Goodluck
 log;log;log
