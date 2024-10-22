@@ -91,7 +91,7 @@ nala autoremove -y #--purge
 
 # Installing Software
 log "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2go" "deborphan" "libpam-cracklib" "unattended-upgrades")
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2go" "deborphan" "libpam-cracklib" "unattended-upgrades" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     nala install -y "$app"
@@ -99,13 +99,35 @@ done
 
 # Checking for updates daily
 log "Checking for updates daily..."
-cp /etc/apt/apt.conf.d/10periodic /etc/apt/apt.conf.d/10periodic.bak
+touch /etc/apt/apt.conf.d/20auto-upgrades
+touch /etc/apt/apt.conf.d/50auto-upgrades
+cp /etc/apt/apt.conf.d/20auto-upgrades /etc/apt/apt.conf.d/20auto-upgrades.bak
+cp /etc/apt/apt.conf.d/50auto-upgrades /etc/apt/apt.conf.d/50auto-upgrades.bak
 dpkg-reconfigure unattended-upgrades
-sed -i 's/APT::Periodic::Update-Package-Lists "0";/APT::Periodic::Update-Package-Lists "1";/' /etc/apt/apt.conf.d/10periodic
+# sed -i 's/APT::Periodic::Update-Package-Lists "0";/APT::Periodic::Update-Package-Lists "1";/' /etc/apt/apt.conf.d/20auto-upgrades
+cat <<EOL > "/etc/apt/apt.conf.d/20auto-upgrades"
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Download-Upgradeable-Packages "1";
+APT::Periodic::AutocleanInterval "7";
+APT::Periodic::Unattended-Upgrade "1";
+EOL
+cat <<EOL > "/etc/apt/apt.conf.d/50auto-upgrades"
+Unattended-Upgrade::Allowed-Origins {
+	"${distro_id} stable";
+	"${distro_id} ${distro_codename}-security";
+	"${distro_id} ${distro_codename}-updates";
+};
+
+Unattended-Upgrade::Package-Blacklist {
+	"libproxy1v5";		# because school blocks the word "proxy"
+};
+EOL
 
 # Firewall
 log "Setting up firewall..."
 ufw enable
+ufw default deny incoming
+ufw logging verbose
 
 # Enabling syn cookie protection
 log "Enabling syn cookie protection..."
@@ -126,7 +148,10 @@ log "Configuring SSH..."
 sshd_config="/etc/ssh/sshd_config"
 log "Creating SSH config backup located at ${sshd_config}.bak"
 cp "$sshd_config" "${sshd_config}.bak"
-
+service ssh enable
+service ssh start
+service sshd enable
+service sshd start
 # Function to ensure a line is set in the configuration
 set_sshd_setting() {
     local setting="$1"
@@ -151,6 +176,11 @@ set_sshd_setting "Port" "22"
 set_sshd_setting "PasswordAuthentication" "no"
 set_sshd_setting "ChallengeResponseAuthentication" "no"
 set_sshd_setting "UsePAM" "no"
+set_sshd_setting "HostbasedAuthentication" "no"
+set_sshd_setting "Protocol" "2"
+set_sshd_setting "LogLevel" "VERBOSE"
+set_sshd_setting "X11Forwarding" "no"
+set_sshd_setting "MaxAuthTries" "4"
 set_sshd_setting "PermitEmptyPasswords" "no"
 set_sshd_setting "ClientAliveInterval" "300"
 set_sshd_setting "ClientAliveCountMax" "0"
@@ -211,11 +241,13 @@ fi
 # Removing Software
 apt list --installed > /software_that_was_installed.txt
 log "Removing prohibited software and hacking tools..."
-apps=("*wireshark*" "*telnet*" "*vsftpd*" "*proftpd*" "*snmpd*" "*mysql*" "*postgresql*" "*xrdp*" "*tightvncserver*" ".*samba.*" ".*smb.*" "*nmap*" "*zenmap*" "*apache2*" "*nginx*" "*lighttpd*" "*tcpdump*" "*netcat-traditional*" "*nikto*" "*ophcrack*" "*ettercap*" "*deluge*" "*dovecot*" "*netcat*" "*john*" "*vuze*" "*frostwire*" "*aircrack*" "*metasploit*" "*nessus*" "*snort*" "*kismet*" "*nikto*" "*yersinia*" "*burp-suite*" "*THCHydra*" "*oclhashcat*" "*maltego*" "*oswapzed*" "*cain*" "*angryipscanner*" "*ipscan*" "*ettercap*" "*hydra*" "*medusa*")
+apps=("*wireshark*" "*telnet*" "*vsftpd*" "*proftpd*" "*snmpd*" "*mysql*" "*postgresql*" "*xrdp*" "*tightvncserver*" ".*samba.*" ".*smb.*" "*nmap*" "*zenmap*" "*apache2*" "*nginx*" "*lighttpd*" "*tcpdump*" "*netcat-traditional*" "*nikto*" "*ophcrack*" "*ettercap*" "*deluge*" "*dovecot*" "*netcat*" "*john*" "*vuze*" "*frostwire*" "*aircrack*" "*metasploit*" "*nessus*" "*snort*" "*kismet*" "*nikto*" "*yersinia*" "*burp-suite*" "*THCHydra*" "*oclhashcat*" "*maltego*" "*oswapzed*" "*cain*" "*angryipscanner*" "*ipscan*" "*ettercap*" "*hydra*" "*medusa*" "*xinetd*" "*openbsd-inetd*" "*inetutils-inetd*")
 for app in "${apps[@]}"; do
     log "Purging $app..."
     nala purge -y "$app" #TODO: try removing instead of purging
 done
+nala purge -y john nmap vuze frostwire kismet freeciv minetest minetest-server medusa hydra truecrack ophcrack nikto cryptcat nc netcat tightvncserver x11vnc nfs xinetd samba postgresql sftpd vsftpd apache apache2 ftp mysql php snmp pop3 icmp sendmail dovecot bind9 nginx telnet rlogind rshd rcmd rexecd rbootd rquotad rstatd rusersd rwalld rexd fingerd tftpd
+nala autoremove -y
 
 # Removing Games
 log "Removing games..."
@@ -231,6 +263,12 @@ systemctl enable fail2ban.service
 systemctl start fail2ban.service
 
 # Disabling Certain Interfaces
+log "USB settings..."
+service autofs stop
+systemctl disable autofs
+apt install usb-storage -y
+apt install USBGaurdd -y
+systemctl enable USBGaurdd
 #log "Disabling USB..."
 #echo 'install usb-storage /bin/true' >> /etc/modprobe.d/disable-usb-storage.conf
 #log "Disabling FireWire..."
@@ -254,6 +292,72 @@ chmod 440 /etc/sudoers
 chmod 640 /etc/shadow
 chown root:root /etc/shadow
 
+# Cron settings
+log "Changing cron settings..."
+cp /etc/rc.local /etc/rc.local.bak
+cp /etc/cron.deny /etc/cron.deny.bak
+echo "exit 0" > /etc/rc.local
+echo "ALL" >> /etc/cron.deny
+
+# Kernel Hardening
+log "Kernel Hardening..."
+cat <<EOL > "/etc/sysctl.conf"
+fs.file-max = 65535
+fs.protected_fifos = 2
+fs.protected_regular = 2
+fs.suid_dumpable = 0
+kernel.core_uses_pid = 1
+kernel.dmesg_restrict = 1
+kernel.exec-shield = 1
+kernel.sysrq = 0
+kernel.randomize_va_space = 2
+kernel.pid_max = 65536
+net.core.rmem_max = 8388608
+net.core.wmem_max = 8388608
+net.core.netdev_max_backlog = 5000
+net.ipv4.tcp_rmem = 10240 87380 12582912
+net.ipv4.tcp_window_scaling = 1
+net.ipv4.tcp_wmem = 10240 87380 12582912
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.all.log_martians = 1
+net.ipv4.conf.all.redirects = 0
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.all.secure_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv4.conf.default.log_martians = 1
+net.ipv4.conf.default.rp_filter = 1
+net.ipv4.conf.default.secure_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+net.ipv4.icmp_echo_ignore_all = 1
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+net.ipv4.ip_forward = 0
+net.ipv4.ip_local_port_range = 2000 65000
+net.ipv4.tcp_max_syn_backlog = 2048
+net.ipv4.tcp_synack_retries = 2
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_syn_retries = 5
+net.ipv4.tcp_timestamps = 9
+
+# Disable IPv6
+net.ipv6.conf.all.disable_ipv6 = 1
+net.ipv6.conf.default.disable_ipv6 = 1
+net.ipv6.conf.lo.disable_ipv6 = 1
+
+# Incase IPv6 is necessary
+net.ipv6.conf.default.router_solicitations = 0
+net.ipv6.conf.default.accept_ra_rtr_pref = 0
+net.ipv6.conf.default.accept_ra_pinfo = 0
+net.ipv6.conf.default.accept_ra_defrtr = 0
+net.ipv6.conf.default.autoconf = 0
+net.ipv6.conf.default.dad_transmits = 0
+net.ipv6.conf.default.max_addresses = 1
+EOL
+sysctl -p
+
 # Setting max password days
 log "Setting max password days..."
 cp /etc/login.defs /etc/login.defs.bak
@@ -265,17 +369,44 @@ cp /etc/pam.d/common-auth /etc/pam.d/common-auth.bak
 #echo 'auth required pam_tally2.so deny=5 onerr=fail unlock_time=1800' >> /etc/pam.d/common-auth
 #echo 'auth required pam_unix.so' >> /etc/pam.d/common-auth
 sed -i 's/nullok//g' /etc/pam.d/common-auth
-sed -i 's/\(pam_tally2\.so.*\)$/\1 deny=5 audit unlock_time=1800/' /etc/pam.d/common-auth # lockout policy
+# sed -i 's/\(pam_tally2\.so.*\)$/\1 deny=5 audit silent unlock_time=1800/' /etc/pam.d/common-auth # lockout policy
 cp /etc/pam.d/common-password /etc/pam.d/common-password.bak
 sed -i 's/\(pam_unix\.so.*\)$/\1 remember=5 minlen=8/' /etc/pam.d/common-password
-sed -i 's/\(pam_cracklib\.so.*\)$/\1 ucredit=-1 lcredit=-1 dcredit=-1 ocredit=-/' /etc/pam.d/common-password
+sed -i 's/\(pam_cracklib\.so.*\)$/\1 maxclassrepeat=5 maxsequence=5 dcredit=-1 ocredit=-1 lcredit=-1 ucredit=-1 minlen=16 difok=5 retry=3/' /etc/pam.d/common-password
 cp /etc/default/useradd /etc/default/useradd.bak
 sed -i 's/^EXPIRE=[0-9]\+/EXPIRE=30/' /etc/default/useradd
 sed -i 's/^INACTIVE=[0-9]\+/INACTIVE=30/' /etc/default/useradd
 
 # Setting up auditing
 log "Setting up auditing..."
+cat <<EOL > "/etc/audit/audit.rules"
+-D
+-w / -p rwax -k filesystem_change
+-a always,exit -S all
+-e 2
+EOL
+cat <<EOL > "/etc/audit/auditd.conf"
+max_log_file = 100000000000
+space_left_action = email
+action_mail_acct = root
+admin_space_left_action = halt
+max_log_file_action = keep_logs
+EOL
 auditctl -e 1
+systemctl enable auditd
+systemctl start auditd
+systemctl reload auditd
+df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -0002 # Auditing no world writable files
+df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nouser # Auditing no unowned files/directories
+df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nogroup # Auditing no ungrouped files/directories
+df --local -P | awk {'if (NR!=1)print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -4000 # Audit SUID executable
+df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -2000 # Audit SGID executables
+
+# Miscellaneous
+snap refresh
+apt install rsyslog -y
+systemctl enable rsyslog
+aa-enforce /etc/apparmor.d/*
 
 # Finding and saving open ports
 log "Finding and saving open ports to \`/open_ports.txt\`..."
@@ -357,13 +488,21 @@ log "User Management..."
 # Lock Root
 log "Locking root account..."
 passwd -l root
+usermod -s /bin/false root
+usermod -L root
+usermod -g 0 root
 # log "Setting default shell for users..."
 # chsh -s /bin/bash
 cp /etc/sudoers /etc/sudoers.bak
 cp /etc/sudoers.d /etc/sudoers.d.bak
 cp /etc/passwd /etc/passwd.bak
+touch /etc/lightdm/lightdm.conf
+touch /etc/gdm/custom.conf
+touch /etc/pam.d/gdm-password
 cp /etc/lightdm/lightdm.conf /etc/lightdm/lightdm.conf.bak
 cp /etc/lightdm/users.conf /etc/lightdm/users.conf.bak
+cp /etc/gdm/custom.conf /etc/gdm/custom.conf.bak
+cp /etc/pam.d/gdm-password /etc/pam.d/gdm-password.bak
 sed -i 's/nopasswd//g' /etc/sudoers
 sed -i 's/!authenticate//g' /etc/sudoers
 sed -i 's/nopasswd//g' /etc/sudoers.d
@@ -371,6 +510,8 @@ sed -i 's/!authenticate//g' /etc/sudoers.d
 log "Turning off guest login..."
 sed -i 's/allow-guest=true/allow-guest=false/' /etc/lightdm/lightdm.conf
 echo "allow-guest=false" >> /etc/lightdm/users.conf
+sed -i 's/AutomaticLoginEnable=true/AutomaticLoginEnable=false/' /etc/gdm/custom.conf
+sed -i 's/auth sufficient pam_succeed_if.so user ingroup nopasswdlogin//' /etc/pam.d/gdm-password
 mawk -F: '$1 == "sudo"' /etc/group > /admins.txt
 log "Admins (saved to \`/admins.txt\`):"
 mawk -F: '$3 > 999 && $3 < 65534 {print $1}' /etc/passwd > /users.txt
@@ -409,6 +550,10 @@ log "Running \`rkhunter --update\`..."
 rkhunter --update
 log "Running \`rkhunter --check\`..."
 rkhunter --check
+log "Running \`rkhunter --propupd\`..."
+rkhunter --propupd
+log "Running \`rkhunter -c --enable all --disable none\`..."
+rkhunter -c --enable all --disable none
 log "Running \`freshclam\`..."
 freshclam
 log "Running \`clamscan -r --bell -i\`..."
@@ -432,6 +577,8 @@ log "Final Notes:"
 log
 log "Please manually check the world-writable files and the no-user files."
 log "Please run \`sudo restart lightdm\`"
+log "Make sure updates are installed daily."
+software-properties-gtk
 log;
 # log "Launching settings..."
 # if [[ "$DESKTOP_SESSION" == "gnome" ]]; then
