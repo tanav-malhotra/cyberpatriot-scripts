@@ -2,9 +2,9 @@
 #GPL3 Licence 
 #Copyright (c) 2024 Tanav Malhotra
 unalias -a
-start_time = $(date +"%Y-%m-%d, %I:%M:%S %p")
-start_secs = $(date +%s)
-log_file = "/linux_script.log"
+start_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
+start_secs=$(date +%s)
+log_file="/linux_script.log"
 # Make log file
 touch "$log_file"
 echo > "$log_file"
@@ -31,7 +31,7 @@ fi
 # Check for debug mode
 if [ $# -gt 0 ]; then
     if [ "$1" == "--debug" ]; then
-        debug = 1
+        debug=1
         log "Debug mode is enabled."
         log "Current Directory: " pwd
         log "Start: $start_time"
@@ -44,7 +44,7 @@ sleep 1
 clear
 log "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
-version = "v1.2.2"
+version="v1.2.2"
 log "CyberPatriot Linux Script $version"
 sleep 1
 log "Starting..."
@@ -89,11 +89,6 @@ if [[ $? -ne 0 ]]; then
 fi
 nala autoremove -y #--purge
 
-# Checking for updates daily
-log "Checking for updates daily..."
-cp /etc/apt/apt.conf.d/10periodic /etc/apt/apt.conf.d/10periodic.bak
-sed -i 's/APT::Periodic::Update-Package-Lists "0";/APT::Periodic::Update-Package-Lists "1";/' /etc/apt/apt.conf.d/10periodic
-
 # Installing Software
 log "Installing software..."
 apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2go" "deborphan" "libpam-cracklib" "unattended-upgrades")
@@ -101,6 +96,12 @@ for app in "${apps[@]}"; do
     log "Installing $app..."
     nala install -y "$app"
 done
+
+# Checking for updates daily
+log "Checking for updates daily..."
+cp /etc/apt/apt.conf.d/10periodic /etc/apt/apt.conf.d/10periodic.bak
+dpkg-reconfigure unattended-upgrades
+sed -i 's/APT::Periodic::Update-Package-Lists "0";/APT::Periodic::Update-Package-Lists "1";/' /etc/apt/apt.conf.d/10periodic
 
 # Firewall
 log "Setting up firewall..."
@@ -156,9 +157,9 @@ set_sshd_setting "ClientAliveCountMax" "0"
 set_sshd_setting "IgnoreRhosts" "yes"
 
 # Extract the current port from the configuration
-current_port = $(grep -Eo '^Port [0-9]+' "$sshd_config" | awk '{print $2}')
+current_port=$(grep -Eo '^Port [0-9]+' "$sshd_config" | awk '{print $2}')
 if [[ -z "$current_port" ]]; then
-    current_port = 22  # Default to 22 if no port is found
+    current_port=22  # Default to 22 if no port is found
 fi
 
 # Ask if the user wants to change the SSH port
@@ -417,12 +418,12 @@ clamscan -r --bell -i /
 apt list --installed > /software_installed.txt
 
 # Calculate time
-$end_time = $(date +"%Y-%m-%d, %I:%M:%S %p")
-$end_secs = $(date +%s)
+$end_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
+$end_secs=$(date +%s)
 log_info "End time: " $end_time
-$duration = $(( $end_secs - $start_secs ))
-$final_min = $(( $duration / 60 ))
-$final_sec = $(( $duration % 60 ))
+$duration=$(( $end_secs - $start_secs ))
+$final_min=$(( $duration / 60 ))
+$final_sec=$(( $duration % 60 ))
 
 # Final Notes
 log "Finished! in $final_min minutes and $final_sec seconds..."
