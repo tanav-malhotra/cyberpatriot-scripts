@@ -1,6 +1,9 @@
 #!/bin/bash
-#GPL3 Licence 
-#Copyright (c) 2024 Tanav Malhotra
+# =========================================================
+# Author: Tanav Malhotra
+# License: GNU General Public License v3.0 License
+# Copyright (C) 2024 Tanav Malhotra
+# =========================================================
 unalias -a
 start_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
 start_secs=$(date +%s)
@@ -615,6 +618,9 @@ else
     reboot
 fi
 
-
 exit 0
-# © 2024 Tanav Malhotra
+# =========================================================
+# Author: Tanav Malhotra
+# License: GNU General Public License v3.0 License
+# Copyright (C) 2024 Tanav Malhotra
+# =========================================================
