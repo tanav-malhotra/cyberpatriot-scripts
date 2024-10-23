@@ -510,7 +510,7 @@ sed -i 's/!authenticate//g' /etc/sudoers.d
 log "Turning off guest login..."
 sed -i 's/allow-guest=true/allow-guest=false/' /etc/lightdm/lightdm.conf
 echo "allow-guest=false" >> /etc/lightdm/users.conf
-sed -i 's/AutomaticLoginEnable=true/AutomaticLoginEnable=false/' /etc/gdm/custom.conf
+sed -i 's/AutomaticLoginEnable=True/AutomaticLoginEnable=False/' /etc/gdm/custom.conf
 sed -i 's/auth sufficient pam_succeed_if.so user ingroup nopasswdlogin//' /etc/pam.d/gdm-password
 mawk -F: '$1 == "sudo"' /etc/group > /admins.txt
 log "Admins (saved to \`/admins.txt\`):"
