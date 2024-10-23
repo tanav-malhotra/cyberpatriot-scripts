@@ -136,7 +136,7 @@ EOL
 log "Setting up firewall..."
 ufw enable
 ufw default deny incoming
-ufw logging verbose
+ufw logging high
 
 # Enabling syn cookie protection
 log "Enabling syn cookie protection..."
