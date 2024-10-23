@@ -6,6 +6,8 @@ start_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
 start_secs=$(date +%s)
 log_file="/linux_script.log"
 starting_dir=$(pwd)
+distro_id=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
+distro_codename=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 # Make log file
 touch "$log_file"
 echo > "$log_file"
