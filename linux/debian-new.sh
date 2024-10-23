@@ -5,17 +5,25 @@ unalias -a
 start_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
 start_secs=$(date +%s)
 log_file="/linux_script.log"
+starting_dir=$(pwd)
 # Make log file
 touch "$log_file"
 echo > "$log_file"
 
-#TODO: use log function for printing msg
+# Functions
 log() {
     echo $@ >> "$log_file"
     echo $@
 }
 log_info() { # does not print out to terminal
     echo $@ >> "$log_file"
+}
+ring_bell() {
+    # for i in {1..10}; do
+    #     echo -e "\a"
+    #     sleep 0.1                                                    
+    # done &
+    echo -e "\a" &
 }
 
 # Check for sudo access
@@ -33,14 +41,13 @@ if [ $# -gt 0 ]; then
     if [ "$1" == "--debug" ]; then
         debug=1
         log "Debug mode is enabled."
-        log "Current Directory: " pwd
+        log "Current Directory: $starting_dir"
         log "Start: $start_time"
     else
         log_info "Start: $start_time"
     fi
 fi
-sleep 1
-
+sleep 1.5
 clear
 log "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
@@ -57,9 +64,9 @@ if [[ $confirmation == n* || $confirmation == N* ]]; then
     log "Please complete these first and only then rerun the script."
     exit 1
 fi
-read -p "Have you created the required admins.txt, users.txt, addusers.txt, & addgroups.txt files in the _ directory? (Y/n): " $confirmation #TODO: fix _ in output
+read -p "Have you created the required admins.txt, users.txt, addusers.txt, & addgroups.txt files in the current directory? (Y/n): " $confirmation #TODO: fix _ in output
 if [[ $confirmation == n* || $confirmation == N* ]]; then
-    log "Please create these first by using the information from the README file located on your desktop."
+    log "Please create these files first by using the information from the README file located on your desktop."
     exit 1
 fi
 
@@ -194,11 +201,8 @@ fi
 
 # Ask if the user wants to change the SSH port
 read -p "Do you want to change the SSH port? (y/N): " change_port
-for i in {1..10}; do                         
-    echo -e "\a"
-    sleep 0.1                                                    
-done &
-#TODO: function for bell
+ring_bell &
+
 if [[ $change_port == y* || $change_port == Y* ]]; then
     while true; do
         read -p "Enter the new SSH port (1-65535): " new_port
