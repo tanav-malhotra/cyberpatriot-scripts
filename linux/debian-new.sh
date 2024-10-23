@@ -87,7 +87,7 @@ fi
 
 # Updating system
 log "Updating system..."
-apt full-upgrade -y
+apt update -y && apt full-upgrade -y
 # if [[ $? -ne 0 ]]; then
 #     nala upgrade -y --full --install-recommends --install-suggests
 #     if [[ $? -ne 0 ]]; then
