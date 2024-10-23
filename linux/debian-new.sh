@@ -578,9 +578,9 @@ $final_sec=$(( $duration % 60 ))
 
 # Final Notes
 log "Finished! in $final_min minutes and $final_sec seconds..."
-log
+log;
 log "Final Notes:"
-log
+log;
 log "Please manually check the world-writable files and the no-user files."
 log "Please run \`sudo restart lightdm\`"
 log "Make sure updates are installed daily."
@@ -598,7 +598,7 @@ log;
 # fi
 
 # Wishing Goodluck
-log;log;log
+log;log;log;
 log "Thank you for using this script. Good luck for the competition!"
 log;
 log "==================================="
