@@ -52,7 +52,7 @@ log;log;
 sleep 1
 
 # Confirming with user
-read -p "Have all of the Forensics Questions been answered yet? (Y/n): " $confirmation
+read -p "Have all of the Forensics Questions been answered? (Y/n): " $confirmation
 if [[ $confirmation == n* || $confirmation == N* ]]; then
     log "Please complete these first and only then rerun the script."
     exit 1
