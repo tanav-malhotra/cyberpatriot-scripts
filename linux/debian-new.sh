@@ -218,7 +218,8 @@ if [[ $change_port == y* || $change_port == Y* ]]; then
     done
 
     # Update the SSHD configuration with the new port
-    sed -i "s/^Port .*/Port $new_port/" $sshd_config
+    # sed -i "s/^Port .*/Port $new_port/" $sshd_config
+    set_sshd_setting "Port" "$new_port"
     log "SSH port changed to $new_port."
     
     # Allow the new port in UFW
@@ -452,7 +453,7 @@ log "Finding & saving No-User files to \`/no_user.txt\`..."
 find /dir -xdev \( -nouser -o -nogroup \) -print > /no_user.txt
 
 log "Removing media files..."
-log "The following files will be removed:" >> /linux_script.log
+log "The following files will be removed:"
 cat /media_files.txt
 # Prompt the user for confirmation
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
@@ -605,3 +606,15 @@ log "==================================="
 log "Copyright (c) 2024 Tanav Malhotra"
 log "GPL3 License"
 log "==================================="
+log;
+
+read -p "Reboot the system? (Y/n): " reboot_choice
+if [[ $reboot_choice == n* || $reboot_choice == N* ]]; then
+    log "Remember to manually reboot the system later."
+else
+    reboot
+fi
+
+
+exit 0
+# © 2024 Tanav Malhotra
