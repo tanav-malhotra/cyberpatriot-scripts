@@ -271,9 +271,10 @@ apt autoremove -y
 # Removing Games
 log "Removing games..."
 games=$(dpkg -l | grep "game" | awk '{print $2}')
-for game in "${apps[@]}"; do
+for game in "${games[@]}"; do
     log "Purging $game..."
     apt purge -y "$game" #TODO: try removing instead of purging
+done
 
 # Setting up fail2ban
 log "Ban IPs with too many incorrect login attempts..."
