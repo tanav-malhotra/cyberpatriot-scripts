@@ -17,20 +17,19 @@
 # =========================================================
 
 # Check for sudo access
-log "Checking for \`sudo\` access (which may request your password)..."
+echo "Checking for \`sudo\` access (which may request your password)..."
 if [[ $EUID -ne 0 ]]; then
-    log "\`sudo\` access is required. Please run \`sudo !!\`"
+    echo "\`sudo\` access is required. Please run \`sudo !!\`"
     exit 1
 else
-    log "\`sudo\` access confirmed. Proceeding..."
+    echo "\`sudo\` access confirmed. Proceeding..."
     sleep 1
 fi
 
-# Preventing getting locked out
-while true; do
-    /sbin/pam_tally2 -u "$USER" --reset
-    sleep 5
-done
+echo "Finding & saving scripts files to \`./scripts.txt\`..."
+find /home/ -type f \( -name "*.sh" -o -name "*.SH" \) -print > ./scripts.txt
+echo "Scripts:"
+cat ./scripts.txt
 
 # ===========================================
 # Author: Tanav Malhotra

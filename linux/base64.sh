@@ -17,20 +17,19 @@
 # =========================================================
 
 # Check for sudo access
-log "Checking for \`sudo\` access (which may request your password)..."
+echo "Checking for \`sudo\` access (which may request your password)..."
 if [[ $EUID -ne 0 ]]; then
-    log "\`sudo\` access is required. Please run \`sudo !!\`"
+    echo "\`sudo\` access is required. Please run \`sudo !!\`"
     exit 1
 else
-    log "\`sudo\` access confirmed. Proceeding..."
+    echo "\`sudo\` access confirmed. Proceeding..."
     sleep 1
 fi
 
-# Preventing getting locked out
-while true; do
-    /sbin/pam_tally2 -u "$USER" --reset
-    sleep 5
-done
+# Decode Base64 encoded string
+read -p "Enter Base64 encoded string: " encoded_string
+decoded_string=$(echo "$encoded_string" | base64 --decode)
+echo "Decoded string: $decoded_string"
 
 # ===========================================
 # Author: Tanav Malhotra

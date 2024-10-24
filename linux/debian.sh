@@ -1,124 +1,181 @@
 #!/bin/bash
-#GPL3 Licence 
-#Copyright (c) 2024 Tanav Malhotra
+# =========================================================
+# Author: Tanav Malhotra
+# License: GNU General Public License v3.0
+# Copyright (C) 2024 Tanav Malhotra
+#
+# Disclaimer:
+# THE SCRIPT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+# PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+# CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR
+# IN CONNECTION WITH THE SCRIPT OR THE USE OR OTHER DEALINGS
+# IN THE SCRIPT.
+# =========================================================
+
 unalias -a
+start_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
+start_secs=$(date +%s)
+log_file="./linux_script.log"
+starting_dir=$(pwd)
+distro_id=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
+distro_codename=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
+# Make log file
+touch "$log_file"
+echo > "$log_file"
+
+# Functions
+log() {
+    echo $@ >> "$log_file"
+    echo $@
+}
+log_info() { # does not print out to terminal
+    echo $@ >> "$log_file"
+}
+ring_bell() {
+    # for i in {1..10}; do
+    #     echo -e "\a"
+    #     sleep 0.1                                                    
+    # done &
+    echo -e "\a" &
+}
+
 # Check for sudo access
-echo "Checking for \`sudo\` access (which may request your password)..."
+log "Checking for \`sudo\` access (which may request your password)..."
 if [[ $EUID -ne 0 ]]; then
-    echo "\`sudo\` access is required. Please run \`sudo !!\`"
+    log "\`sudo\` access is required. Please run \`sudo !!\`"
     exit 1
 else
-    echo "\`sudo\` access confirmed. Proceeding..."
+    log "\`sudo\` access confirmed. Proceeding..."
     sleep 1
 fi
-#TODO: make function for printing and sending to log file
-# Check if an argument was passed
-echo > /linux_script.log
+
+# Check for debug mode
 if [ $# -gt 0 ]; then
     if [ "$1" == "--debug" ]; then
-        $debug = 1
-        echo "Debug mode is enabled." >> /linux_script.log
-        echo "Debug mode is enabled."
-        echo "Current Directory: " pwd >> /linux_script.log
-        echo "Current Directory: " pwd
-        #TODO: print current time in log
-        #TODO: print current time
+        debug=1
+        log "Debug mode is enabled."
+        log "Current Directory: $starting_dir"
+        log "Start: $start_time"
+    else
+        log_info "Start: $start_time"
     fi
 fi
-
-sleep 1
+sleep 1.5
 clear
-cd
-echo "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA" >> /linux_script.log
-echo "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
+log "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
-$version = "v1.2.2"
-echo "CyberPatriot Linux Script $version" >> /linux_script.log
-echo "CyberPatriot Linux Script $version"
+version="v1.2.2"
+log "CyberPatriot Linux Script $version"
 sleep 1
-echo "Starting..." >> /linux_script.log
-echo "Starting..."
-echo;echo;
+log "Starting..."
+log;log;
 sleep 1
 
 # Confirming with user
-read -p "Have all of the Forensics Questions been answered yet? (Y/n): " $confirmation
+read -p "Have all of the Forensics Questions been answered? (Y/n): " $confirmation
 if [[ $confirmation == n* || $confirmation == N* ]]; then
-    echo "Please complete these first and only then rerun the script." >> /linux_script.log
-    echo "Please complete these first and only then rerun the script."
+    log "Please complete these first and only then rerun the script."
     exit 1
 fi
-read -p "Have you created the required admins.txt, users.txt, addusers.txt, & addgroups.txt files in the _ directory? (Y/n): " $confirmation #TODO: fix _ in output
+read -p "Have you created the required admins.txt, users.txt, addusers.txt, & addgroups.txt files in the current directory? (Y/n): " $confirmation #TODO: fix _ in output
 if [[ $confirmation == n* || $confirmation == N* ]]; then
-    echo "Please create these first by using the information from the README file located on your desktop." >> /linux_script.log
-    echo "Please create these first by using the information from the README file located on your desktop."
+    log "Please create these files first by using the information from the README file located on your desktop."
     exit 1
 fi
 
-# Installing nala
-echo "Installing nala..." >> /linux_script.log
-echo "Installing nala..."
-apt install -y git python3-pip
-apt-get install -y bum
-git clone https://gitlab.com/volian/nala.git
-cd nala
-make install
-cd ..
-alias apt="nala -y"
-apt install -y nala
-apt-get install -y nala
+# # Installing nala
+# log "Installing nala..."
+# apt install -y git python3-pip
+# apt-get install -y bum
+# git clone https://gitlab.com/volian/nala.git
+# cd nala
+# make install
+# cd ..
+# apt install -y nala
+# apt-get install -y nala
 
 # Installing bash completion
-echo "Installing bash completion..." >> /linux_script.log
-echo "Installing bash completion..."
-nala --install-completion bash
+# log "Installing bash completion..."
+# nala --install-completion bash
 
 # Updating system
-echo "Updating system..." >> /linux_script.log
-echo "Updating system..."
-nala full-upgrade -y --install-recommends --install-suggests
-if [[ $? -ne 0 ]]; then
-    nala upgrade -y --full --install-recommends --install-suggests
-    if [[ $? -ne 0 ]]; then
-        nala upgrade -y --install-recommends --install-suggests
-    fi
-fi
-nala autoremove -y #--purge
-
-# Checking for updates daily
-echo "Checking for updates daily..." >> /linux_script.log
-echo "Checking for updates daily..."
-cp /etc/apt/apt.conf.d/10periodic /etc/apt/apt.conf.d/10periodic.bak
-sed -i 's/APT::Periodic::Update-Package-Lists "0";/APT::Periodic::Update-Package-Lists "1";/' /etc/apt/apt.conf.d/10periodic
-
-# Lock Root
-echo "Locking root account..." >> /linux_script.log
-echo "Locking root account..."
-passwd -l root
+log "Updating system..."
+apt update -y && apt full-upgrade -y
+# if [[ $? -ne 0 ]]; then
+#     nala upgrade -y --full --install-recommends --install-suggests
+#     if [[ $? -ne 0 ]]; then
+#         nala upgrade -y --install-recommends --install-suggests
+#     fi
+# fi
+apt autoremove -y #--purge
 
 # Installing Software
-echo "Installing software..." >> /linux_script.log
-echo "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2go" "deborphan") # "libpam-cracklib"
+log "Installing software..."
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2go" "deborphan" "libpam-cracklib" "unattended-upgrades" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog")
 for app in "${apps[@]}"; do
-    echo "Installing $app..." >> /linux_script.log
-    echo "Installing $app..."
-    nala install -y "$app"
+    log "Installing $app..."
+    apt install -y "$app"
 done
 
+# Checking for updates daily
+log "Checking for updates daily..."
+touch /etc/apt/apt.conf.d/20auto-upgrades
+touch /etc/apt/apt.conf.d/50auto-upgrades
+cp /etc/apt/apt.conf.d/20auto-upgrades /etc/apt/apt.conf.d/20auto-upgrades.bak
+cp /etc/apt/apt.conf.d/50auto-upgrades /etc/apt/apt.conf.d/50auto-upgrades.bak
+dpkg-reconfigure unattended-upgrades
+# sed -i 's/APT::Periodic::Update-Package-Lists "0";/APT::Periodic::Update-Package-Lists "1";/' /etc/apt/apt.conf.d/20auto-upgrades
+cat <<EOL > "/etc/apt/apt.conf.d/20auto-upgrades"
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Download-Upgradeable-Packages "1";
+APT::Periodic::AutocleanInterval "7";
+APT::Periodic::Unattended-Upgrade "1";
+EOL
+cat <<EOL > "/etc/apt/apt.conf.d/50auto-upgrades"
+Unattended-Upgrade::Allowed-Origins {
+	"${distro_id} stable";
+	"${distro_id} ${distro_codename}-security";
+	"${distro_id} ${distro_codename}-updates";
+};
+
+Unattended-Upgrade::Package-Blacklist {
+	"libproxy1v5";		# because school blocks the word "proxy"
+};
+EOL
+
 # Firewall
-echo "Setting up firewall..." >> /linux_script.log
-echo "Setting up firewall..."
+log "Setting up firewall..."
 ufw enable
+ufw default deny incoming
+ufw logging high
+
+# Enabling syn cookie protection
+log "Enabling syn cookie protection..."
+sysctl -n net.ipv4.tcp_syncookies
+
+# Disabling IPv6
+log "Disabling IPv6..."
+cp /etc/sysctl.conf /etc/sysctl.conf.bak
+echo "net.ipv6.conf.all.disable_ipv6 = 1" | tee -a /etc/sysctl.conf
+
+# Disable IP Forwarding
+log "Disabling IP Forwarding..."
+cp /proc/sys/net/ipv4/ip_forward /proc/sys/net/ipv4/ip_forward.bak
+echo 0 | tee /proc/sys/net/ipv4/ip_forward
 
 # Configuring SSH
-echo "Configuring SSH..." >> /linux_script.log
-echo "Configuring SSH..."
+log "Configuring SSH..."
 sshd_config="/etc/ssh/sshd_config"
-echo "Creating SSH config backup located at ${sshd_config}.bak" >> /linux_script.log
-echo "Creating SSH config backup located at ${sshd_config}.bak"
+log "Creating SSH config backup located at ${sshd_config}.bak"
 cp "$sshd_config" "${sshd_config}.bak"
-
+service ssh enable
+service ssh start
+service sshd enable
+service sshd start
 # Function to ensure a line is set in the configuration
 set_sshd_setting() {
     local setting="$1"
@@ -127,19 +184,15 @@ set_sshd_setting() {
     # Check if the setting exists and update or add accordingly
     if grep -q "^$setting" "$sshd_config"; then
         sed -i "s/^$setting.*/$setting $value/" "$sshd_config"
-        echo "Updated $setting to $value." >> /linux_script.log
-        echo "Updated $setting to $value."
+        log "Updated $setting to $value."
     else
-        echo "$setting $value" >> "$sshd_config" >> /linux_script.log
-        echo "$setting $value" >> "$sshd_config"
-        echo "Added $setting with value $value." >> /linux_script.log
-        echo "Added $setting with value $value."
+        log "$setting $value" >> "$sshd_config"
+        log "Added $setting with value $value."
     fi
 }
 
 if [[ ! -f $sshd_config ]]; then
-    echo "Creating a basic sshd_config file (with secure settings)..." >> /linux_script.log
-    echo "Creating a basic sshd_config file (with secure settings)..."
+    log "Creating a basic sshd_config file (with secure settings)..."
     touch $sshd_config
 fi
 set_sshd_setting "PermitRootLogin" "no"
@@ -147,6 +200,11 @@ set_sshd_setting "Port" "22"
 set_sshd_setting "PasswordAuthentication" "no"
 set_sshd_setting "ChallengeResponseAuthentication" "no"
 set_sshd_setting "UsePAM" "no"
+set_sshd_setting "HostbasedAuthentication" "no"
+set_sshd_setting "Protocol" "2"
+set_sshd_setting "LogLevel" "VERBOSE"
+set_sshd_setting "X11Forwarding" "no"
+set_sshd_setting "MaxAuthTries" "4"
 set_sshd_setting "PermitEmptyPasswords" "no"
 set_sshd_setting "ClientAliveInterval" "300"
 set_sshd_setting "ClientAliveCountMax" "0"
@@ -154,17 +212,14 @@ set_sshd_setting "IgnoreRhosts" "yes"
 
 # Extract the current port from the configuration
 current_port=$(grep -Eo '^Port [0-9]+' "$sshd_config" | awk '{print $2}')
-
 if [[ -z "$current_port" ]]; then
     current_port=22  # Default to 22 if no port is found
 fi
 
 # Ask if the user wants to change the SSH port
 read -p "Do you want to change the SSH port? (y/N): " change_port
-for i in {1..10}; do                         
-    echo -e "\a"
-    sleep 0.1                                                    
-done &
+# ring_bell &
+
 if [[ $change_port == y* || $change_port == Y* ]]; then
     while true; do
         read -p "Enter the new SSH port (1-65535): " new_port
@@ -173,85 +228,81 @@ if [[ $change_port == y* || $change_port == Y* ]]; then
         if [[ "$new_port" =~ ^[0-9]+$ ]] && [ "$new_port" -ge 1 ] && [ "$new_port" -le 65535 ]; then
             break
         else
-            echo "Invalid port number. Please enter a number between 1 and 65535." >> /linux_script.log
-            echo "Invalid port number. Please enter a number between 1 and 65535."
+            log "Invalid port number. Please enter a number between 1 and 65535."
         fi
     done
 
     # Update the SSHD configuration with the new port
-    sed -i "s/^Port .*/Port $new_port/" $sshd_config
-    echo "SSH port changed to $new_port." >> /linux_script.log
-    echo "SSH port changed to $new_port."
+    # sed -i "s/^Port .*/Port $new_port/" $sshd_config
+    set_sshd_setting "Port" "$new_port"
+    log "SSH port changed to $new_port."
     
     # Allow the new port in UFW
     ufw delete allow "$current_port"/tcp
-    echo "Blocked old SSH port." >> /linux_script.log
-    echo "Blocked old SSH port."
+    log "Blocked old SSH port."
     ufw allow "$new_port"/tcp
-    echo "UFW allowed port $new_port." >> /linux_script.log
-    echo "UFW allowed port $new_port."
+    log "UFW allowed port $new_port."
 else
-    echo "Keeping the default SSH port (22)." >> /linux_script.log
-    echo "Keeping the default SSH port (22)."
+    log "Keeping the default SSH port (22)."
     ufw allow "$current_port"/tcp
 fi
 
-if sudo sshd -t; then
-    echo "SSH configuration is correct. Restarting SSH service..." >> /linux_script.log
-    echo "SSH configuration is correct. Restarting SSH service..."
+if sshd -t; then
+    log "SSH configuration is correct. Restarting SSH service..."
     if [[ -x "$(command -v systemctl)" ]]; then
-        sudo systemctl restart sshd
+        systemctl restart sshd
     elif [[ -x "$(command -v service)" ]]; then
-        sudo service sshd restart
+        service sshd restart
     else
-        echo "Unable to restart sshd service." >> /linux_script.log
-        echo "Unable to restart sshd service."
+        log "Unable to restart sshd service."
     fi
 else
-    echo "SSH configuration has errors. Please fix them before restarting." >> /linux_script.log
-    echo "SSH configuration has errors. Please fix them before restarting."
+    log "SSH configuration has errors. Please fix them before restarting."
 fi
 
 # Removing Software
-echo "Removing prohibited software and hacking tools..." >> /linux_script.log
-echo "Removing prohibited software and hacking tools..."
-apps=("*wireshark*" "*telnet*" "*vsftpd*" "*proftpd*" "*snmpd*" "*mysql*" "*postgresql*" "*xrdp*" "*tightvncserver*" ".*samba.*" ".*smb.*" "*nmap*" "*zenmap*" "*apache2*" "*nginx*" "*lighttpd*" "*tcpdump*" "*netcat-traditional*" "*nikto*" "*ophcrack*" "*ettercap*" "*deluge*" "*dovecot*" "*netcat*" "*john*" "*vuze*" "*frostwire*" "*aircrack*" "*metasploit*" "*nessus*" "*snort*" "*kismet*" "*nikto*" "*yersinia*" "*burp-suite*" "*THCHydra*" "*oclhashcat*" "*maltego*" "*oswapzed*" "*cain*" "*angryipscanner*" "*ipscan*" "*ettercap*" "*hydra*" "*medusa*")
+apt list --installed > ./software_that_was_installed.txt
+log "Removing prohibited software and hacking tools..."
+apps=("*wireshark*" "*telnet*" "*vsftpd*" "*proftpd*" "*snmpd*" "*mysql*" "*postgresql*" "*xrdp*" "*tightvncserver*" ".*samba.*" ".*smb.*" "*nmap*" "*zenmap*" "*apache2*" "*nginx*" "*lighttpd*" "*tcpdump*" "*netcat-traditional*" "*nikto*" "*ophcrack*" "*ettercap*" "*deluge*" "*dovecot*" "*netcat*" "*john*" "*vuze*" "*frostwire*" "*aircrack*" "*metasploit*" "*nessus*" "*snort*" "*kismet*" "*nikto*" "*yersinia*" "*burp-suite*" "*THCHydra*" "*oclhashcat*" "*maltego*" "*oswapzed*" "*cain*" "*angryipscanner*" "*ipscan*" "*ettercap*" "*hydra*" "*medusa*" "*xinetd*" "*openbsd-inetd*" "*inetutils-inetd*")
 for app in "${apps[@]}"; do
-    echo "Purging $app..." >> /linux_script.log
-    echo "Purging $app..."
-    nala purge -y "$app" #TODO: try removing instead of purging
+    log "Purging $app..."
+    apt purge -y "$app" #TODO: try removing instead of purging
 done
+apt purge -y john nmap vuze frostwire kismet freeciv minetest minetest-server medusa hydra truecrack ophcrack nikto cryptcat nc netcat tightvncserver x11vnc nfs xinetd samba postgresql sftpd vsftpd apache apache2 ftp mysql php snmp pop3 icmp sendmail dovecot bind9 nginx telnet rlogind rshd rcmd rexecd rbootd rquotad rstatd rusersd rwalld rexd fingerd tftpd
+apt autoremove -y
 
 # Removing Games
-echo "Removing games..." >> /linux_script.log
-echo "Removing games..."
+log "Removing games..."
 games=$(dpkg -l | grep "game" | awk '{print $2}')
-for game in "${apps[@]}"; do
-    echo "Purging $game..." >> /linux_script.log
-    echo "Purging $game..."
-    nala purge -y "$game" #TODO: try removing instead of purging
+for game in "${games[@]}"; do
+    log "Purging $game..."
+    apt purge -y "$game" #TODO: try removing instead of purging
+done
 
 # Setting up fail2ban
-echo "Ban IPs with too many incorrect login attempts..." >> /linux_script.log
-echo "Ban IPs with too many incorrect login attempts..."
+log "Ban IPs with too many incorrect login attempts..."
 #systemctl reload-or-restart fail2ban.service
 systemctl enable fail2ban.service
 systemctl start fail2ban.service
 
 # Disabling Certain Interfaces
-#echo "Disabling USB..."
+log "USB settings..."
+service autofs stop
+systemctl disable autofs
+apt install usb-storage -y
+apt install USBGaurdd -y
+systemctl enable USBGaurdd
+#log "Disabling USB..."
 #echo 'install usb-storage /bin/true' >> /etc/modprobe.d/disable-usb-storage.conf
-#echo "Disabling FireWire..."
+#log "Disabling FireWire..."
 #echo "blacklist firewire-core" >> /etc/modprobe.d/firewire.conf
-#echo "Disabling Thunderbolt..."
+#log "Disabling Thunderbolt..."
 #echo "blacklist thunderbolt" >> /etc/modprobe.d/thunderbolt.conf
 
 # Setting home directory permissions
-echo "Setting home directory permissions..." >> /linux_script.log
-echo "Setting home directory permissions..."
+log "Setting home directory permissions..."
 for i in $(mawk -F: '$3 > 999 && $3 < 65534 {print $1}' /etc/passwd); do [ -d /home/${i} ] && chmod -R 750 /home/${i}; done
-echo "Changing permissions of commonly exploited files..." >> /linux_script.log
-echo "Changing permissions of commonly exploited files..."
+log "Changing permissions of commonly exploited files..."
 chown root:root /etc/securetty
 chmod 0600 /etc/securetty
 chmod 644 /etc/crontab
@@ -264,136 +315,241 @@ chmod 440 /etc/sudoers
 chmod 640 /etc/shadow
 chown root:root /etc/shadow
 
+# Cron settings
+log "Changing cron settings..."
+cp /etc/rc.local /etc/rc.local.bak
+cp /etc/cron.deny /etc/cron.deny.bak
+echo "exit 0" > /etc/rc.local
+echo "ALL" >> /etc/cron.deny
+
+# Kernel Hardening
+log "Kernel Hardening..."
+cat <<EOL > "/etc/sysctl.conf"
+fs.file-max = 65535
+fs.protected_fifos = 2
+fs.protected_regular = 2
+fs.suid_dumpable = 0
+kernel.core_uses_pid = 1
+kernel.dmesg_restrict = 1
+kernel.exec-shield = 1
+kernel.sysrq = 0
+kernel.randomize_va_space = 2
+kernel.pid_max = 65536
+net.core.rmem_max = 8388608
+net.core.wmem_max = 8388608
+net.core.netdev_max_backlog = 5000
+net.ipv4.tcp_rmem = 10240 87380 12582912
+net.ipv4.tcp_window_scaling = 1
+net.ipv4.tcp_wmem = 10240 87380 12582912
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.all.log_martians = 1
+net.ipv4.conf.all.redirects = 0
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.all.secure_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv4.conf.default.log_martians = 1
+net.ipv4.conf.default.rp_filter = 1
+net.ipv4.conf.default.secure_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+net.ipv4.icmp_echo_ignore_all = 1
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+net.ipv4.ip_forward = 0
+net.ipv4.ip_local_port_range = 2000 65000
+net.ipv4.tcp_max_syn_backlog = 2048
+net.ipv4.tcp_synack_retries = 2
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_syn_retries = 5
+net.ipv4.tcp_timestamps = 9
+
+# Disable IPv6
+net.ipv6.conf.all.disable_ipv6 = 1
+net.ipv6.conf.default.disable_ipv6 = 1
+net.ipv6.conf.lo.disable_ipv6 = 1
+
+# Incase IPv6 is necessary
+net.ipv6.conf.default.router_solicitations = 0
+net.ipv6.conf.default.accept_ra_rtr_pref = 0
+net.ipv6.conf.default.accept_ra_pinfo = 0
+net.ipv6.conf.default.accept_ra_defrtr = 0
+net.ipv6.conf.default.autoconf = 0
+net.ipv6.conf.default.dad_transmits = 0
+net.ipv6.conf.default.max_addresses = 1
+EOL
+sysctl -p
+
 # Setting max password days
-echo "Setting max password days..." >> /linux_script.log
-echo "Setting max password days..."
+log "Setting max password days..."
 cp /etc/login.defs /etc/login.defs.bak
 sed -i 's/PASS_MAX_DAYS.*$/PASS_MAX_DAYS 90/;s/PASS_MIN_DAYS.*$/PASS_MIN_DAYS 10/;s/PASS_WARN_AGE.*$/PASS_WARN_AGE 7/' /etc/login.defs
 
 # Change PAM (Pluggable Authentication Modules) settings
-echo "Changing PAM settings (setting max password attempts, minimum password langths, etc.)..." >> /linux_script.log
-echo "Changing PAM settings (setting max password attempts, minimum password langths, etc.)..."
+log "Changing PAM settings (setting max password attempts, minimum password langths, etc.)..."
 cp /etc/pam.d/common-auth /etc/pam.d/common-auth.bak
+sed -i 's/\w*nullok\w*//g' /etc/pam.d/common-auth
+#sed -i 's/\(pam_tally2\.so.*\)$/\1 deny=5 audit silent unlock_time=1800/' /etc/pam.d/common-auth # lockout policy
 #echo 'auth required pam_tally2.so deny=5 onerr=fail unlock_time=1800' >> /etc/pam.d/common-auth
 #echo 'auth required pam_unix.so' >> /etc/pam.d/common-auth
-sed -i 's/nullok//g' /etc/pam.d/common-auth
 cp /etc/pam.d/common-password /etc/pam.d/common-password.bak
 sed -i 's/\(pam_unix\.so.*\)$/\1 remember=5 minlen=8/' /etc/pam.d/common-password
-sed -i 's/\(pam_cracklib\.so.*\)$/\1 ucredit=-1 lcredit=-1 dcredit=-1 ocredit=-1/' /etc/pam.d/common-password
+sed -i 's/\(pam_cracklib\.so.*\)$/\1 maxclassrepeat=5 maxsequence=5 dcredit=-1 ocredit=-1 lcredit=-1 ucredit=-1 minlen=16 difok=5 retry=3/' /etc/pam.d/common-password
+cp /etc/default/useradd /etc/default/useradd.bak
+sed -i 's/^EXPIRE=[0-9]\+/EXPIRE=30/' /etc/default/useradd
+sed -i 's/^INACTIVE=[0-9]\+/INACTIVE=30/' /etc/default/useradd
 
 # Setting up auditing
-echo "Setting up auditing..." >> /linux_script.log
-echo "Setting up auditing..."
+log "Setting up auditing..."
+cat <<EOL > "/etc/audit/audit.rules"
+-D
+-w / -p rwax -k filesystem_change
+-a always,exit -S all
+-e 2
+EOL
+cat <<EOL > "/etc/audit/auditd.conf"
+max_log_file = 100000000000
+space_left_action = email
+action_mail_acct = root
+admin_space_left_action = halt
+max_log_file_action = keep_logs
+EOL
 auditctl -e 1
+systemctl enable auditd
+systemctl start auditd
+systemctl reload auditd
+df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -0002 # Auditing no world writable files
+df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nouser # Auditing no unowned files/directories
+df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nogroup # Auditing no ungrouped files/directories
+df --local -P | awk {'if (NR!=1)print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -4000 # Audit SUID executable
+df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -2000 # Audit SGID executables
+
+# Miscellaneous
+snap refresh
+apt install rsyslog -y
+systemctl enable rsyslog
+aa-enforce /etc/apparmor.d/*
+
+# Finding and saving open ports
+log "Finding and saving open ports to \`/open_ports.txt\`..."
+ss -ln > ./open_ports.txt
+
+# Finding and saving running services
+log "Finding and saving running services to \`/services.txt\`..."
+service --status-all > ./services.txt
 
 # Finding unused software
-echo "Finding & saving unused software to \`/unused_software.txt\`..." >> /linux_script.log
-echo "Finding & saving unused software to \`/unused_software.txt\`..."
-deborphan --guess-all > /unused_software.txt
-echo "Removing unused software..." >> /linux_script.log
-echo "Removing unused software..."
-echo "The following files will be removed:" >> /linux_script.log
-echo "The following files will be removed:"
+log "Finding & saving unused software to \`/unused_software.txt\`..."
+deborphan --guess-all > ./unused_software.txt
+log "Removing unused software..."
+log "The following files will be removed:"
 cat /unused_software.txt
 # Prompt the user for confirmation
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
 if [[ $choice == n* || $choice == N* ]]; then
-    echo "No software was removed." >> /linux_script.log
-    echo "No software was removed."
+    log "No software was removed."
 else
     # Proceed with removal
     while IFS= read -r file; do
         rm -rf "$file"
     done < /unused_software.txt
 
-    echo "Unused software has been removed." >> /linux_script.log
-    echo "Unused software has been removed."
+    log "Unused software has been removed."
 fi
 
 # Finding & Removing Files
-echo "Finding & saving media files to \`/media_files.txt\`..." >> /linux_script.log
-echo "Finding & saving media files to \`/media_files.txt\`..."
-find /home/ -type f \( -name "*.mp3" -o -name "*.mp4" -o -name "*.wav" -o -name "*.avi" -o -name "*.mkv" -o -name "*.flac" -o -name "*.mov" \) -print > /media_files.txt
-echo "Finding & saving possible hacking tools as packages to \`/packages.txt\`..." >> /linux_script.log
-echo "Finding & saving possible hacking tools as packages to \`/packages.txt\`..."
-find /home/ -type f \( -name "*.tar.gz" -o -name "*.tgz" -o -name "*.zip" -o -name "*.deb" \) -print > /packages.txt
-echo "Finding & saving World Writable files to \`/world_writable.txt\`..." >> /linux_script.log
-echo "Finding & saving World Writable files to \`/world_writable.txt\`..."
-find /dir -xdev -type d \( -perm -0002 -a ! -perm -1000 \) -print > /world_writable.txt
-echo "Finding & saving No-User files to \`/no_user.txt\`..." >> /linux_script.log
-echo "Finding & saving No-User files to \`/no_user.txt\`..."
-find /dir -xdev \( -nouser -o -nogroup \) -print > /no_user.txt
+log "Finding & saving media files to \`/media_files.txt\`..."
+find /home/ -type f \( -name "*.mp3" -o -name "*.mp4" -o -name "*.wav" -o -name "*.avi" -o -name "*.mkv" -o -name "*.flac" -o -name "*.mov" \) -print > ./media_files.txt
+log "Finding & saving possible hacking tools as packages to \`/packages.txt\`..."
+find /home/ -type f \( -name "*.tar.gz" -o -name "*.tgz" -o -name "*.zip" -o -name "*.deb" \) -print > ./packages.txt
+log "Finding & saving World Writable files to \`/world_writable.txt\`..."
+find /dir -xdev -type d \( -perm -0002 -a ! -perm -1000 \) -print > ./world_writable.txt
+log "Finding & saving No-User files to \`/no_user.txt\`..."
+find /dir -xdev \( -nouser -o -nogroup \) -print > ./no_user.txt
 
-echo "Removing media files..." >> /linux_script.log
-echo "Removing media files..."
-echo "The following files will be removed:" >> /linux_script.log
-echo "The following files will be removed:"
+log "Removing media files..."
+log "The following files will be removed:"
 cat /media_files.txt
 # Prompt the user for confirmation
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
 if [[ $choice == n* || $choice == N* ]]; then
-    echo "No files were removed." >> /linux_script.log
-    echo "No files were removed."
+    log "No files were removed."
 else
     # Proceed with removal
     while IFS= read -r file; do
         rm -rf "$file"
     done < /media_files.txt
 
-    echo "Files have been removed." >> /linux_script.log
-    echo "Files have been removed."
+    log "Files have been removed."
 fi
 
-echo "Removing packages..." >> /linux_script.log
-echo "Removing packages..."
-echo "The following files will be removed:" >> /linux_script.log
-echo "The following files will be removed:"
+log "Removing packages..."
+log "The following files will be removed:"
 cat /packages.txt
 # Prompt the user for confirmation
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
 if [[ $choice == n* || $choice == N* ]]; then
-    echo "No files were removed." >> /linux_script.log
-    echo "No files were removed."
+    log "No files were removed."
 else
     # Proceed with removal
     while IFS= read -r file; do
         rm -rf "$file"
     done < /packages.txt
-    echo "Files have been removed." >> /linux_script.log
-    echo "Files have been removed."
+    log "Files have been removed."
 fi
 
-echo "Please manually check the world-writable files and the no-user files." >> /linux_script.log
-echo "Please manually check the world-writable files and the no-user files."
+log "Please manually check the world-writable files and the no-user files."
 
 # Preventing IP Spoofing
-echo "Preventing IP Spoofing in /etc/host.conf..." >> /linux_script.log
-echo "Preventing IP Spoofing in /etc/host.conf..."
-echo "failed: no code for preventing IP spoofing written..." >> /linux_script.log
-echo "failed: no code for preventing IP spoofing written..."
+log "Preventing IP Spoofing in /etc/host.conf..."
+log "failed: no code for preventing IP spoofing written..."
+#TODO: fix IP spoofing
 
 # User Management
-mawk -F: '$1 == "sudo"' /etc/group > /admins.txt
-echo "Admins (saved to \`/admins.txt\`):" >> /linux_script.log
-echo "Admins (saved to \`/admins.txt\`):"
-mawk -F: '$3 > 999 && $3 < 65534 {print $1}' /etc/passwd > /users.txt
-echo "Users (saved to \`/users.txt\`):" >> /linux_script.log
-echo "Users (saved to \`/users.txt\`):"
-mawk -F: '$2 == ""' /etc/passwd > /no_passwd.txt
-echo "Empty Passwords (saved to \`/no_passwd.txt\`):" >> /linux_script.log
-echo "Empty Passwords (saved to \`/no_passwd.txt\`):"
-mawk -F: '$3 == 0 && $1 != "root"' /etc/passwd > /non-root_uid0.txt
-echo "Non-root UID 0 users (saved to \`/non-root_uid0.txt\`):" >> /linux_script.log
-echo "Non-root UID 0 users (saved to \`/non-root_uid0.txt\`):"
+log "User Management..."
+# Lock Root
+log "Locking root account..."
+passwd -l root
+usermod -s /bin/false root
+usermod -L root
+usermod -g 0 root
+# log "Setting default shell for users..."
+# chsh -s /bin/bash
+cp /etc/sudoers /etc/sudoers.bak
+cp /etc/sudoers.d /etc/sudoers.d.bak
+cp /etc/passwd /etc/passwd.bak
+touch /etc/lightdm/lightdm.conf
+touch /etc/gdm/custom.conf
+touch /etc/pam.d/gdm-password
+cp /etc/lightdm/lightdm.conf /etc/lightdm/lightdm.conf.bak
+cp /etc/lightdm/users.conf /etc/lightdm/users.conf.bak
+cp /etc/gdm/custom.conf /etc/gdm/custom.conf.bak
+cp /etc/pam.d/gdm-password /etc/pam.d/gdm-password.bak
+sed -i 's/nopasswd//g' /etc/sudoers
+sed -i 's/!authenticate//g' /etc/sudoers
+sed -i 's/nopasswd//g' /etc/sudoers.d
+sed -i 's/!authenticate//g' /etc/sudoers.d
+log "Turning off guest login..."
+sed -i 's/allow-guest=true/allow-guest=false/' /etc/lightdm/lightdm.conf
+echo "allow-guest=false" >> /etc/lightdm/users.conf
+sed -i 's/AutomaticLoginEnable=True/AutomaticLoginEnable=False/' /etc/gdm/custom.conf
+sed -i 's/auth sufficient pam_succeed_if.so user ingroup nopasswdlogin//' /etc/pam.d/gdm-password
+mawk -F: '$1 == "sudo"' /etc/group > ./admins.txt
+log "Admins (saved to \`/admins.txt\`):"
+mawk -F: '$3 > 999 && $3 < 65534 {print $1}' /etc/passwd > ./users.txt
+log "Users (saved to \`/users.txt\`):"
+mawk -F: '$2 == ""' /etc/passwd > ./no_passwd.txt
+log "Empty Passwords (saved to \`/no_passwd.txt\`):"
+mawk -F: '$3 == 0 && $1 != "root"' /etc/passwd > ./non-root_uid0.txt
+log "Non-root UID 0 users (saved to \`/non-root_uid0.txt\`):"
 # Reading files for authorized users and admins
-echo "Reading users.txt, admins.txt, addusers.txt, and addgroups.txt..." >> /linux_script.log
-echo "Reading users.txt, admins.txt, addusers.txt, and addgroups.txt..."
+log "Reading users.txt, admins.txt, addusers.txt, and addgroups.txt..."
 #TODO
 
 # Changing Passwords
-NEW_PASSWORD="CyberPatr!0t"
-echo "Changing Passwords of all users, admins, and root to \`$NEW_PASSWORD\`..." >> /linux_script.log
-echo "Changing Passwords of all users, admins, and root to \`$NEW_PASSWORD\`..."
+$NEW_PASSWORD="CyberPatr!0t"
+log "Changing Passwords of all users, admins, and root to \`$NEW_PASSWORD\`..."
 
 for user in $(cut -f1 -d: /etc/passwd); do
     if [[ "$user" != "root" && "$user" != "nobody" && "$user" != "daemon" && "$user" != "systemd-timesync" ]]; then
@@ -403,59 +559,64 @@ for user in $(cut -f1 -d: /etc/passwd); do
             ROLE="user"
         fi
         echo "$user:$NEW_PASSWORD" | chpasswd
-        echo "Password for $ROLE $user changed."
+        log "Password for $ROLE $user changed."
     fi
 done
 echo "root:$NEW_PASSWORD" | chpasswd
-echo "Password for admin root changed."
+log "Password for admin root changed."
 
-# Finding vulnerabilities
-echo "Finding vulnerabilities..." >> /linux_script.log
-echo "Finding vulnerabilities..."
-echo "Running \`chkrootkit\`..." >> /linux_script.log
-echo "Running \`chkrootkit\`..."
-chkrootkit
-echo "Running \`rkhunter --update\`..." >> /linux_script.log
-echo "Running \`rkhunter --update\`..."
-rkhunter --update
-echo "Running \`rkhunter --check\`..." >> /linux_script.log
-echo "Running \`rkhunter --check\`..."
-rkhunter --check
-echo "Running \`freshclam\`..." >> /linux_script.log
-echo "Running \`freshclam\`..."
-freshclam
-echo "Running \`clamscan -r --bell -i\`..." >> /linux_script.log
-echo "Running \`clamscan -r --bell -i\`..."
-clamscan -r --bell -i /
+# Saving list of installed software
+apt list --installed > ./software_installed.txt
+
+# Calculate time
+$end_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
+$end_secs=$(date +%s)
+log_info "End time: " $end_time
+$duration=$(( $end_secs - $start_secs ))
+$final_min=$(( $duration / 60 ))
+$final_sec=$(( $duration % 60 ))
 
 # Final Notes
-echo "Final Notes:" >> /linux_script.log
-echo "Final Notes:"
-echo >> /linux_script.log
-echo
-echo "Please manually check the world-writable files and the no-user files." >> /linux_script.log
-echo "Please manually check the world-writable files and the no-user files."
-echo;
-echo "Launching settings..." >> /linux_script.log
-echo "Launching settings..."
-if [[ "$DESKTOP_SESSION" == "gnome" ]]; then
-    gnome-control-center > /dev/null 2>&1 &
-elif [[ "$DESKTOP_SESSION" == "cinnamon" ]]; then
-    cinnamon-settings > /dev/null 2>&1 &
-elif [[ "$DESKTOP_SESSION" == "xfce" ]]; then
-    xfce4-settings-manager > /dev/null 2>&1 &
-elif [[ "$DESKTOP_SESSION" == "kde" ]]; then
-    systemsettings5 > /dev/null 2>&1 &
-fi
-
-# Print Finished in Log
-echo "Finished! in _s..." >> /linux_script.log # TODO: calculate time
+log "Finished! in $final_min minutes and $final_sec seconds..."
+log
+log "Final Notes:"
+log
+log "Please manually check the world-writable files and the no-user files."
+log "Please run \`sudo restart lightdm\`"
+log "Make sure updates are installed daily."
+software-properties-gtk
+log
+# log "Launching settings..."
+# if [[ "$DESKTOP_SESSION" == "gnome" ]]; then
+#     gnome-control-center > /dev/null 2>&1 &
+# elif [[ "$DESKTOP_SESSION" == "cinnamon" ]]; then
+#     cinnamon-settings > /dev/null 2>&1 &
+# elif [[ "$DESKTOP_SESSION" == "xfce" ]]; then
+#     xfce4-settings-manager > /dev/null 2>&1 &
+# elif [[ "$DESKTOP_SESSION" == "kde" ]]; then
+#     systemsettings5 > /dev/null 2>&1 &
+# fi
 
 # Wishing Goodluck
-echo;echo;echo
-echo "Thank you for using this script. Good luck for the competition!"
-echo;
-echo "==================================="
-echo "Copyright (c) 2024 Tanav Malhotra"
-echo "GPL3 License"
-echo "==================================="
+log;log;log;
+log "Thank you for using this script. Good luck for the competition!"
+log
+log "==================================="
+log "Copyright (C) 2024 Tanav Malhotra"
+log "GNU General Public License v3.0"
+log "==================================="
+log
+
+read -p "Reboot the system? (Y/n): " reboot_choice
+if [[ $reboot_choice == n* || $reboot_choice == N* ]]; then
+    log "Remember to manually reboot the system later."
+else
+    reboot
+fi
+
+exit 0
+# ===========================================
+# Author: Tanav Malhotra
+# License: GNU General Public License v3.0
+# Copyright (C) 2024 Tanav Malhotra
+# ===========================================
