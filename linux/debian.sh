@@ -400,6 +400,13 @@ cp /etc/default/useradd /etc/default/useradd.bak
 sed -i 's/^EXPIRE=[0-9]\+/EXPIRE=30/' /etc/default/useradd
 sed -i 's/^INACTIVE=[0-9]\+/INACTIVE=30/' /etc/default/useradd
 
+# Change password encryption method to SHA512
+log "Changing password encryption method to SHA512..."
+cp /etc/login.defs /etc/login_with_max_pw_days.defs.bak
+sed -i '/^ENCRYPT_METHOD/c\ENCRYPT_METHOD SHA512' /etc/login.defs
+echo "SHA_CRYPT_MIN_ROUNDS 10000" >> /etc/login.defs
+echo "SHA_CRYPT_MAX_ROUNDS 12000" >> /etc/login.defs
+
 # Setting up auditing
 log "Setting up auditing..."
 cat <<EOL > "/etc/audit/audit.rules"
