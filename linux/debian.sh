@@ -684,7 +684,7 @@ log
 log "Please manually check the world-writable files and the no-user files."
 log "Please run \`sudo restart lightdm\`"
 log "Make sure updates are installed daily."
-software-properties-gtk
+software-properties-gtk &
 log
 # log "Launching settings..."
 # if [[ "$DESKTOP_SESSION" == "gnome" ]]; then
