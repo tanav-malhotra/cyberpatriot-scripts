@@ -97,16 +97,12 @@ else
     chmod +x *.sh
 fi
 
-# # Installing nala
-# log "Installing nala..."
-# apt install -y git python3-pip
-# apt-get install -y bum
-# git clone https://gitlab.com/volian/nala.git
-# cd nala
-# make install
-# cd ..
-# apt install -y nala
-# apt-get install -y nala
+# Installing nala
+log "Installing nala..."
+echo "deb http://deb.volian.org/volian/ scar main" | tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
+apt update -y
+apt install nala
+apt install nala-legacy
 
 # Installing bash completion
 # log "Installing bash completion..."
@@ -121,7 +117,7 @@ apt update -y && apt full-upgrade -y
 #         nala upgrade -y --install-recommends --install-suggests
 #     fi
 # fi
-apt autoremove -y #--purge
+apt autoremove -y --purge
 
 # Installing Software
 log "Installing software..."
@@ -130,6 +126,7 @@ for app in "${apps[@]}"; do
     log "Installing $app..."
     apt install -y "$app"
 done
+apt autoremove -y --purge
 
 # Checking for updates daily
 log "Checking for updates daily..."
@@ -261,6 +258,7 @@ fi
 if sshd -t; then
     log "SSH configuration is correct. Restarting SSH service..."
     if [[ -x "$(command -v systemctl)" ]]; then
+        systemctl enable sshd
         systemctl restart sshd
     elif [[ -x "$(command -v service)" ]]; then
         service sshd restart
@@ -305,8 +303,12 @@ for app in "${apps[@]}"; do
     log "Purging $app..."
     apt purge -y "$app" #TODO: try removing instead of purging
 done
-apt purge -y john nmap vuze frostwire kismet freeciv minetest minetest-server medusa hydra truecrack ophcrack nikto cryptcat nc netcat tightvncserver x11vnc nfs xinetd samba postgresql sftpd vsftpd apache apache2 ftp mysql php snmp pop3 icmp sendmail dovecot bind9 nginx telnet rlogind rshd rcmd rexecd rbootd rquotad rstatd rusersd rwalld rexd fingerd tftpd
-apt autoremove -y
+hacking_tools=("john" "nmap" "vuze" "frostwire" "kismet" "freeciv" "minetest" "minetest-server" "medusa" "hydra" "truecrack" "ophcrack" "nikto" "cryptcat" "nc" "netcat" "tightvncserver" "x11vnc" "nfs" "xinetd" "samba" "postgresql" "sftpd" "vsftpd" "apache" "apache2" "ftp" "mysql" "php" "snmp" "pop3" "icmp" "sendmail" "dovecot" "bind9" "nginx" "telnet" "rlogind" "rshd" "rcmd" "rexecd" "rbootd" "rquotad" "rstatd" "rusersd" "rwalld" "rexd" "fingerd" "tftpd")
+for tool in "${hacking_tools[@]}"; do
+    log "Purging $tool..."
+    apt purge -y "$tool" #TODO: try removing instead of purging
+done
+apt autoremove -y --purge
 
 # Removing Games
 log "Removing games..."
@@ -315,11 +317,13 @@ for game in "${games[@]}"; do
     log "Purging $game..."
     apt purge -y "$game" #TODO: try removing instead of purging
 done
+apt autoremove --purge
 
 # Setting up fail2ban
 log "Ban IPs with too many incorrect login attempts..."
 #systemctl reload-or-restart fail2ban.service
 systemctl enable fail2ban.service
+systemctl restart fail2ban.service
 systemctl start fail2ban.service
 
 # Disabling Certain Interfaces
@@ -504,8 +508,8 @@ max_log_file_action = keep_logs
 EOL
 auditctl -e 1
 systemctl enable auditd
+systemctl restart auditd
 systemctl start auditd
-systemctl reload auditd
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -0002 # Auditing no world writable files
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nouser # Auditing no unowned files/directories
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nogroup # Auditing no ungrouped files/directories
@@ -516,22 +520,24 @@ df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -typ
 #snap refresh
 apt install rsyslog -y
 systemctl enable rsyslog
+systemctl restart rsyslog
+systemctl start rsyslog
 aa-enforce /etc/apparmor.d/*
 
 # Finding and saving open ports
-log "Finding and saving open ports to \`/open_ports.txt\`..."
+log "Finding and saving open ports to \`./open_ports.txt\`..."
 ss -ln > ./open_ports.txt
 
 # Finding and saving running services
-log "Finding and saving running services to \`/services.txt\`..."
+log "Finding and saving running services to \`./services.txt\`..."
 service --status-all > ./services.txt
 
 # Finding unused software
-log "Finding & saving unused software to \`/unused_software.txt\`..."
+log "Finding & saving unused software to \`./unused_software.txt\`..."
 deborphan --guess-all > ./unused_software.txt
 log "Removing unused software..."
 log "The following files will be removed:"
-cat /unused_software.txt
+cat ./unused_software.txt
 # Prompt the user for confirmation
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
 if [[ $choice == n* || $choice == N* ]]; then
@@ -540,24 +546,24 @@ else
     # Proceed with removal
     while IFS= read -r file; do
         rm -rf "$file"
-    done < /unused_software.txt
+    done < ./unused_software.txt
 
     log "Unused software has been removed."
 fi
 
 # Finding & Removing Files
-log "Finding & saving media files to \`/media_files.txt\`..."
+log "Finding & saving media files to \`./media_files.txt\`..."
 find /home/ -type f \( -name "*.mp3" -o -name "*.mp4" -o -name "*.wav" -o -name "*.avi" -o -name "*.mkv" -o -name "*.flac" -o -name "*.mov" \) -print > ./media_files.txt
-log "Finding & saving possible hacking tools as packages to \`/packages.txt\`..."
+log "Finding & saving possible hacking tools as packages to \`./packages.txt\`..."
 find /home/ -type f \( -name "*.tar.gz" -o -name "*.tgz" -o -name "*.zip" -o -name "*.deb" \) -print > ./packages.txt
-log "Finding & saving World Writable files to \`/world_writable.txt\`..."
+log "Finding & saving World Writable files to \`./world_writable.txt\`..."
 find /dir -xdev -type d \( -perm -0002 -a ! -perm -1000 \) -print > ./world_writable.txt
-log "Finding & saving No-User files to \`/no_user.txt\`..."
+log "Finding & saving No-User files to \`./no_user.txt\`..."
 find /dir -xdev \( -nouser -o -nogroup \) -print > ./no_user.txt
 
 log "Removing media files..."
 log "The following files will be removed:"
-cat /media_files.txt
+cat ./media_files.txt
 # Prompt the user for confirmation
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
 if [[ $choice == n* || $choice == N* ]]; then
@@ -566,14 +572,14 @@ else
     # Proceed with removal
     while IFS= read -r file; do
         rm -rf "$file"
-    done < /media_files.txt
+    done < ./media_files.txt
 
     log "Files have been removed."
 fi
 
 log "Removing packages..."
 log "The following files will be removed:"
-cat /packages.txt
+cat ./packages.txt
 # Prompt the user for confirmation
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
 if [[ $choice == n* || $choice == N* ]]; then
@@ -582,7 +588,7 @@ else
     # Proceed with removal
     while IFS= read -r file; do
         rm -rf "$file"
-    done < /packages.txt
+    done < ./packages.txt
     log "Files have been removed."
 fi
 
@@ -662,6 +668,10 @@ log_info "End time: " $end_time
 $duration=$(( $end_secs - $start_secs ))
 $final_min=$(( $duration / 60 ))
 $final_sec=$(( $duration % 60 ))
+
+# Running one last apt autoremove
+log "Running \`apt autoremove --purge\`..."
+apt autoremove -y --purge
 
 # Final Notes
 log "Finished! in $final_min minutes and $final_sec seconds..."
