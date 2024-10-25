@@ -60,11 +60,12 @@ if [ $# -gt 0 ]; then
         log "Debug mode is enabled."
         log "Current Directory: $starting_dir"
         log "Start: $start_time"
+        sleep 3
     else
         log_info "Start: $start_time"
+        sleep 1
     fi
 fi
-sleep 1.5
 clear
 log "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
