@@ -151,6 +151,7 @@ EOL
 log "Setting up firewall..."
 ufw enable
 ufw default deny incoming
+ufw logging on
 ufw logging high
 
 # Enabling syn cookie protection
@@ -199,7 +200,7 @@ set_sshd_setting "PermitRootLogin" "no"
 set_sshd_setting "Port" "22"
 set_sshd_setting "PasswordAuthentication" "no"
 set_sshd_setting "ChallengeResponseAuthentication" "no"
-set_sshd_setting "UsePAM" "no"
+set_sshd_setting "UsePAM" "yes"
 set_sshd_setting "HostbasedAuthentication" "no"
 set_sshd_setting "Protocol" "2"
 set_sshd_setting "LogLevel" "VERBOSE"
@@ -260,6 +261,32 @@ else
     log "SSH configuration has errors. Please fix them before restarting."
 fi
 
+log "Creating new SSH keys..."
+# Define variables
+KEY_NAME="id_ed25519"
+KEY_DIR="/home/$USER/.ssh"
+AUTHORIZED_KEYS="$KEY_DIR/authorized_keys"
+# Check if the .ssh directory exists; if not, create it
+if [ ! -d "$KEY_DIR" ]; then
+    mkdir -p "$KEY_DIR"
+    chmod 700 "$KEY_DIR"
+fi
+ssh-keygen -t ed25519 -f "$KEY_DIR/$KEY_NAME" -N ""
+# Check if the key was created successfully
+if [ $? -eq 0 ]; then
+    log "Ed25519 SSH key generated successfully."
+else
+    log "Failed to generate SSH key."
+fi
+
+# Append the public key to authorized_keys
+cat "$KEY_DIR/$KEY_NAME.pub" >> "$AUTHORIZED_KEYS"
+
+# Set the correct permissions for the authorized_keys file
+chmod 600 "$AUTHORIZED_KEYS"
+
+log "Public key added to $AUTHORIZED_KEYS."
+
 # Removing Software
 apt list --installed > ./software_that_was_installed.txt
 log "Removing prohibited software and hacking tools..."
@@ -302,6 +329,7 @@ systemctl enable USBGaurdd
 # Setting home directory permissions
 log "Setting home directory permissions..."
 for i in $(mawk -F: '$3 > 999 && $3 < 65534 {print $1}' /etc/passwd); do [ -d /home/${i} ] && chmod -R 750 /home/${i}; done
+find /home -type d -name '.ssh' -exec chmod 700 {} \;
 log "Changing permissions of commonly exploited files..."
 chown root:root /etc/securetty
 chmod 0600 /etc/securetty
@@ -314,6 +342,48 @@ chmod 644 /etc/hosts.allow
 chmod 440 /etc/sudoers
 chmod 640 /etc/shadow
 chown root:root /etc/shadow
+
+# Setting critical file and directory permissions
+log "Setting critical file and directory permissions and ownership..."
+# Set ownership and permissions for critical directories
+chown root:root /
+chmod 755 /
+chown root:root /bin
+chmod 755 /bin
+chown root:root /boot
+chmod 755 /boot
+chown root:root /etc
+chmod 755 /etc
+chown root:root /lib
+chmod 755 /lib
+chown root:root /lib64
+chmod 755 /lib64
+chown root:root /opt
+chmod 755 /opt
+chown root:root /sbin
+chmod 755 /sbin
+chown root:root /usr
+chmod 755 /usr
+chown root:root /var
+chmod 755 /var
+# Set ownership and permissions for critical files
+chown root:root /etc/passwd
+chmod 644 /etc/passwd
+chown root:shadow /etc/shadow
+chmod 600 /etc/shadow
+chown root:root /etc/group
+chmod 644 /etc/group
+chown root:shadow /etc/gshadow
+chmod 600 /etc/gshadow
+chown root:root /etc/hosts
+chmod 644 /etc/hosts
+chown root:root /etc/ssh/ssh_host_*_key
+chmod 600 /etc/ssh/ssh_host_*_key
+chown root:root /etc/ssh/ssh_host_*_key.pub
+chmod 644 /etc/ssh/ssh_host_*_key.pub
+# Set ownership and permissions for the root user's home directory
+chown root:root /root
+chmod 700 /root
 
 # Cron settings
 log "Changing cron settings..."
@@ -433,7 +503,7 @@ df --local -P | awk {'if (NR!=1)print $6'} | xargs -I '{}' find '{}' -xdev -type
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -2000 # Audit SGID executables
 
 # Miscellaneous
-snap refresh
+#snap refresh
 apt install rsyslog -y
 systemctl enable rsyslog
 aa-enforce /etc/apparmor.d/*
