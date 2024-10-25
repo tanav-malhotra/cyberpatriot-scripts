@@ -81,10 +81,17 @@ if [[ $confirmation == n* || $confirmation == N* ]]; then
     log "Please complete these first and only then rerun the script."
     exit 1
 fi
-read -p "Have you created the required admins.txt, users.txt, addusers.txt, & addgroups.txt files in the current directory? (Y/n): " $confirmation #TODO: fix _ in output
+read -p "Have you created the required admins.txt, users.txt, addusers.txt, & addgroups.txt files in the current directory? (Y/n): " $confirmation
 if [[ $confirmation == n* || $confirmation == N* ]]; then
     log "Please create these files first by using the information from the README file located on your desktop."
     exit 1
+fi
+
+read -p "Do you want to make all of the bash scripts in this directory executable? (Y/n): " $confirmation
+if [[ $confirmation == n* || $confirmation == N* ]]; then
+    log "Make sure you manually run \`chmod +x\` on any script you want to run."
+else
+    chmod +x *.sh
 fi
 
 # # Installing nala
