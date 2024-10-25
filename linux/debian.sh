@@ -298,7 +298,7 @@ log "Public key added to $AUTHORIZED_KEYS."
 # Removing Software
 apt list --installed > ./software_that_was_installed.txt
 log "Removing prohibited software and hacking tools..."
-apps=("*wireshark*" "*telnet*" "*vsftpd*" "*proftpd*" "*snmpd*" "*mysql*" "*postgresql*" "*xrdp*" "*tightvncserver*" ".*samba.*" ".*smb.*" "*nmap*" "*zenmap*" "*apache2*" "*nginx*" "*lighttpd*" "*tcpdump*" "*netcat-traditional*" "*nikto*" "*ophcrack*" "*ettercap*" "*deluge*" "*dovecot*" "*netcat*" "*john*" "*vuze*" "*frostwire*" "*aircrack*" "*metasploit*" "*nessus*" "*snort*" "*kismet*" "*nikto*" "*yersinia*" "*burp-suite*" "*THCHydra*" "*oclhashcat*" "*maltego*" "*oswapzed*" "*cain*" "*angryipscanner*" "*ipscan*" "*ettercap*" "*hydra*" "*medusa*" "*xinetd*" "*openbsd-inetd*" "*inetutils-inetd*")
+apps=("*wireshark*" "*telnet*" "*vsftpd*" "*proftpd*" "*snmpd*" "*mysql*" "*postgresql*" "*xrdp*" "*tightvncserver*" ".*samba.*" ".*smb.*" "*nmap*" "*zenmap*" "*apache2*" "*nginx*" "*lighttpd*" "*tcpdump*" "*netcat-traditional*" "*nikto*" "*ophcrack*" "*ettercap*" "*deluge*" "*dovecot*" "*netcat*" "*john*" "*vuze*" "*frostwire*" "*aircrack*" "*metasploit*" "*nessus*" "*snort*" "*kismet*" "*nikto*" "*yersinia*" "*burp-suite*" "*THCHydra*" "*oclhashcat*" "*maltego*" "*oswapzed*" "*cain*" "*angryipscanner*" "*ipscan*" "*ettercap*" "*hydra*" "*medusa*" "*xinetd*" "*openbsd-inetd*" "*inetutils-inetd*" "*avahi*" "*avahi-daemon*")
 for app in "${apps[@]}"; do
     log "Purging $app..."
     apt purge -y "$app" #TODO: try removing instead of purging
