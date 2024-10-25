@@ -638,7 +638,7 @@ mawk -F: '$3 == 0 && $1 != "root"' /etc/passwd > ./non-root_uid0.txt
 log "Non-root UID 0 users (saved to \`./non-root_uid0.txt\`):"
 # Reading files for authorized users and admins
 log "Reading users.txt, admins.txt, addusers.txt, and addgroups.txt..."
-#TODO
+#TODO: user management
 
 # Changing Passwords
 $NEW_PASSWORD="CyberPatr!0t"
