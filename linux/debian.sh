@@ -629,13 +629,13 @@ echo "allow-guest=false" >> /etc/lightdm/users.conf
 sed -i 's/AutomaticLoginEnable=True/AutomaticLoginEnable=False/' /etc/gdm/custom.conf
 sed -i 's/auth sufficient pam_succeed_if.so user ingroup nopasswdlogin//' /etc/pam.d/gdm-password
 mawk -F: '$1 == "sudo"' /etc/group > ./admins.txt
-log "Admins (saved to \`/admins.txt\`):"
+log "Admins (saved to \`./admins.txt\`):"
 mawk -F: '$3 > 999 && $3 < 65534 {print $1}' /etc/passwd > ./users.txt
-log "Users (saved to \`/users.txt\`):"
+log "Users (saved to \`./users.txt\`):"
 mawk -F: '$2 == ""' /etc/passwd > ./no_passwd.txt
-log "Empty Passwords (saved to \`/no_passwd.txt\`):"
+log "Empty Passwords (saved to \`./no_passwd.txt\`):"
 mawk -F: '$3 == 0 && $1 != "root"' /etc/passwd > ./non-root_uid0.txt
-log "Non-root UID 0 users (saved to \`/non-root_uid0.txt\`):"
+log "Non-root UID 0 users (saved to \`./non-root_uid0.txt\`):"
 # Reading files for authorized users and admins
 log "Reading users.txt, admins.txt, addusers.txt, and addgroups.txt..."
 #TODO
