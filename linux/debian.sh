@@ -69,7 +69,7 @@ fi
 clear
 log "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
-version="v1.2.2"
+version="v1.3.6"
 log "CyberPatriot Linux Script $version"
 sleep 1
 log "Starting..."
