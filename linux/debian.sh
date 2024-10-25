@@ -45,7 +45,7 @@ ring_bell() {
 }
 
 # Check for sudo access
-log "Checking for \`sudo\` access (which may request your password)..."
+log_info "Checking for \`sudo\` access (which may request your password)..."
 if [[ $EUID -ne 0 ]]; then
     log "\`sudo\` access is required. Please run \`sudo !!\`"
     exit 1
