@@ -16,4 +16,4 @@ sudo chmod +x [script_name].sh && sudo ./[script_name].sh
 > IN CONNECTION WITH THE SCRIPTS OR THE USE OR OTHER DEALINGS
 > IN THE SCRIPTS.
 >
-> This script is licensed under the GNU General Public License v3.0 (GPL-3.0). You can freely use, modify, and distribute it under the terms of the GPL-3.0. For more details, please see the LICENSE file.
+> The scripts are licensed under the GNU General Public License v3.0 (GPL-3.0). You can freely use, modify, and distribute them under the terms of the GPL-3.0. For more details, please see the LICENSE file.
