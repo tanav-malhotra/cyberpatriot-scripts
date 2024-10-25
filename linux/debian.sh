@@ -60,7 +60,9 @@ if [ $# -gt 0 ]; then
         log "Debug mode is enabled."
         log "Current Directory: $starting_dir"
         log "Start: $start_time"
-        sleep 3
+        log "Distro ID: $distro_id"
+        log "Distro Codename: $distro_codename"
+        sleep 5
     else
         log_info "Start: $start_time"
         sleep 1
