@@ -2,7 +2,7 @@
 # =========================================================
 # Author: Tanav Malhotra
 # License: GNU General Public License v3.0
-# Copyright (C) 2024 Tanav Malhotra
+# Copyright (c) 2024 Tanav Malhotra
 #
 # DISCLAIMER:
 # THE SCRIPT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
@@ -66,5 +66,5 @@ echo "UFW is configured and Google Authenticator setup is complete."
 # ===========================================
 # Author: Tanav Malhotra
 # License: GNU General Public License v3.0
-# Copyright (C) 2024 Tanav Malhotra
+# Copyright (c) 2024 Tanav Malhotra
 # ===========================================
