@@ -476,6 +476,8 @@ sed -i 's/\w*nullok\w*//g' /etc/pam.d/common-auth
 #sed -i 's/\(pam_tally2\.so.*\)$/\1 deny=5 audit silent unlock_time=1800/' /etc/pam.d/common-auth # lockout policy
 #echo 'auth required pam_tally2.so deny=5 onerr=fail unlock_time=1800' >> /etc/pam.d/common-auth
 #echo 'auth required pam_unix.so' >> /etc/pam.d/common-auth
+sed -i 's/deny=[0-9]\+/deny=5/' /etc/pam.d/common-auth
+sed -i 's/unlock_time=[0-9]\+/unlock_time=1800/' /etc/pam.d/common-auth
 cp /etc/pam.d/common-password /etc/pam.d/common-password.bak
 sed -i 's/\(pam_unix\.so.*\)$/\1 remember=5 minlen=8/' /etc/pam.d/common-password
 sed -i 's/\(pam_cracklib\.so.*\)$/\1 maxclassrepeat=5 maxsequence=5 dcredit=-1 ocredit=-1 lcredit=-1 ucredit=-1 minlen=16 difok=5 retry=3/' /etc/pam.d/common-password
