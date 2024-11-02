@@ -309,14 +309,15 @@ for tool in "${hacking_tools[@]}"; do
 done
 apt autoremove -y --purge
 
-# # Removing Games
-# log "Removing games..."
+# Removing Games
+log "Removing games..."
+games=("gnome-games" "iagno" "lightsoff" "four-in-a-row" "gnome-robots" "pegsolitaire" "gnome-2048" "hitori" "gnome-klotski" "gnome-mines" "gnome-mahjongg" "gnome-sudoku" "quadrapassel" "swell-foop" "gnome-tetravex" "gnome-taquin" "aisleriot" "gnome-chess" "five-or-more" "gnome-nibbles" "tali")
 # games=$(dpkg -l | grep "game" | awk '{print $2}')
-# for game in "${games[@]}"; do
-#     log "Purging $game..."
-#     apt-get purge -y "$game" #TODO: try removing instead of purging
-# done
-# apt autoremove --purge
+for game in "${games[@]}"; do
+    log "Purging $game..."
+    apt-get purge -y "$game" #TODO: try removing instead of purging
+done
+apt autoremove -y --purge
 
 # Setting up fail2ban
 log "Ban IPs with too many incorrect login attempts..."
