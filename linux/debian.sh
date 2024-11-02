@@ -701,7 +701,7 @@ log;log;log;
 log "Thank you for using this script. Good luck for the competition!"
 log
 log "==================================="
-log "Copyright (C) 2024 Tanav Malhotra"
+log "Copyright (c) 2024 Tanav Malhotra"
 log "GNU General Public License v3.0"
 log "==================================="
 log
