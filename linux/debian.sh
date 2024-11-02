@@ -116,14 +116,14 @@ apt update -y && apt full-upgrade -y
 #         nala upgrade -y --install-recommends --install-suggests
 #     fi
 # fi
-apt autoremove -y --purge
+# apt autoremove -y --purge
 
 # Installing Software
 log "Installing software..."
 apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2go" "deborphan" "libpam-cracklib" "unattended-upgrades" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog")
 for app in "${apps[@]}"; do
     log "Installing $app..."
-    apt install -y "$app"
+    apt-get install -y "$app"
 done
 apt autoremove -y --purge
 
@@ -300,23 +300,23 @@ log "Removing prohibited software and hacking tools..."
 apps=("*wireshark*" "*telnet*" "*vsftpd*" "*proftpd*" "*snmpd*" "*mysql*" "*postgresql*" "*xrdp*" "*tightvncserver*" ".*samba.*" ".*smb.*" "*nmap*" "*zenmap*" "*apache2*" "*nginx*" "*lighttpd*" "*tcpdump*" "*netcat-traditional*" "*nikto*" "*ophcrack*" "*ettercap*" "*deluge*" "*dovecot*" "*netcat*" "*john*" "*vuze*" "*frostwire*" "*aircrack*" "*metasploit*" "*nessus*" "*snort*" "*kismet*" "*nikto*" "*yersinia*" "*burp-suite*" "*THCHydra*" "*oclhashcat*" "*maltego*" "*oswapzed*" "*cain*" "*angryipscanner*" "*ipscan*" "*ettercap*" "*hydra*" "*medusa*" "*xinetd*" "*openbsd-inetd*" "*inetutils-inetd*" "*avahi*" "*avahi-daemon*")
 for app in "${apps[@]}"; do
     log "Purging $app..."
-    apt purge -y "$app" #TODO: try removing instead of purging
+    apt-get purge -y "$app" #TODO: try removing instead of purging
 done
 hacking_tools=("john" "nmap" "vuze" "frostwire" "kismet" "freeciv" "minetest" "minetest-server" "medusa" "hydra" "truecrack" "ophcrack" "nikto" "cryptcat" "nc" "netcat" "tightvncserver" "x11vnc" "nfs" "xinetd" "samba" "postgresql" "sftpd" "vsftpd" "apache" "apache2" "ftp" "mysql" "php" "snmp" "pop3" "icmp" "sendmail" "dovecot" "bind9" "nginx" "telnet" "rlogind" "rshd" "rcmd" "rexecd" "rbootd" "rquotad" "rstatd" "rusersd" "rwalld" "rexd" "fingerd" "tftpd")
 for tool in "${hacking_tools[@]}"; do
     log "Purging $tool..."
-    apt purge -y "$tool" #TODO: try removing instead of purging
+    apt-get purge -y "$tool" #TODO: try removing instead of purging
 done
 apt autoremove -y --purge
 
-# Removing Games
-log "Removing games..."
-games=$(dpkg -l | grep "game" | awk '{print $2}')
-for game in "${games[@]}"; do
-    log "Purging $game..."
-    apt purge -y "$game" #TODO: try removing instead of purging
-done
-apt autoremove --purge
+# # Removing Games
+# log "Removing games..."
+# games=$(dpkg -l | grep "game" | awk '{print $2}')
+# for game in "${games[@]}"; do
+#     log "Purging $game..."
+#     apt-get purge -y "$game" #TODO: try removing instead of purging
+# done
+# apt autoremove --purge
 
 # Setting up fail2ban
 log "Ban IPs with too many incorrect login attempts..."
@@ -531,24 +531,24 @@ ss -ln > ./open_ports.txt
 log "Finding and saving running services to \`./services.txt\`..."
 service --status-all > ./services.txt
 
-# Finding unused software
-log "Finding & saving unused software to \`./unused_software.txt\`..."
-deborphan --guess-all > ./unused_software.txt
-log "Removing unused software..."
-log "The following files will be removed:"
-cat ./unused_software.txt
-# Prompt the user for confirmation
-read -p "Do you want to proceed with the deletion? (Y/n): " choice
-if [[ $choice == n* || $choice == N* ]]; then
-    log "No software was removed."
-else
-    # Proceed with removal
-    while IFS= read -r file; do
-        rm -rf "$file"
-    done < ./unused_software.txt
+# # Finding unused software
+# log "Finding & saving unused software to \`./unused_software.txt\`..."
+# deborphan --guess-all > ./unused_software.txt
+# log "Removing unused software..."
+# log "The following files will be removed:"
+# cat ./unused_software.txt
+# # Prompt the user for confirmation
+# read -p "Do you want to proceed with the deletion? (Y/n): " choice
+# if [[ $choice == n* || $choice == N* ]]; then
+#     log "No software was removed."
+# else
+#     # Proceed with removal
+#     while IFS= read -r file; do
+#         rm -rf "$file"
+#     done < ./unused_software.txt
 
-    log "Unused software has been removed."
-fi
+#     log "Unused software has been removed."
+# fi
 
 # Finding & Removing Files
 log "Finding & saving media files to \`./media_files.txt\`..."
@@ -672,7 +672,7 @@ $final_min=$(( $duration / 60 ))
 $final_sec=$(( $duration % 60 ))
 
 # Running one last apt autoremove
-log "Running \`apt autoremove --purge\`..."
+log "Running \`apt autoremove -y --purge\`..."
 apt autoremove -y --purge
 
 # Final Notes
