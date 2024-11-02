@@ -96,17 +96,20 @@ sleep 1
 
 # Confirming with user
 read -p "Do you want to make all of the bash scripts in this directory executable? (Y/n): " $confirmation
+ring_bell
 if [[ $confirmation == n* || $confirmation == N* ]]; then
     log "Make sure you manually run \`chmod +x\` on any script you want to run."
 else
     chmod +x *.sh
 fi
 read -p "Have all of the Forensics Questions been answered? (Y/n): " $confirmation
+ring_bell
 if [[ $confirmation == n* || $confirmation == N* ]]; then
     log "Please complete these first and only then rerun the script."
     exit 1
 fi
 read -p "Have you created the required admins.txt, users.txt, addusers.txt, & addgroups.txt files in the current directory? (Y/n): " $confirmation
+ring_bell
 if [[ $confirmation == n* || $confirmation == N* ]]; then
     log "Please create these files first by using the information from the README file located on your desktop."
     exit 1
@@ -241,11 +244,12 @@ fi
 
 # Ask if the user wants to change the SSH port
 read -p "Do you want to change the SSH port? (y/N): " change_port
-# ring_bell &
+ring_bell
 
 if [[ $change_port == y* || $change_port == Y* ]]; then
     while true; do
         read -p "Enter the new SSH port (1-65535): " new_port
+        ring_bell
         
         # Validate the input
         if [[ "$new_port" =~ ^[0-9]+$ ]] && [ "$new_port" -ge 1 ] && [ "$new_port" -le 65535 ]; then
@@ -558,6 +562,7 @@ service --status-all > ./services.txt
 # cat ./unused_software.txt
 # # Prompt the user for confirmation
 # read -p "Do you want to proceed with the deletion? (Y/n): " choice
+# ring_bell
 # if [[ $choice == n* || $choice == N* ]]; then
 #     log "No software was removed."
 # else
@@ -584,6 +589,7 @@ log "The following files will be removed:"
 cat ./media_files.txt
 # Prompt the user for confirmation
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
+ring_bell
 if [[ $choice == n* || $choice == N* ]]; then
     log "No files were removed."
 else
@@ -600,6 +606,7 @@ log "The following files will be removed:"
 cat ./packages.txt
 # Prompt the user for confirmation
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
+ring_bell
 if [[ $choice == n* || $choice == N* ]]; then
     log "No files were removed."
 else
@@ -726,6 +733,7 @@ log "==================================="
 log
 
 read -p "Reboot the system? (Y/n): " reboot_choice
+ring_bell
 if [[ $reboot_choice == n* || $reboot_choice == N* ]]; then
     log "Remember to manually reboot the system later."
 else
