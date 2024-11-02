@@ -1,10 +1,5 @@
 # Scripts for CyberPatriot
 
-## Running a script:
-```
-sudo chmod +x [script_name].sh && sudo ./[script_name].sh
-```
-
 # Disclaimer:
 > THE SCRIPTS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
 > KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
