@@ -31,9 +31,3 @@ while true; do
     /sbin/pam_tally2 -u "$USER" --reset
     sleep 5
 done
-
-# ===========================================
-# Author: Tanav Malhotra
-# License: GNU General Public License v3.0
-# Copyright (c) 2024 Tanav Malhotra
-# ===========================================

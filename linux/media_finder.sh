@@ -30,9 +30,3 @@ echo "Finding & saving media files to \`./media_files.txt\`..."
 find /home/ -type f \( -name "*.mp3" -o -name "*.mp4" -o -name "*.wav" -o -name "*.avi" -o -name "*.mkv" -o -name "*.flac" -o -name "*.mov" \) -print > ./media_files.txt
 echo "Media Files:"
 cat ./media_files.txt
-
-# ===========================================
-# Author: Tanav Malhotra
-# License: GNU General Public License v3.0
-# Copyright (c) 2024 Tanav Malhotra
-# ===========================================

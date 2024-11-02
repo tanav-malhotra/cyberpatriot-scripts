@@ -30,9 +30,3 @@ fi
 read -p "Enter Base64 encoded string: " encoded_string
 decoded_string=$(echo "$encoded_string" | base64 --decode)
 echo "Decoded string: $decoded_string"
-
-# ===========================================
-# Author: Tanav Malhotra
-# License: GNU General Public License v3.0
-# Copyright (c) 2024 Tanav Malhotra
-# ===========================================

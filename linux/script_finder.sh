@@ -30,9 +30,3 @@ echo "Finding & saving scripts files to \`./scripts.txt\`..."
 find /home/ -type f \( -name "*.sh" -o -name "*.SH" \) -print > ./scripts.txt
 echo "Scripts:"
 cat ./scripts.txt
-
-# ===========================================
-# Author: Tanav Malhotra
-# License: GNU General Public License v3.0
-# Copyright (c) 2024 Tanav Malhotra
-# ===========================================
