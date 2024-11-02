@@ -29,6 +29,22 @@ touch "$log_file"
 echo > "$log_file"
 
 # Functions
+banner() {
+    cat << 'EOF'
+ _____  _    _   _    ___     __
+|_   _|/ \  | \ | |  / \ \   / /
+  | | / _ \ |  \| | / _ \ \ / / 
+  | |/ ___ \| |\  |/ ___ \ V /  
+  |_/_/   \_\_| \_/_/   \_\_/   
+
+ __  __    _    _     _   _  ___ _____ ____      _    
+|  \/  |  / \  | |   | | | |/ _ \_   _|  _ \    / \   
+| |\/| | / _ \ | |   | |_| | | | || | | |_) |  / _ \  
+| |  | |/ ___ \| |___|  _  | |_| || | |  _ <  / ___ \ 
+|_|  |_/_/   \_\_____|_| |_|\___/ |_| |_| \_\/_/   \_\
+EOF
+    log
+}
 log() {
     echo $@ >> "$log_file"
     echo $@
@@ -70,6 +86,7 @@ if [ $# -gt 0 ]; then
     fi
 fi
 clear
+banner
 log "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
 sleep 3
 log "CyberPatriot Linux Script $version"
