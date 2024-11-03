@@ -621,7 +621,7 @@ log "Please manually check the world-writable files and the no-user files."
 
 # Preventing IP Spoofing
 log "Preventing IP Spoofing in /etc/host.conf..."
-log "failed: no code for preventing IP spoofing written..."
+log "error: no code for preventing IP spoofing written..."
 #TODO: fix IP spoofing
 
 # User Management
