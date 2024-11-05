@@ -115,25 +115,9 @@ if [[ $confirmation =~ ^[Nn].* ]]; then
     exit 1
 fi
 
-# Installing nala
-# log "Installing nala..."
-# echo "deb http://deb.volian.org/volian/ scar main" | tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
-# apt update -y
-# apt install nala
-# apt install nala-legacy
-# Installing bash completion
-# log "Installing bash completion..."
-# nala --install-completion bash
-
 # Updating system
 log "Updating system..."
 apt update -y && apt full-upgrade -y
-# if [[ $? -ne 0 ]]; then
-#     nala upgrade -y --full --install-recommends --install-suggests
-#     if [[ $? -ne 0 ]]; then
-#         nala upgrade -y --install-recommends --install-suggests
-#     fi
-# fi
 apt autoremove -y #--purge
 
 # Installing Software
@@ -316,7 +300,7 @@ log "Public key added to $AUTHORIZED_KEYS."
 # Removing Software
 apt list --installed > ./software_that_was_installed.txt
 log "Removing prohibited software and hacking tools..."
-apps=("*wireshark*" "*telnet*" "*vsftpd*" "*proftpd*" "*snmpd*" "*mysql*" "*postgresql*" "*xrdp*" "*tightvncserver*" ".*samba.*" ".*smb.*" "*nmap*" "*zenmap*" "*apache2*" "*nginx*" "*lighttpd*" "*tcpdump*" "*netcat-traditional*" "*nikto*" "*ophcrack*" "*ettercap*" "*deluge*" "*dovecot*" "*netcat*" "*john*" "*vuze*" "*frostwire*" "*aircrack*" "*metasploit*" "*nessus*" "*snort*" "*kismet*" "*nikto*" "*yersinia*" "*burp-suite*" "*THCHydra*" "*oclhashcat*" "*maltego*" "*oswapzed*" "*cain*" "*angryipscanner*" "*ipscan*" "*ettercap*" "*hydra*" "*medusa*" "*xinetd*" "*openbsd-inetd*" "*inetutils-inetd*" "*avahi-daemon*")
+apps=("wireshark" "telnet" "vsftpd" "proftpd" "snmpd" "mysql-server" "mysql-client" "postgresql" "xrdp" "tightvncserver" "samba" "nmap" "apache2" "nginx" "lighttpd" "tcpdump" "netcat-traditional" "nikto" "ophcrack" "ettercap*" "deluge" "dovecot-core" "*netcat*" "john" "vuze" "frostwire" "aircrack-ng" "metasploit-framework" "nessus" "snort" "kismet" "yersinia" "burp-suite" "burpsuite" "hydra" "oclhashcat" "hashcat" "maltego" "zaproxy" "cain" "*angryip*" "ipscan" "medusa" "xinetd" "openbsd-inetd" "inetutils-inetd" "avahi-daemon" "tcpd")
 for app in "${apps[@]}"; do
     log "Purging $app..."
     apt-get remove -y "$app"
@@ -467,12 +451,10 @@ net.ipv4.tcp_synack_retries = 2
 net.ipv4.tcp_syncookies = 1
 net.ipv4.tcp_syn_retries = 5
 net.ipv4.tcp_timestamps = 9
-
 # Disable IPv6
 net.ipv6.conf.all.disable_ipv6 = 1
 net.ipv6.conf.default.disable_ipv6 = 1
 net.ipv6.conf.lo.disable_ipv6 = 1
-
 # Incase IPv6 is necessary
 net.ipv6.conf.default.router_solicitations = 0
 net.ipv6.conf.default.accept_ra_rtr_pref = 0
@@ -553,9 +535,9 @@ ss -ln > ./open_ports.txt
 log "Finding and saving running services to \`./services.txt\`..."
 service --status-all > ./services.txt
 
-# # Finding unused software
-# log "Finding & saving unused software to \`./unused_software.txt\`..."
-# deborphan --guess-all > ./unused_software.txt
+# Finding unused software
+log "Finding & saving unused software to \`./unused_software.txt\`..."
+deborphan --guess-all > ./unused_software.txt
 # log "Removing unused software..."
 # log "The following files will be removed:"
 # cat ./unused_software.txt
@@ -582,6 +564,7 @@ log "Finding & saving World Writable files to \`./world_writable.txt\`..."
 find /dir -xdev -type d \( -perm -0002 -a ! -perm -1000 \) -print > ./world_writable.txt
 log "Finding & saving No-User files to \`./no_user.txt\`..."
 find /dir -xdev \( -nouser -o -nogroup \) -print > ./no_user.txt
+log "Please manually check the world-writable files and the no-user files."
 
 log "Removing media files..."
 log "The following files will be removed:"
@@ -615,8 +598,6 @@ else
     done < ./packages.txt
     log "Files have been removed."
 fi
-
-log "Please manually check the world-writable files and the no-user files."
 
 # Preventing IP Spoofing
 log "Preventing IP Spoofing in /etc/host.conf..."
