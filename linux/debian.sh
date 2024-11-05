@@ -302,7 +302,7 @@ apt list --installed > ./software_that_was_installed.txt
 log "Removing prohibited software and hacking tools..."
 apps=("wireshark" "telnet" "vsftpd" "proftpd" "snmpd" "mysql-server" "mysql-client" "postgresql" "xrdp" "tightvncserver" "samba" "nmap" "apache2" "nginx" "lighttpd" "tcpdump" "netcat-traditional" "nikto" "ophcrack" "ettercap*" "deluge" "dovecot-core" "*netcat*" "john" "vuze" "frostwire" "aircrack-ng" "metasploit-framework" "nessus" "snort" "kismet" "yersinia" "burp-suite" "burpsuite" "hydra" "oclhashcat" "hashcat" "maltego" "zaproxy" "cain" "*angryip*" "ipscan" "medusa" "xinetd" "openbsd-inetd" "inetutils-inetd" "avahi-daemon" "tcpd")
 for app in "${apps[@]}"; do
-    log "Purging $app..."
+    log "Removing $app..."
     apt-get remove -y "$app"
     if snap list "$app" &>/dev/null; then
         snap remove "$app"
@@ -310,7 +310,7 @@ for app in "${apps[@]}"; do
 done
 hacking_tools=("john" "nmap" "vuze" "frostwire" "kismet" "freeciv" "minetest" "minetest-server" "medusa" "hydra" "truecrack" "ophcrack" "nikto" "cryptcat" "nc" "netcat" "tightvncserver" "x11vnc" "nfs" "xinetd" "samba" "postgresql" "sftpd" "vsftpd" "apache" "apache2" "ftp" "mysql" "php" "snmp" "pop3" "icmp" "sendmail" "dovecot" "bind9" "nginx" "telnet" "rlogind" "rshd" "rcmd" "rexecd" "rbootd" "rquotad" "rstatd" "rusersd" "rwalld" "rexd" "fingerd" "tftpd")
 for tool in "${hacking_tools[@]}"; do
-    log "Purging $tool..."
+    log "Removing $tool..."
     apt-get remove -y "$tool"
     if snap list "$tool" &>/dev/null; then
         snap remove "$tool"
@@ -323,7 +323,7 @@ log "Removing games..."
 games=("gnome-games" "iagno" "lightsoff" "four-in-a-row" "gnome-robots" "pegsolitaire" "gnome-2048" "hitori" "gnome-klotski" "gnome-mines" "gnome-mahjongg" "gnome-sudoku" "quadrapassel" "swell-foop" "gnome-tetravex" "gnome-taquin" "aisleriot" "gnome-chess" "five-or-more" "gnome-nibbles" "tali" "freeciv" "wesnoth")
 # games=$(dpkg -l | grep "game" | awk '{print $2}')
 for game in "${games[@]}"; do
-    log "Purging $game..."
+    log "Removing $game..."
     apt-get remove -y "$game"
     if snap list "$game" &>/dev/null; then
         snap remove "$game"
