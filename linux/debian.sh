@@ -732,12 +732,12 @@ log "GNU General Public License v3.0"
 log "==================================="
 log
 
-read -p "Reboot the system? (Y/n): " reboot_choice
+read -p "Reboot the system? (y/N): " reboot_choice
 ring_bell
-if [[ $reboot_choice =~ ^[Nn].* ]]; then
-    log "Remember to manually reboot the system later."
-else
+if [[ $reboot_choice =~ ^[Yy].* ]]; then
     reboot
+else
+    log "Remember to manually reboot the system later."
 fi
 
 exit 0
