@@ -316,7 +316,6 @@ for tool in "${hacking_tools[@]}"; do
         snap remove "$tool"
     fi
 done
-apt autoremove -y #--purge
 
 # Removing Games
 log "Removing games..."
