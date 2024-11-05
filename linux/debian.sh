@@ -772,11 +772,13 @@ log
 
 read -p "Reboot the system? (y/N): " reboot_choice
 ring_bell
-log_info "End time: " $end_time # log end time
 if [[ $reboot_choice =~ ^[Yy].* ]]; then
+    log_info "End time: " $end_time # log end time
+    log_info "Rebooting..."
     reboot
 else
     log "Remember to manually reboot the system later."
 fi
+log_info "End time: " $end_time # log end time
 
 exit 0
