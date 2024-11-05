@@ -18,9 +18,9 @@
 # ====================================================================================
 
 unalias -a
-version="v1.3.7"
+version="v1.4.2"
 start_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
-start_secs=$(date +%s)
+start_secs=$(date +%s.%N)
 log_file="./linux_script.log"
 starting_dir=$(pwd)
 distro_id=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
@@ -87,6 +87,9 @@ if [ $# -gt 0 ]; then
             ;;
             --license)
             curl https://www.gnu.org/licenses/gpl-3.0.txt | less
+            ;;
+            --version)
+            echo "$0 $version"
             ;;
             --help)
             echo "Usage: $0 [OPTIONS]"
@@ -707,11 +710,11 @@ service --status-all > ./enabled_services.txt
 
 # Calculate time
 $end_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
-$end_secs=$(date +%s)
+$end_secs=$(date +%s.%N)
 log_info "End time: " $end_time
-$duration=$(( $end_secs - $start_secs ))
-$final_min=$(( $duration / 60 ))
-$final_sec=$(( $duration % 60 ))
+$duration=$(echo "$end_secs - $start_secs" | bc)
+$final_min=$(echo "$duration / 60" | bc)
+$final_sec=$(echo "$duration % 60" | bc)
 
 # Running one last apt autoremove
 log "Running \`apt autoremove -y\`..."
