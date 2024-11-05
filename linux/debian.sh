@@ -533,8 +533,8 @@ echo "auth required pam_faillock.so authfail deny=5 unlock_time=1800" >> /etc/pa
 # sed -i 's/deny=[0-9]\+/deny=5/' /etc/pam.d/common-auth
 # sed -i 's/unlock_time=[0-9]\+/unlock_time=1800/' /etc/pam.d/common-auth
 cp /etc/pam.d/common-password /etc/pam.d/common-password.bak
-sed -i 's/\(pam_unix\.so.*\)$/\1 remember=5 minlen=8/' /etc/pam.d/common-password
-sed -i 's/\(pam_cracklib\.so.*\)$/\1 maxclassrepeat=5 maxsequence=5 dcredit=-1 ocredit=-1 lcredit=-1 ucredit=-1 minlen=16 difok=5 retry=3/' /etc/pam.d/common-password
+sed -i 's/\(pam_unix\.so.*\)$/\1 remember=5 minlen=12/' /etc/pam.d/common-password
+sed -i 's/\(pam_cracklib\.so.*\)$/\1 maxclassrepeat=5 maxsequence=5 minclass=4 dcredit=-1 ocredit=-1 lcredit=-1 ucredit=-1 minlen=12 difok=8 retry=5/' /etc/pam.d/common-password # try difok=5
 cp /etc/default/useradd /etc/default/useradd.bak
 sed -i 's/^EXPIRE=[0-9]\+/EXPIRE=30/' /etc/default/useradd
 sed -i 's/^INACTIVE=[0-9]\+/INACTIVE=30/' /etc/default/useradd
