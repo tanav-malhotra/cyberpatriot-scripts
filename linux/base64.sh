@@ -30,3 +30,15 @@ fi
 read -p "Enter Base64 encoded string: " encoded_string
 decoded_string=$(echo "$encoded_string" | base64 --decode)
 echo "Decoded string: $decoded_string"
+read
+
+# Wishing Goodluck
+echo;echo;echo;
+echo "Thank you for using this script. Good luck for the competition!"
+echo
+echo "==================================="
+echo "Copyright (c) 2024 Tanav Malhotra"
+echo "GNU General Public License v3.0"
+echo "==================================="
+echo
+exit 0

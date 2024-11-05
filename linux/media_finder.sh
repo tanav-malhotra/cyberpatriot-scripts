@@ -30,3 +30,15 @@ echo "Finding & saving media files to \`./media_files.txt\`..."
 find /home/ -type f \( -name "*.mp3" -o -name "*.mp4" -o -name "*.wav" -o -name "*.avi" -o -name "*.mkv" -o -name "*.flac" -o -name "*.mov" \) -print > ./media_files.txt
 echo "Media Files:"
 cat ./media_files.txt
+read
+
+# Wishing Goodluck
+echo;echo;echo;
+echo "Thank you for using this script. Good luck for the competition!"
+echo
+echo "==================================="
+echo "Copyright (c) 2024 Tanav Malhotra"
+echo "GNU General Public License v3.0"
+echo "==================================="
+echo
+exit 0

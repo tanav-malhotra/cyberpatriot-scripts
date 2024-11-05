@@ -30,3 +30,15 @@ echo "Finding & saving scripts files to \`./scripts.txt\`..."
 find /home/ -type f \( -name "*.sh" -o -name "*.SH" \) -print > ./scripts.txt
 echo "Scripts:"
 cat ./scripts.txt
+read
+
+# Wishing Goodluck
+echo;echo;echo;
+echo "Thank you for using this script. Good luck for the competition!"
+echo
+echo "==================================="
+echo "Copyright (c) 2024 Tanav Malhotra"
+echo "GNU General Public License v3.0"
+echo "==================================="
+echo
+exit 0

@@ -31,3 +31,14 @@ while true; do
     /sbin/pam_tally2 -u "$USER" --reset
     sleep 5
 done
+
+# Wishing Goodluck
+echo;echo;echo;
+echo "Thank you for using this script. Good luck for the competition!"
+echo
+echo "==================================="
+echo "Copyright (c) 2024 Tanav Malhotra"
+echo "GNU General Public License v3.0"
+echo "==================================="
+echo
+exit 0

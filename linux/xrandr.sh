@@ -16,21 +16,20 @@
 # IN THE SCRIPT.
 # =========================================================
 
-# Check for sudo access
-echo "Checking for \`sudo\` access (which may request your password)..."
-if [[ $EUID -ne 0 ]]; then
-    echo "\`sudo\` access is required. Please run \`sudo !!\`"
-    exit 1
+ESOLUTION="1920x1080"
+OUTPUT=$(xrandr | grep " connected" | awk '{ print $1 }')
+AVAILABLE_RESOLUTIONS=$(xrandr | grep "$OUTPUT" -A 10 | grep -oP "\d+x\d+")
+if echo "$AVAILABLE_RESOLUTIONS" | grep -q "$RESOLUTION"; then
+    echo "Resolution $RESOLUTION is already available. Applying it..."
+    xrandr -s $RESOLUTION
 else
-    echo "\`sudo\` access confirmed. Proceeding..."
-    sleep 1
+    echo "Resolution $RESOLUTION is not available. Adding it now..."
+    MODELINE=$(cvt 1920 1080 60 | grep -oP 'Modeline.*')
+    xrandr --newmode $MODELINE
+    xrandr --addmode "$OUTPUT" "$RESOLUTION"
+    echo "Applying resolution $RESOLUTION..."
+    xrandr -s $RESOLUTION
 fi
-
-# Finding Backdoors
-echo "Searching for backdoors..."
-#TODO
-
-echo "Finished searching for backdoors..."
 
 # Wishing Goodluck
 echo;echo;echo;

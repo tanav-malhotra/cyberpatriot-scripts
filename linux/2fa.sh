@@ -60,5 +60,15 @@ fi
 
 # Restart SSH service to apply changes
 systemctl restart sshd
-
 echo "UFW is configured and Google Authenticator setup is complete."
+
+# Wishing Goodluck
+echo;echo;echo;
+echo "Thank you for using this script. Good luck for the competition!"
+echo
+echo "==================================="
+echo "Copyright (c) 2024 Tanav Malhotra"
+echo "GNU General Public License v3.0"
+echo "==================================="
+echo
+exit 0
