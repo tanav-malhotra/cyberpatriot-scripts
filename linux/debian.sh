@@ -116,12 +116,11 @@ if [[ $confirmation =~ ^[Nn].* ]]; then
 fi
 
 # Installing nala
-log "Installing nala..."
-echo "deb http://deb.volian.org/volian/ scar main" | tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
-apt update -y
-apt install nala
-apt install nala-legacy
-
+# log "Installing nala..."
+# echo "deb http://deb.volian.org/volian/ scar main" | tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list; wget -qO - https://deb.volian.org/volian/scar.key | tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg
+# apt update -y
+# apt install nala
+# apt install nala-legacy
 # Installing bash completion
 # log "Installing bash completion..."
 # nala --install-completion bash
