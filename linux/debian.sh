@@ -69,20 +69,38 @@ else
     sleep 1
 fi
 
+debug=0
 # Check for debug mode
 if [ $# -gt 0 ]; then
-    if [ "$1" == "--debug" ]; then
-        debug=1
-        log "Debug mode is enabled."
-        log "Current Directory: $starting_dir"
-        log "Start: $start_time"
-        log "Distro ID: $distro_id"
-        log "Distro Codename: $distro_codename"
-        sleep 5
-    else
-        log_info "Start: $start_time"
-        sleep 1
-    fi
+    # Loop over all arguments
+    for arg in "$@"; do
+        case "$arg" in
+            --debug)
+                debug=1
+                log "Debug mode enabled."
+                log "Current Directory: $starting_dir"
+                log "Start: $start_time"
+                log "Distro ID: $distro_id"
+                log "Distro Codename: $distro_codename"
+                sleep 5
+            ;;
+            --license)
+            curl https://www.gnu.org/licenses/gpl-3.0.txt | less
+            ;;
+            --help)
+            echo "Usage: $0 [OPTIONS]"
+            echo "Options:"
+            echo "  --debug      Enable debug mode"
+            echo "  --license    Show license information"
+            echo "  --help       Display this help message"
+            exit 0
+            ;;
+            *)
+            echo "Unknown option: $arg"
+            exit 1
+            ;;
+        esac
+    done
 fi
 clear
 banner

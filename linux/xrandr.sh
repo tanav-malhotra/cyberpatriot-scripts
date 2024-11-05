@@ -16,7 +16,7 @@
 # IN THE SCRIPT.
 # =========================================================
 
-ESOLUTION="1920x1080"
+RESOLUTION="1920x1080"
 OUTPUT=$(xrandr | grep " connected" | awk '{ print $1 }')
 AVAILABLE_RESOLUTIONS=$(xrandr | grep "$OUTPUT" -A 10 | grep -oP "\d+x\d+")
 if echo "$AVAILABLE_RESOLUTIONS" | grep -q "$RESOLUTION"; then
