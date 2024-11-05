@@ -104,6 +104,8 @@ if [ $# -gt 0 ]; then
             echo "  --help       Display this help message"
             echo "  --license    Show license information"
             echo "  --version    Show version information"
+            echo
+            echo "Description: A sophisticated script for Debian-based Linux systems, designed for CyberPatriot competitions."
             exit 0
             ;;
             *)
