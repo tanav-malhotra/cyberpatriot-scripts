@@ -98,7 +98,7 @@ sleep 1
 read -p "Do you want to make all of the bash scripts in this directory executable? (Y/n): " $confirmation
 ring_bell
 if [[ $confirmation =~ ^[Nn].* ]]; then
-    log "Make sure you manually run \`chmod +x\` on any script you want to run."
+    log "Make sure you manually run \`sudo chmod +x\` on any script you want to run."
 else
     chmod +x *.sh
 fi
