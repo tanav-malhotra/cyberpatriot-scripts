@@ -28,6 +28,8 @@ distro_codename=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d'=' -f2 | tr
 # Make log file
 touch "$log_file"
 # echo > "$log_file"
+# Redirect both stdout and stderr to tee
+exec > >(tee -a "$log_file") 2>&1
 
 # Functions
 banner() {
@@ -46,7 +48,7 @@ EOF
     echo
 }
 log() {
-    echo $@ >> "$log_file"
+    # echo $@ >> "$log_file"
     echo $@
 }
 log_info() { # does not print out to terminal
@@ -409,7 +411,6 @@ chmod 644 /etc/hosts.allow
 chmod 440 /etc/sudoers
 chmod 640 /etc/shadow
 chown root:root /etc/shadow
-
 # Setting critical file and directory permissions
 log "Setting critical file and directory permissions and ownership..."
 # Set ownership and permissions for critical directories
@@ -451,14 +452,12 @@ chmod 644 /etc/ssh/ssh_host_*_key.pub
 # Set ownership and permissions for the root user's home directory
 chown root:root /root
 chmod 700 /root
-
 # Cron settings
 log "Changing cron settings..."
 cp /etc/rc.local /etc/rc.local.bak
 cp /etc/cron.deny /etc/cron.deny.bak
 echo "exit 0" > /etc/rc.local
 echo "ALL" >> /etc/cron.deny
-
 # Kernel Hardening
 log "Kernel Hardening..."
 cat <<EOL > "/etc/sysctl.conf"
