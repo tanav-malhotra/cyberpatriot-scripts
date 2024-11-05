@@ -97,8 +97,8 @@ if [ $# -gt 0 ]; then
             echo "Usage: $0 [OPTIONS]"
             echo "Options:"
             echo "  --debug      Enable debug mode"
-            echo "  --license    Show license information"
             echo "  --help       Display this help message"
+            echo "  --license    Show license information"
             echo "  --version    Show version information"
             exit 0
             ;;
