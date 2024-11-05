@@ -304,11 +304,17 @@ apps=("wireshark" "telnet" "vsftpd" "proftpd" "snmpd" "mysql-server" "mysql-clie
 for app in "${apps[@]}"; do
     log "Purging $app..."
     apt-get remove -y "$app"
+    if snap list "$app" &>/dev/null; then
+        snap remove "$app"
+    fi
 done
 hacking_tools=("john" "nmap" "vuze" "frostwire" "kismet" "freeciv" "minetest" "minetest-server" "medusa" "hydra" "truecrack" "ophcrack" "nikto" "cryptcat" "nc" "netcat" "tightvncserver" "x11vnc" "nfs" "xinetd" "samba" "postgresql" "sftpd" "vsftpd" "apache" "apache2" "ftp" "mysql" "php" "snmp" "pop3" "icmp" "sendmail" "dovecot" "bind9" "nginx" "telnet" "rlogind" "rshd" "rcmd" "rexecd" "rbootd" "rquotad" "rstatd" "rusersd" "rwalld" "rexd" "fingerd" "tftpd")
 for tool in "${hacking_tools[@]}"; do
     log "Purging $tool..."
     apt-get remove -y "$tool"
+    if snap list "$tool" &>/dev/null; then
+        snap remove "$tool"
+    fi
 done
 apt autoremove -y #--purge
 
@@ -319,6 +325,9 @@ games=("gnome-games" "iagno" "lightsoff" "four-in-a-row" "gnome-robots" "pegsoli
 for game in "${games[@]}"; do
     log "Purging $game..."
     apt-get remove -y "$game"
+    if snap list "$game" &>/dev/null; then
+        snap remove "$game"
+    fi
 done
 apt autoremove -y #--purge
 
