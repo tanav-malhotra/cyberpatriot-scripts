@@ -135,7 +135,7 @@ apt update -y && apt full-upgrade -y
 #         nala upgrade -y --install-recommends --install-suggests
 #     fi
 # fi
-# apt autoremove -y --purge
+apt autoremove -y #--purge
 
 # Installing Software
 log "Installing software..."
@@ -144,7 +144,7 @@ for app in "${apps[@]}"; do
     log "Installing $app..."
     apt-get install -y "$app"
 done
-apt autoremove -y --purge
+apt autoremove -y #--purge
 
 # Checking for updates daily
 log "Checking for updates daily..."
@@ -320,14 +320,14 @@ log "Removing prohibited software and hacking tools..."
 apps=("*wireshark*" "*telnet*" "*vsftpd*" "*proftpd*" "*snmpd*" "*mysql*" "*postgresql*" "*xrdp*" "*tightvncserver*" ".*samba.*" ".*smb.*" "*nmap*" "*zenmap*" "*apache2*" "*nginx*" "*lighttpd*" "*tcpdump*" "*netcat-traditional*" "*nikto*" "*ophcrack*" "*ettercap*" "*deluge*" "*dovecot*" "*netcat*" "*john*" "*vuze*" "*frostwire*" "*aircrack*" "*metasploit*" "*nessus*" "*snort*" "*kismet*" "*nikto*" "*yersinia*" "*burp-suite*" "*THCHydra*" "*oclhashcat*" "*maltego*" "*oswapzed*" "*cain*" "*angryipscanner*" "*ipscan*" "*ettercap*" "*hydra*" "*medusa*" "*xinetd*" "*openbsd-inetd*" "*inetutils-inetd*" "*avahi-daemon*")
 for app in "${apps[@]}"; do
     log "Purging $app..."
-    apt-get purge -y "$app" #TODO: try removing instead of purging
+    apt-get remove -y "$app"
 done
 hacking_tools=("john" "nmap" "vuze" "frostwire" "kismet" "freeciv" "minetest" "minetest-server" "medusa" "hydra" "truecrack" "ophcrack" "nikto" "cryptcat" "nc" "netcat" "tightvncserver" "x11vnc" "nfs" "xinetd" "samba" "postgresql" "sftpd" "vsftpd" "apache" "apache2" "ftp" "mysql" "php" "snmp" "pop3" "icmp" "sendmail" "dovecot" "bind9" "nginx" "telnet" "rlogind" "rshd" "rcmd" "rexecd" "rbootd" "rquotad" "rstatd" "rusersd" "rwalld" "rexd" "fingerd" "tftpd")
 for tool in "${hacking_tools[@]}"; do
     log "Purging $tool..."
-    apt-get purge -y "$tool" #TODO: try removing instead of purging
+    apt-get remove -y "$tool"
 done
-apt autoremove -y --purge
+apt autoremove -y #--purge
 
 # Removing Games
 log "Removing games..."
@@ -335,9 +335,9 @@ games=("gnome-games" "iagno" "lightsoff" "four-in-a-row" "gnome-robots" "pegsoli
 # games=$(dpkg -l | grep "game" | awk '{print $2}')
 for game in "${games[@]}"; do
     log "Purging $game..."
-    apt-get purge -y "$game" #TODO: try removing instead of purging
+    apt-get remove -y "$game"
 done
-apt autoremove -y --purge
+apt autoremove -y #--purge
 
 # Setting up fail2ban
 log "Ban IPs with too many incorrect login attempts..."
@@ -698,8 +698,8 @@ $final_min=$(( $duration / 60 ))
 $final_sec=$(( $duration % 60 ))
 
 # Running one last apt autoremove
-log "Running \`apt autoremove -y --purge\`..."
-apt autoremove -y --purge
+log "Running \`apt autoremove -y\`..."
+apt autoremove -y #--purge
 
 # Final Notes
 log "Finished! in $final_min minutes and $final_sec seconds..."
