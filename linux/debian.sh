@@ -80,16 +80,16 @@ if [ $# -gt 0 ]; then
     for arg in "$@"; do
         case "$arg" in
             --help)
-            help=1
+                help=1
             ;;
             --version)
-            version_arg=1
+                version_arg=1
             ;;
             --license)
-            license=1
+                license=1
             ;;
             --debug)
-            debug=1
+                debug=1
             ;;
             *)
             echo "Unknown option: $arg"
