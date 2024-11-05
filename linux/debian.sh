@@ -666,13 +666,17 @@ sed -i '/^autologin-user/s/^/#/' /etc/lightdm/lightdm.conf
 sed -i 's/AutomaticLoginEnable=True/AutomaticLoginEnable=False/' /etc/gdm/custom.conf
 sed -i 's/auth sufficient pam_succeed_if.so user ingroup nopasswdlogin//' /etc/pam.d/gdm-password
 mawk -F: '$1 == "sudo"' /etc/group > ./admins.txt
-log "Admins (saved to \`./admins.txt\`):"
+log "Admins (saved to \`./admins.txt\`)..."
 mawk -F: '$3 > 999 && $3 < 65534 {print $1}' /etc/passwd > ./users.txt
-log "Users (saved to \`./users.txt\`):"
+log "Users (saved to \`./users.txt\`)..."
 mawk -F: '$2 == ""' /etc/passwd > ./no_passwd.txt
-log "Empty Passwords (saved to \`./no_passwd.txt\`):"
+log "Empty Passwords (saved to \`./no_passwd.txt\`)..."
 mawk -F: '$3 == 0 && $1 != "root"' /etc/passwd > ./non-root_uid0.txt
-log "Non-root UID 0 users (saved to \`./non-root_uid0.txt\`):"
+log "Non-root UID 0 users (saved to \`./non-root_uid0.txt\`)..."
+# Restarting display manager
+log "Restarting display manager..."
+dm=$(cat /etc/X11/default-display-manager | xargs basename)
+systemctl restart "$dm"
 # Reading files for authorized users and admins
 log "Reading users.txt, admins.txt, addusers.txt, and addgroups.txt..."
 #TODO: user management
@@ -698,6 +702,9 @@ log "Password for admin root changed."
 # Saving list of installed software
 apt list --installed > ./software_installed.txt
 
+# Saving list of services
+service --status-all > ./enabled_services.txt
+
 # Calculate time
 $end_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
 $end_secs=$(date +%s)
@@ -717,6 +724,8 @@ log "Final Notes:"
 log
 log "Please manually check the world-writable files and the no-user files."
 log "Please run \`sudo restart lightdm\`"
+log "Please make sure only the required services are enabled."
+service --status-all
 log "Make sure updates are installed daily."
 software-properties-gtk &
 log
