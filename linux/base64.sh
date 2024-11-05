@@ -5,7 +5,7 @@
 # Copyright (c) 2024 Tanav Malhotra
 #
 # This script is licensed under the GNU General Public License v3.0.
-# You may obtain a copy of the License at:
+# You may obtain a copy of the license at:
 #   https://www.gnu.org/licenses/gpl-3.0.html
 #
 # The script is provided "as-is", without any warranty of any kind,
@@ -13,8 +13,8 @@
 # of merchantability and fitness for a particular purpose. See the GPL-3.0
 # for full details.
 #
-# You can also view the license by running the
-# debian.sh script with the '--license' option.
+# You can also view the license by running the `debian.sh` script
+# with the '--license' option.
 # ====================================================================================
 
 # Decode Base64 encoded string

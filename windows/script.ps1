@@ -1,19 +1,20 @@
-# ================================================================================
+# ====================================================================================
 # Authors: Tanav Malhotra, Bryan Lochan 
 # License: GNU General Public License v3.0
 # Copyright (c) 2024 Tanav Malhotra, Bryan Lochan 
 #
-# DISCLAIMER:
-# THE SCRIPT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
-# KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-# PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-# CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR
-# IN CONNECTION WITH THE SCRIPT OR THE USE OR OTHER DEALINGS
-# IN THE SCRIPT.
-# ================================================================================
+# This script is licensed under the GNU General Public License v3.0.
+# You may obtain a copy of the license at:
+#   https://www.gnu.org/licenses/gpl-3.0.html
+#
+# The script is provided "as-is", without any warranty of any kind,
+# express or implied, including but not limited to the implied warranties
+# of merchantability and fitness for a particular purpose. See the GPL-3.0
+# for full details.
+#
+# You can also view the license by running this script
+# with the '--license' option.
+# ====================================================================================
 
 # Check for administrator access
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
