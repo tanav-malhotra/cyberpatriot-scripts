@@ -79,21 +79,25 @@ if [ $# -gt 0 ]; then
     for arg in "$@"; do
         case "$arg" in
             --debug)
-                debug=1
-                log "Debug mode enabled."
-                log "Current Directory: $starting_dir"
-                log "Start: $start_time"
-                log "Distro ID: $distro_id"
-                log "Distro Codename: $distro_codename"
-                sleep 5
+            debug=1
+            log "Debug mode enabled."
+            log "Current Directory: $starting_dir"
+            log "Start: $start_time"
+            log "Distro ID: $distro_id"
+            log "Distro Codename: $distro_codename"
+            sleep 5
             ;;
             --license)
+            license=1
             curl https://www.gnu.org/licenses/gpl-3.0.txt | less
+            exit 0
             ;;
             --version)
             echo "$0 $version"
+            exit 0
             ;;
             --help)
+            help=1
             echo "Usage: $0 [OPTIONS]"
             echo "Options:"
             echo "  --debug      Enable debug mode"
@@ -109,6 +113,7 @@ if [ $# -gt 0 ]; then
         esac
     done
 fi
+
 clear
 banner
 log "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
