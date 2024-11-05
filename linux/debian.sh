@@ -122,6 +122,8 @@ elif [[ $debug -eq 1 ]]; then
     log "Distro ID: $distro_id"
     log "Distro Codename: $distro_codename"
     sleep 5
+else
+    log_info "Start time: $start_time" # log start time
 fi
 
 clear
@@ -729,7 +731,6 @@ service --status-all > ./enabled_services.txt
 # Calculate time
 $end_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
 $end_secs=$(date +%s.%N)
-log_info "End time: " $end_time
 $duration=$(echo "$end_secs - $start_secs" | bc)
 $final_min=$(echo "$duration / 60" | bc)
 $final_sec=$(echo "$duration % 60" | bc)
@@ -742,7 +743,6 @@ apt autoremove -y #--purge
 log "Finished! in $final_min minutes and $final_sec seconds..."
 log
 log "Final Notes:"
-log
 log "Please manually check the world-writable files and the no-user files."
 log "Please make sure only the required services are enabled."
 service --status-all
@@ -772,6 +772,7 @@ log
 
 read -p "Reboot the system? (y/N): " reboot_choice
 ring_bell
+log_info "End time: " $end_time # log end time
 if [[ $reboot_choice =~ ^[Yy].* ]]; then
     reboot
 else
