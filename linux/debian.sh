@@ -723,7 +723,6 @@ log
 log "Final Notes:"
 log
 log "Please manually check the world-writable files and the no-user files."
-log "Please run \`sudo restart lightdm\`"
 log "Please make sure only the required services are enabled."
 service --status-all
 log "Make sure updates are installed daily."
