@@ -1,14 +1,9 @@
 # Scripts for CyberPatriot
 
 ## Disclaimer:
-> THE SCRIPTS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
-> KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-> WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-> PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-> DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-> CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR
-> IN CONNECTION WITH THE SCRIPTS OR THE USE OR OTHER DEALINGS
-> IN THE SCRIPTS.
+> The scripts are provided "as-is", without any warranty of any kind,
+> express or implied, including but not limited to the implied warranties
+> of merchantability and fitness for a particular purpose. See the GPL-3.0
+> for full details.
 >
-> The scripts are licensed under the GNU General Public License v3.0 (GPL-3.0). You can freely use, modify, and distribute them under the terms of the GPL-3.0. For more details, please see the LICENSE file.
+> The scripts are licensed under the GNU General Public License v3.0 (GPL-3.0). You are free to use, modify, and distribute them under the terms of the GPL-3.0. For more details, please refer to the [LICENSE](./LICENSE) file.
