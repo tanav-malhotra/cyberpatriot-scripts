@@ -73,40 +73,23 @@ fi
 debug=0
 help=0
 license=0
+version_arg=0
 # Check for debug mode
 if [ $# -gt 0 ]; then
     # Loop over all arguments
     for arg in "$@"; do
         case "$arg" in
-            --debug)
-            debug=1
-            log "Debug mode enabled."
-            log "Current Directory: $starting_dir"
-            log "Start: $start_time"
-            log "Distro ID: $distro_id"
-            log "Distro Codename: $distro_codename"
-            sleep 5
+            --help)
+            help=1
+            ;;
+            --version)
+            version_arg=1
             ;;
             --license)
             license=1
-            curl https://www.gnu.org/licenses/gpl-3.0.txt | less
-            exit 0
             ;;
-            --version)
-            echo "$0 $version"
-            exit 0
-            ;;
-            --help)
-            help=1
-            echo "Usage: $0 [OPTIONS]"
-            echo "Options:"
-            echo "  --debug      Enable debug mode"
-            echo "  --help       Display this help message"
-            echo "  --license    Show license information"
-            echo "  --version    Show version information"
-            echo ""
-            echo "Description: A sophisticated script for Debian-based Linux systems, designed for CyberPatriot competitions."
-            exit 0
+            --debug)
+            debug=1
             ;;
             *)
             echo "Unknown option: $arg"
@@ -114,6 +97,31 @@ if [ $# -gt 0 ]; then
             ;;
         esac
     done
+fi
+
+if [[ $help -eq 1 ]]; then
+    echo "Usage: $0 [OPTIONS]"
+    echo "Options:"
+    echo "  --debug      Enable debug mode"
+    echo "  --help       Display this help message"
+    echo "  --license    Show license information"
+    echo "  --version    Show version information"
+    echo ""
+    echo "Description: A sophisticated script for Debian-based Linux systems, designed for CyberPatriot competitions."
+    exit 0
+elif [[ $version_arg -eq 1 ]]; then
+    echo "$0 $version"
+    exit 0
+elif [[ $license -eq 1 ]]; then
+    curl https://www.gnu.org/licenses/gpl-3.0.txt | less
+    exit 0
+elif [[ $debug -eq 1 ]]; then
+    log "Debug mode enabled."
+    log "Current Directory: $starting_dir"
+    log "Start: $start_time"
+    log "Distro ID: $distro_id"
+    log "Distro Codename: $distro_codename"
+    sleep 5
 fi
 
 clear
