@@ -26,7 +26,7 @@ distro_id=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 distro_codename=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 # Make log file
 touch "$log_file"
-echo > "$log_file"
+# echo > "$log_file"
 
 # Functions
 banner() {
