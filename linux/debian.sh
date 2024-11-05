@@ -71,6 +71,8 @@ else
 fi
 
 debug=0
+help=0
+license=0
 # Check for debug mode
 if [ $# -gt 0 ]; then
     # Loop over all arguments
@@ -97,6 +99,7 @@ if [ $# -gt 0 ]; then
             echo "  --debug      Enable debug mode"
             echo "  --license    Show license information"
             echo "  --help       Display this help message"
+            echo "  --version    Show version information"
             exit 0
             ;;
             *)
