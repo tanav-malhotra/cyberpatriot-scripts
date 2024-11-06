@@ -699,10 +699,6 @@ mawk -F: '$2 == ""' /etc/passwd > ./no_passwd.txt
 log "Empty Passwords (saved to \`./no_passwd.txt\`)..."
 mawk -F: '$3 == 0 && $1 != "root"' /etc/passwd > ./non-root_uid0.txt
 log "Non-root UID 0 users (saved to \`./non-root_uid0.txt\`)..."
-# Restarting display manager
-log "Restarting display manager..."
-dm=$(cat /etc/X11/default-display-manager | xargs basename)
-systemctl restart "$dm"
 # Reading files for authorized users and admins
 log "Reading users.txt, admins.txt, addusers.txt, and addgroups.txt..."
 #TODO: user management
@@ -773,6 +769,18 @@ log "GNU General Public License v3.0"
 log "==================================="
 log
 
+read -p "Restart the display manager? (y/N): " dm_choice
+ring_bell
+if [[ $dm_choice =~ ^[Yy].* ]]; then
+    # Restarting display manager
+    log "Restarting display manager..."
+    dm=$(cat /etc/X11/default-display-manager | xargs basename)
+    systemctl restart "$dm"
+else
+    dm=$(cat /etc/X11/default-display-manager | xargs basename)
+    log "Remember to manually run `sudo systemctl restart $dm` when you're ready."
+fi
+
 read -p "Reboot the system? (y/N): " reboot_choice
 ring_bell
 if [[ $reboot_choice =~ ^[Yy].* ]]; then
@@ -780,7 +788,7 @@ if [[ $reboot_choice =~ ^[Yy].* ]]; then
     log_info "Rebooting..."
     reboot
 else
-    log "Remember to manually reboot the system later."
+    log "Remember to manually reboot the system when you're ready."
 fi
 log_info "End time: " $end_time # log end time
 
