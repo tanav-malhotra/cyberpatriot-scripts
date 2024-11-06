@@ -22,6 +22,7 @@ version="v1.4.2"
 start_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
 start_secs=$(date +%s.%N)
 log_file="./linux_script.log"
+output_file="./linux_script_output.txt"
 starting_dir=$(pwd)
 distro_id=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 distro_codename=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
@@ -29,7 +30,7 @@ distro_codename=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d'=' -f2 | tr
 touch "$log_file"
 # echo > "$log_file"
 # Redirect both stdout and stderr to tee
-exec > >(tee -a "$log_file") 2>&1
+exec > >(tee -a "$output_file") 2>&1
 
 # Functions
 banner() {
@@ -48,11 +49,12 @@ EOF
     echo
 }
 log() {
-    # echo $@ >> "$log_file"
+    echo $@ >> "$log_file"
     echo $@
 }
 log_info() { # does not print out to terminal
     echo $@ >> "$log_file"
+    echo $@ >> "$output_file"
 }
 ring_bell() {
     # for i in {1..10}; do
