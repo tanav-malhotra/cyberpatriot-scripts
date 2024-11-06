@@ -29,8 +29,6 @@ distro_codename=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d'=' -f2 | tr
 # Make log file
 touch "$log_file"
 # echo > "$log_file"
-# Redirect both stdout and stderr to tee
-exec > >(tee -a "$output_file") 2>&1
 
 # Functions
 banner() {
@@ -65,7 +63,7 @@ ring_bell() {
 }
 
 # Check for sudo access
-log_info "Checking for \`sudo\` access (which may request your password)..."
+log_info "Checking for \`sudo\` access..."
 if [[ $EUID -ne 0 ]]; then
     log "\`sudo\` access is required. Please run \`sudo !!\`"
     exit 1
@@ -120,6 +118,10 @@ elif [[ $license -eq 1 ]]; then
     curl https://www.gnu.org/licenses/gpl-3.0.txt | less
     exit 0
 elif [[ $debug -eq 1 ]]; then
+    # Redirect both stdout and stderr to tee
+    exec > >(tee -a "$output_file") 2>&1
+    
+    # Display debug information
     log "Debug mode enabled."
     log "Current Directory: $starting_dir"
     log "Start: $start_time"
