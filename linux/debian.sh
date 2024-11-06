@@ -126,7 +126,6 @@ elif [[ $debug -eq 1 ]]; then
     sleep 5
 else
     log_info "Start time: $start_time" # log start time
-    sleep 2
 fi
 
 clear
