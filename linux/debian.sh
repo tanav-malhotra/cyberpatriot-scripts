@@ -30,9 +30,6 @@ debug=0
 help=0
 license=0
 version_arg=0
-# Make log file
-touch "$log_file"
-# echo > "$log_file"
 
 # Functions
 banner() {
@@ -69,12 +66,12 @@ ring_bell() {
 }
 
 # Check for sudo access
-log_info "Checking for \`sudo\` access..."
+echo "Checking for \`sudo\` access..."
 if [[ $EUID -ne 0 ]]; then
-    log "\`sudo\` access is required. Please run \`sudo !!\`"
+    echo "\`sudo\` access is required. Please run \`sudo !!\`"
     exit 1
 else
-    log "\`sudo\` access confirmed. Proceeding..."
+    echo "\`sudo\` access confirmed. Proceeding..."
     sleep 1
 fi
 
@@ -120,6 +117,7 @@ elif [[ $license -eq 1 ]]; then
     curl https://www.gnu.org/licenses/gpl-3.0.txt | less
     exit 0
 elif [[ $debug -eq 1 ]]; then
+    touch "$log_file"
     touch $output_file
     # Redirect both stdout and stderr to tee
     exec > >(tee -a "$output_file") 2>&1
@@ -132,6 +130,7 @@ elif [[ $debug -eq 1 ]]; then
     log "Distro Codename: $distro_codename"
     sleep 5
 else
+    touch "$log_file"
     log_info "Start time: $start_time" # log start time
 fi
 
