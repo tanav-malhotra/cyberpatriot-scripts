@@ -56,7 +56,7 @@ log() {
 }
 log_info() { # does not print out to terminal
     echo $@ >> "$log_file"
-    if [[ $debug -eq 1]]; then
+    if [[ $debug -eq 1 ]]; then
         echo $@ >> "$output_file"
     fi
 }
@@ -346,8 +346,8 @@ log "Public key added to $AUTHORIZED_KEYS."
 
 # Removing Software
 apt list --installed > ./software_that_was_installed.txt
-log "Removing prohibited software and hacking tools..."
-apps=("wireshark" "telnet" "vsftpd" "proftpd" "snmpd" "mysql-server" "mysql-client" "postgresql" "xrdp" "tightvncserver" "samba" "nmap" "apache2" "*nginx*" "lighttpd" "tcpdump" "netcat-traditional" "nikto" "ophcrack" "ettercap*" "deluge" "dovecot-core" "*netcat*" "john" "vuze" "frostwire" "aircrack-ng" "metasploit-framework" "nessus" "snort" "kismet" "yersinia" "burp-suite" "burpsuite" "hydra" "oclhashcat" "hashcat" "maltego" "zaproxy" "cain" "*angryip*" "ipscan" "medusa" "xinetd" "openbsd-inetd" "inetutils-inetd" "avahi-daemon" "tcpd")
+log "Removing prohibited software and hacking tools (and making sure `snapd` was removed)..."
+apps=("wireshark" "telnet" "vsftpd" "proftpd" "snmpd" "mysql-server" "mysql-client" "postgresql" "xrdp" "tightvncserver" "samba" "nmap" "apache2" "*nginx*" "lighttpd" "tcpdump" "netcat-traditional" "nikto" "ophcrack" "ettercap*" "deluge" "dovecot-core" "*netcat*" "john" "vuze" "frostwire" "aircrack-ng" "metasploit-framework" "nessus" "snort" "kismet" "yersinia" "burp-suite" "burpsuite" "hydra" "oclhashcat" "hashcat" "maltego" "zaproxy" "cain" "*angryip*" "ipscan" "medusa" "xinetd" "openbsd-inetd" "inetutils-inetd" "avahi-daemon" "tcpd" "snapd")
 for app in "${apps[@]}"; do
     log "Removing $app..."
     apt-get remove -y "$app"
