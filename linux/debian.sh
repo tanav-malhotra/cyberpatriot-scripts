@@ -551,8 +551,8 @@ max_log_file_action = keep_logs
 EOL
 auditctl -e 1
 systemctl enable auditd
-systemctl restart auditd
 systemctl start auditd
+systemctl restart auditd
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -0002 # Auditing no world writable files
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nouser # Auditing no unowned files/directories
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nogroup # Auditing no ungrouped files/directories
