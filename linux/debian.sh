@@ -768,6 +768,7 @@ log "Copyright (c) 2024 Tanav Malhotra"
 log "GNU General Public License v3.0"
 log "==================================="
 log
+log_info "End time: " $end_time # log end time
 
 read -p "Restart the display manager? (y/N): " dm_choice
 ring_bell
@@ -784,12 +785,10 @@ fi
 read -p "Reboot the system? (y/N): " reboot_choice
 ring_bell
 if [[ $reboot_choice =~ ^[Yy].* ]]; then
-    log_info "End time: " $end_time # log end time
     log "Rebooting..."
     reboot
 else
     log "Remember to manually reboot the system when you're ready."
 fi
-log_info "End time: " $end_time # log end time
 
 exit 0
