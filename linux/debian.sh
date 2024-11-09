@@ -641,7 +641,6 @@ fi
 
 # Preventing IP Spoofing
 log "Preventing IP Spoofing in /etc/host.conf..."
-log "error: no code for preventing IP spoofing written..."
 #TODO: fix IP spoofing
 
 # User Management
