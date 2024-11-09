@@ -770,18 +770,6 @@ log "==================================="
 log
 log_info "End time: " $end_time # log end time
 
-read -p "Restart the display manager? (y/N): " dm_choice
-ring_bell
-if [[ $dm_choice =~ ^[Yy].* ]]; then
-    # Restarting display manager
-    log "Restarting display manager..."
-    dm=$(cat /etc/X11/default-display-manager | xargs basename)
-    systemctl restart "$dm"
-else
-    dm=$(cat /etc/X11/default-display-manager | xargs basename)
-    log "Remember to manually run `sudo systemctl restart $dm` when you're ready."
-fi
-
 read -p "Reboot the system? (y/N): " reboot_choice
 ring_bell
 if [[ $reboot_choice =~ ^[Yy].* ]]; then
