@@ -215,11 +215,6 @@ ufw logging high
 log "Enabling syn cookie protection..."
 sysctl -n net.ipv4.tcp_syncookies
 
-# Disabling IPv6
-log "Disabling IPv6..."
-cp /etc/sysctl.conf /etc/sysctl.conf.bak
-echo "net.ipv6.conf.all.disable_ipv6 = 1" | tee -a /etc/sysctl.conf
-
 # Disable IP Forwarding
 log "Disabling IP Forwarding..."
 cp /proc/sys/net/ipv4/ip_forward /proc/sys/net/ipv4/ip_forward.bak
@@ -465,6 +460,7 @@ echo "exit 0" > /etc/rc.local
 echo "ALL" >> /etc/cron.deny
 # Kernel Hardening
 log "Kernel Hardening..."
+cp /etc/sysctl.conf /etc/sysctl.conf.bak
 cat <<EOL > "/etc/sysctl.conf"
 fs.file-max = 65535
 fs.protected_fifos = 2
