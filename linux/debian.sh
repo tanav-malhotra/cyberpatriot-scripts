@@ -572,6 +572,20 @@ systemctl enable apparmor
 systemctl start apparmor
 systemctl restart apparmor
 
+# Removing all bash aliases
+log "Removing all bash aliases..."
+find / -type f -name "*.bashrc" 2>/dev/null | while read -r bashrc_file; do
+    if [ -f "$bashrc_file" ]; then
+        cp "$bashrc_file" "$bashrc_file.bak"
+        sed -i '/alias /d' "$bashrc_file"
+        if ! diff "$bashrc_file" "$bashrc_file.bak" >/dev/null; then
+            echo "Aliases removed from $bashrc_file"
+        else
+            echo "No aliases found in $bashrc_file"
+        fi
+    fi
+done
+
 # Finding and saving open ports
 log "Finding and saving open ports to \`./open_ports.txt\`..."
 ss -ln > ./open_ports.txt
