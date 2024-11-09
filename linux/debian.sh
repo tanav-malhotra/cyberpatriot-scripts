@@ -17,6 +17,7 @@
 # with the '--license' option.
 # ====================================================================================
 
+##### IMPORTANT VARS #####
 unalias -a
 version="v1.5.1"
 start_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
@@ -31,7 +32,7 @@ help=0
 license=0
 version_arg=0
 
-# Functions
+##### FUNCTIONS #####
 banner() {
     cat << 'EOF'
  _____  _    _   _    ___     __
@@ -65,7 +66,7 @@ ring_bell() {
     echo -e "\a" &
 }
 
-# Check for sudo access
+##### CHECK FOR SUDO #####
 echo "Checking for \`sudo\` access..."
 if [[ $EUID -ne 0 ]]; then
     echo "\`sudo\` access is required. Please run \`sudo !!\`"
@@ -75,9 +76,8 @@ else
     sleep 1
 fi
 
-# Check for debug mode
+##### MANAGE ARGS #####
 if [ $# -gt 0 ]; then
-    # Loop over all arguments
     for arg in "$@"; do
         case "$arg" in
             --help)
@@ -99,7 +99,6 @@ if [ $# -gt 0 ]; then
         esac
     done
 fi
-
 if [[ $help -eq 1 ]]; then
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
@@ -134,6 +133,7 @@ else
     log_info "Start time: $start_time" # log start time
 fi
 
+##### START SCRIPT #####
 clear
 banner
 log "Created by Tanav Malhotra, Thomas A. Edison Career & Technical Education High School, New York City, NY, USA"
@@ -143,8 +143,7 @@ sleep 1
 log "Starting..."
 log;log;
 sleep 1
-
-# Confirming with user
+##### MAKE SURE USER IS READY TO RUN SCRIPT #####
 read -p "Do you want to make all of the bash scripts in this directory executable? (Y/n): " $confirmation
 ring_bell
 if [[ $confirmation =~ ^[Nn].* ]]; then
@@ -165,13 +164,13 @@ if [[ $confirmation =~ ^[Nn].* ]]; then
     exit 1
 fi
 
-# Updating system
+##### UPDATE #####
 log "Updating system..."
 apt purge -y snapd
 apt update -y && apt full-upgrade -y
 apt autoremove -y --purge
 
-# Setting language to English (US) and removing other languages
+##### LANGUAGE #####
 LANG_TO_KEEP="en_US.UTF-8"
 LOCALE_TO_KEEP="en"
 log "Setting language to $LANG_TO_KEEP and locale to $LOCALE_TO_KEEP..."
@@ -186,7 +185,7 @@ for locale in $(locale -a); do
 done
 dpkg-reconfigure locales
 
-# Installing Software
+##### SOFTWARE MANAGEMENT #####
 log "Installing software..."
 apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage")
 for app in "${apps[@]}"; do
@@ -194,6 +193,7 @@ for app in "${apps[@]}"; do
     apt-get install -y "$app"
 done
 apt autoremove -y --purge
+
 
 # Checking for updates daily
 log "Checking for updates daily..."
@@ -348,30 +348,6 @@ cat "$KEY_DIR/$KEY_NAME.pub" >> "$AUTHORIZED_KEYS"
 chmod 600 "$AUTHORIZED_KEYS"
 
 log "Public key added to $AUTHORIZED_KEYS."
-
-# Removing Software
-apt list --installed > ./software_that_was_installed.txt
-log "Removing prohibited software and hacking tools (and making sure \`snapd\` was removed)..."
-apps=("wireshark" "telnet" "vsftpd" "proftpd" "snmpd" "mysql-server" "mysql-client" "postgresql" "xrdp" "tightvncserver" "samba" "nmap" "php" "apache2*" "*nginx*" "lighttpd" "tcpdump" "netcat-traditional" "nikto" "ophcrack" "ettercap*" "deluge" "dovecot-core" "*netcat*" "john" "vuze" "frostwire" "aircrack-ng" "metasploit-framework" "nessus" "snort" "kismet" "yersinia" "burp-suite" "burpsuite" "hydra" "oclhashcat" "hashcat" "maltego" "zaproxy" "cain" "*angryip*" "ipscan" "medusa" "xinetd" "openbsd-inetd" "inetutils-inetd" "avahi-daemon" "tcpd" "snapd")
-for app in "${apps[@]}"; do
-    log "Removing $app..."
-    apt-get purge -y "$app"
-done
-hacking_tools=("john" "nmap" "vuze" "frostwire" "kismet" "freeciv" "minetest" "minetest-server" "medusa" "hydra" "truecrack" "ophcrack" "nikto" "cryptcat" "nc" "netcat" "tightvncserver" "x11vnc" "nfs" "xinetd" "samba" "postgresql" "sftpd" "vsftpd" "apache" "apache2" "ftp" "mysql" "php" "snmp" "pop3" "icmp" "sendmail" "dovecot" "bind9" "nginx" "telnet" "rlogind" "rshd" "rcmd" "rexecd" "rbootd" "rquotad" "rstatd" "rusersd" "rwalld" "rexd" "fingerd" "tftpd")
-for tool in "${hacking_tools[@]}"; do
-    log "Removing $tool..."
-    apt-get purge -y "$tool"
-done
-
-# Removing Games
-log "Removing games..."
-games=("gnome-games" "iagno" "lightsoff" "four-in-a-row" "gnome-robots" "pegsolitaire" "gnome-2048" "hitori" "gnome-klotski" "gnome-mines" "gnome-mahjongg" "gnome-sudoku" "quadrapassel" "swell-foop" "gnome-tetravex" "gnome-taquin" "aisleriot" "gnome-chess" "five-or-more" "gnome-nibbles" "tali" "freeciv" "wesnoth")
-# games=$(dpkg -l | grep "game" | awk '{print $2}')
-for game in "${games[@]}"; do
-    log "Removing $game..."
-    apt-get purge -y "$game"
-done
-apt autoremove -y --purge
 
 # Setting up fail2ban
 log "Ban IPs with too many incorrect login attempts..."
