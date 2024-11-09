@@ -321,6 +321,7 @@ if sshd -t; then
     log "SSH configuration is correct. Restarting SSH service..."
     if [[ -x "$(command -v systemctl)" ]]; then
         systemctl enable sshd
+        systemctl start sshd
         systemctl restart sshd
     elif [[ -x "$(command -v service)" ]]; then
         service sshd restart
