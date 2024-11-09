@@ -167,7 +167,7 @@ fi
 
 # Updating system
 log "Updating system..."
-apt purge snapd
+apt purge -y snapd
 apt update -y && apt full-upgrade -y
 apt autoremove -y --purge
 
