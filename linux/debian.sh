@@ -94,7 +94,6 @@ if [ $# -gt 0 ]; then
             ;;
             --debug)
                 debug=1
-                touch $output_file
             ;;
             *)
             echo "Unknown option: $arg"
@@ -121,6 +120,7 @@ elif [[ $license -eq 1 ]]; then
     curl https://www.gnu.org/licenses/gpl-3.0.txt | less
     exit 0
 elif [[ $debug -eq 1 ]]; then
+    touch $output_file
     # Redirect both stdout and stderr to tee
     exec > >(tee -a "$output_file") 2>&1
     
