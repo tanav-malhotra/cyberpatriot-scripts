@@ -758,6 +758,10 @@ final_sec=$(echo "$duration % 60" | bc)
 log "Running \`apt autoremove -y\`..."
 apt autoremove -y #--purge
 
+# Ensuring language is still set to US English
+log "Ensuring language is set to US English..."
+update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP
+
 # Final Notes
 log "Finished! in $final_min minutes and $final_sec seconds..."
 log
