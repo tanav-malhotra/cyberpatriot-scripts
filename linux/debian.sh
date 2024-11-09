@@ -155,21 +155,21 @@ fi
 read -p "Have all of the Forensics Questions been answered? (Y/n): " $confirmation
 ring_bell
 if [[ $confirmation =~ ^[Nn].* ]]; then
-    log "Please complete these first and only then rerun the script."
+    log "error: Please complete these first and only then rerun the script."
     exit 1
 fi
 read -p "Have you created the required admins.txt, users.txt, addusers.txt, & addgroups.txt files in the current directory? (Y/n): " $confirmation
 ring_bell
 if [[ $confirmation =~ ^[Nn].* ]]; then
-    log "Please create these files first by using the information from the README file located on your desktop."
+    log "error: Please create these files first by using the information from the README file located on your desktop."
     exit 1
 fi
 
 # Updating system
 log "Updating system..."
-apt remove snapd
+apt purge snapd
 apt update -y && apt full-upgrade -y
-apt autoremove -y #--purge
+apt autoremove -y --purge
 
 # Setting language to English (US) and removing other languages
 LANG_TO_KEEP="en_US.UTF-8"
@@ -188,12 +188,12 @@ dpkg-reconfigure locales
 
 # Installing Software
 log "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog")
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     apt-get install -y "$app"
 done
-apt autoremove -y #--purge
+apt autoremove -y --purge
 
 # Checking for updates daily
 log "Checking for updates daily..."
@@ -326,10 +326,10 @@ if sshd -t; then
     elif [[ -x "$(command -v service)" ]]; then
         service sshd restart
     else
-        log "Unable to restart sshd service."
+        log "error: Unable to restart sshd service."
     fi
 else
-    log "SSH configuration has errors. Please fix them before restarting."
+    log "error: SSH configuration has errors. Please fix them before restarting."
 fi
 
 log "Creating new SSH keys..."
@@ -347,7 +347,7 @@ ssh-keygen -t ed25519 -f "$KEY_DIR/$KEY_NAME" -N ""
 if [ $? -eq 0 ]; then
     log "Ed25519 SSH key generated successfully."
 else
-    log "Failed to generate SSH key."
+    log "error: Failed to generate SSH key."
 fi
 
 # Append the public key to authorized_keys
@@ -364,18 +364,12 @@ log "Removing prohibited software and hacking tools (and making sure `snapd` was
 apps=("wireshark" "telnet" "vsftpd" "proftpd" "snmpd" "mysql-server" "mysql-client" "postgresql" "xrdp" "tightvncserver" "samba" "nmap" "apache2" "*nginx*" "lighttpd" "tcpdump" "netcat-traditional" "nikto" "ophcrack" "ettercap*" "deluge" "dovecot-core" "*netcat*" "john" "vuze" "frostwire" "aircrack-ng" "metasploit-framework" "nessus" "snort" "kismet" "yersinia" "burp-suite" "burpsuite" "hydra" "oclhashcat" "hashcat" "maltego" "zaproxy" "cain" "*angryip*" "ipscan" "medusa" "xinetd" "openbsd-inetd" "inetutils-inetd" "avahi-daemon" "tcpd" "snapd")
 for app in "${apps[@]}"; do
     log "Removing $app..."
-    apt-get remove -y "$app"
-    if snap list "$app" &>/dev/null; then
-        snap remove "$app"
-    fi
+    apt-get purge -y "$app"
 done
 hacking_tools=("john" "nmap" "vuze" "frostwire" "kismet" "freeciv" "minetest" "minetest-server" "medusa" "hydra" "truecrack" "ophcrack" "nikto" "cryptcat" "nc" "netcat" "tightvncserver" "x11vnc" "nfs" "xinetd" "samba" "postgresql" "sftpd" "vsftpd" "apache" "apache2" "ftp" "mysql" "php" "snmp" "pop3" "icmp" "sendmail" "dovecot" "bind9" "nginx" "telnet" "rlogind" "rshd" "rcmd" "rexecd" "rbootd" "rquotad" "rstatd" "rusersd" "rwalld" "rexd" "fingerd" "tftpd")
 for tool in "${hacking_tools[@]}"; do
     log "Removing $tool..."
-    apt-get remove -y "$tool"
-    if snap list "$tool" &>/dev/null; then
-        snap remove "$tool"
-    fi
+    apt-get purge -y "$tool"
 done
 
 # Removing Games
@@ -384,12 +378,9 @@ games=("gnome-games" "iagno" "lightsoff" "four-in-a-row" "gnome-robots" "pegsoli
 # games=$(dpkg -l | grep "game" | awk '{print $2}')
 for game in "${games[@]}"; do
     log "Removing $game..."
-    apt-get remove -y "$game"
-    if snap list "$game" &>/dev/null; then
-        snap remove "$game"
-    fi
+    apt-get purge -y "$game"
 done
-apt autoremove -y #--purge
+apt autoremove -y --purge
 
 # Setting up fail2ban
 log "Ban IPs with too many incorrect login attempts..."
@@ -399,12 +390,12 @@ systemctl start fail2ban
 systemctl restart fail2ban
 
 # Disabling Certain Interfaces
-log "USB settings..."
+log "Setting USB settings..."
 service autofs stop
 systemctl disable autofs
-apt install usb-storage -y
-apt install USBGaurdd -y
 systemctl enable USBGaurdd
+systemctl start USBGaurdd
+systemctl restart USBGaurdd
 #log "Disabling USB..."
 #echo 'install usb-storage /bin/true' >> /etc/modprobe.d/disable-usb-storage.conf
 #log "Disabling FireWire..."
@@ -782,7 +773,7 @@ final_sec=$(echo "$duration % 60" | bc)
 
 # Running one last apt autoremove
 log "Running \`apt autoremove -y\`..."
-apt autoremove -y #--purge
+apt autoremove -y --purge
 
 # Ensuring language is still set to English (US)
 log "Ensuring language is set to English (US)..."
