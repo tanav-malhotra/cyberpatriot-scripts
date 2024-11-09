@@ -227,15 +227,6 @@ ufw default deny incoming
 ufw logging on
 ufw logging high
 
-# Enabling syn cookie protection
-log "Enabling syn cookie protection..."
-sysctl -n net.ipv4.tcp_syncookies
-
-# Disable IP Forwarding
-log "Disabling IP Forwarding..."
-cp /proc/sys/net/ipv4/ip_forward /proc/sys/net/ipv4/ip_forward.bak
-echo 0 | tee /proc/sys/net/ipv4/ip_forward
-
 # Configuring SSH
 log "Configuring SSH..."
 sshd_config="/etc/ssh/sshd_config"
@@ -466,7 +457,20 @@ cp /etc/rc.local /etc/rc.local.bak
 cp /etc/cron.deny /etc/cron.deny.bak
 echo "exit 0" > /etc/rc.local
 echo "ALL" >> /etc/cron.deny
+
 # Kernel Hardening
+log "Enabling syn cookie protection..."
+sysctl -n net.ipv4.tcp_syncookies
+log "Disabling IP Forwarding..."
+cp /proc/sys/net/ipv4/ip_forward /proc/sys/net/ipv4/ip_forward.bak
+echo 0 | tee /proc/sys/net/ipv4/ip_forward
+log "Preventing IP Spoofing..."
+iptables -A INPUT -s 10.0.0.0/8 -i eth0 -j DROP
+iptables -A INPUT -s 172.16.0.0/12 -i eth0 -j DROP
+iptables -A INPUT -s 192.168.0.0/16 -i eth0 -j DROP
+iptables -A INPUT -i eth0 -m limit --limit 2/min -j LOG --log-prefix "Dropped Packet: "
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -m state --state NEW -j DROP
 log "Kernel Hardening..."
 cp /etc/sysctl.conf /etc/sysctl.conf.bak
 cat <<EOL > "/etc/sysctl.conf"
@@ -649,15 +653,6 @@ else
     done < ./packages.txt
     log "Files have been removed."
 fi
-
-# Preventing IP Spoofing
-log "Preventing IP Spoofing..."
-iptables -A INPUT -s 10.0.0.0/8 -i eth0 -j DROP
-iptables -A INPUT -s 172.16.0.0/12 -i eth0 -j DROP
-iptables -A INPUT -s 192.168.0.0/16 -i eth0 -j DROP
-iptables -A INPUT -i eth0 -m limit --limit 2/min -j LOG --log-prefix "Dropped Packet: "
-iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-iptables -A INPUT -m state --state NEW -j DROP
 
 # User Management
 log "User Management..."
