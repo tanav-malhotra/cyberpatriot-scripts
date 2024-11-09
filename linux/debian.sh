@@ -174,7 +174,7 @@ apt autoremove -y #--purge
 
 # Installing Software
 log "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog")
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "language-pack-en" "localepurge")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     apt-get install -y "$app"
@@ -737,6 +737,11 @@ $final_sec=$(echo "$duration % 60" | bc)
 # Running one last apt autoremove
 log "Running \`apt autoremove -y\`..."
 apt autoremove -y #--purge
+
+# Making sure the language is English (US)
+log "Setting language to English (US)..."
+localepurge
+update-locale LANG=en_US.UTF-8
 
 # Final Notes
 log "Finished! in $final_min minutes and $final_sec seconds..."
