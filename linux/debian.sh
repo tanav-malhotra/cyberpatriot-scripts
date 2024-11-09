@@ -143,6 +143,7 @@ sleep 1
 log "Starting..."
 log;log;
 sleep 1
+
 ##### MAKE SURE USER IS READY TO RUN SCRIPT #####
 read -p "Do you want to make all of the bash scripts in this directory executable? (Y/n): " $confirmation
 ring_bell
@@ -213,7 +214,7 @@ for game in "${games[@]}"; do
 done
 apt autoremove -y --purge
 
-# Checking for updates daily
+##### CHECK FOR UPDATES DAILY #####
 log "Checking for updates daily..."
 touch /etc/apt/apt.conf.d/20auto-upgrades
 touch /etc/apt/apt.conf.d/50auto-upgrades
@@ -237,23 +238,20 @@ EOL
 # Unattended-Upgrade::Package-Blacklist {
 # 	"libproxy1v5";		# because school blocks the word "proxy"
 # };
+# EOL
 
-# Firewall
+##### FIREWALL #####
 log "Setting up firewall..."
 ufw enable
 ufw default deny incoming
 ufw logging on
 ufw logging high
 
-# Configuring SSH
+##### SSH #####
 log "Configuring SSH..."
 sshd_config="/etc/ssh/sshd_config"
 log "Creating SSH config backup located at ${sshd_config}.bak"
 cp "$sshd_config" "${sshd_config}.bak"
-service ssh enable
-service ssh start
-service sshd enable
-service sshd start
 # Function to ensure a line is set in the configuration
 set_sshd_setting() {
     local setting="$1"
@@ -268,7 +266,6 @@ set_sshd_setting() {
         log "Added $setting with value $value."
     fi
 }
-
 if [[ ! -f $sshd_config ]]; then
     log "Creating a basic sshd_config file (with secure settings)..."
     touch $sshd_config
@@ -287,17 +284,14 @@ set_sshd_setting "PermitEmptyPasswords" "no"
 set_sshd_setting "ClientAliveInterval" "300"
 set_sshd_setting "ClientAliveCountMax" "0"
 set_sshd_setting "IgnoreRhosts" "yes"
-
 # Extract the current port from the configuration
 current_port=$(grep -Eo '^Port [0-9]+' "$sshd_config" | awk '{print $2}')
 if [[ -z "$current_port" ]]; then
     current_port=22  # Default to 22 if no port is found
 fi
-
 # Ask if the user wants to change the SSH port
 read -p "Do you want to change the SSH port? (y/N): " change_port
 ring_bell
-
 if [[ $change_port =~ ^[Yy].* ]]; then
     while true; do
         read -p "Enter the new SSH port (1-65535): " new_port
@@ -325,7 +319,6 @@ else
     log "Keeping the default SSH port (22)."
     ufw allow "$current_port"/tcp
 fi
-
 if sshd -t; then
     log "SSH configuration is correct. Restarting SSH service..."
     if [[ -x "$(command -v systemctl)" ]]; then
@@ -340,7 +333,6 @@ if sshd -t; then
 else
     log "error: SSH configuration has errors. Please fix them before restarting."
 fi
-
 log "Creating new SSH keys..."
 # Define variables
 KEY_NAME="id_ed25519"
@@ -364,14 +356,14 @@ cat "$KEY_DIR/$KEY_NAME.pub" >> "$AUTHORIZED_KEYS"
 chmod 600 "$AUTHORIZED_KEYS"
 log "Public key added to $AUTHORIZED_KEYS."
 
-# Setting up fail2ban
+##### IP BANNING (FAIL2BAN) #####
 log "Ban IPs with too many incorrect login attempts..."
 #systemctl reload-or-restart fail2ban.service
 systemctl enable fail2ban
 systemctl start fail2ban
 systemctl restart fail2ban
 
-# Disabling Certain Interfaces
+##### INTERFACE SETTINGS (e.g. USB) #####
 log "Setting USB settings..."
 service autofs stop
 systemctl disable autofs
@@ -385,7 +377,21 @@ systemctl restart USBGaurdd
 #log "Disabling Thunderbolt..."
 #echo "blacklist thunderbolt" >> /etc/modprobe.d/thunderbolt.conf
 
-# Setting home directory permissions
+##### REMOVING BASH ALIASES #####
+log "Removing all bash aliases..."
+find / -type f -name "*.bashrc" 2>/dev/null | while read -r bashrc_file; do
+    if [ -f "$bashrc_file" ]; then
+        cp "$bashrc_file" "$bashrc_file.bak"
+        sed -i '/alias /d' "$bashrc_file"
+        if ! diff "$bashrc_file" "$bashrc_file.bak" >/dev/null; then
+            echo "Aliases removed from $bashrc_file"
+        else
+            echo "No aliases found in $bashrc_file"
+        fi
+    fi
+done
+
+##### FILE/DIR PERMS/OWNERSHIP #####
 log "Setting home directory permissions..."
 for i in $(mawk -F: '$3 > 999 && $3 < 65534 {print $1}' /etc/passwd); do [ -d /home/${i} ] && chmod -R 750 /home/${i}; done
 find /home -type d -name '.ssh' -exec chmod 700 {} \;
@@ -442,14 +448,15 @@ chmod 644 /etc/ssh/ssh_host_*_key.pub
 # Set ownership and permissions for the root user's home directory
 chown root:root /root
 chmod 700 /root
-# Cron settings
+
+##### CRON SETTINGS #####
 log "Changing cron settings..."
 cp /etc/rc.local /etc/rc.local.bak
 cp /etc/cron.deny /etc/cron.deny.bak
 echo "exit 0" > /etc/rc.local
 echo "ALL" >> /etc/cron.deny
 
-# Kernel Hardening
+##### KERNEL HARDENING AND IP SETTINGS #####
 log "Enabling syn cookie protection..."
 sysctl -n net.ipv4.tcp_syncookies
 log "Disabling IP Forwarding..."
@@ -521,7 +528,7 @@ net.ipv6.conf.default.rp_filter = 1
 EOL
 sysctl -p
 
-# Setting up auditing
+##### AUDITING #####
 log "Setting up auditing..."
 cat <<EOL > "/etc/audit/audit.rules"
 -D
@@ -545,43 +552,24 @@ df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nou
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nogroup # Auditing ungrouped files/directories
 df --local -P | awk {'if (NR!=1)print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -4000 # Audit SUID executable
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -2000 # Audit SGID executables
-
 # Setting up rsyslog
 log "Setting up rsyslog..."
 systemctl enable rsyslog
 systemctl start rsyslog
 systemctl restart rsyslog
 
-# Setting up AppArmor
+##### APPARMOR #####
 log "Setting up AppArmor..."
 aa-enforce /etc/apparmor.d/*
 systemctl enable apparmor
 systemctl start apparmor
 systemctl restart apparmor
 
-# Removing all bash aliases
-log "Removing all bash aliases..."
-find / -type f -name "*.bashrc" 2>/dev/null | while read -r bashrc_file; do
-    if [ -f "$bashrc_file" ]; then
-        cp "$bashrc_file" "$bashrc_file.bak"
-        sed -i '/alias /d' "$bashrc_file"
-        if ! diff "$bashrc_file" "$bashrc_file.bak" >/dev/null; then
-            echo "Aliases removed from $bashrc_file"
-        else
-            echo "No aliases found in $bashrc_file"
-        fi
-    fi
-done
-
-# Finding and saving open ports
+##### FINDING & SAVING INFO #####
 log "Finding and saving open ports to \`./open_ports.txt\`..."
 ss -ln > ./open_ports.txt
-
-# Finding and saving running services
 log "Finding and saving running services to \`./services.txt\`..."
 service --status-all > ./services.txt
-
-# Finding unused software
 log "Finding & saving unused software to \`./unused_software.txt\`..."
 deborphan --guess-all > ./unused_software.txt
 # log "Removing unused software..."
@@ -600,8 +588,10 @@ deborphan --guess-all > ./unused_software.txt
 
 #     log "Unused software has been removed."
 # fi
-
-# Finding & Removing Files
+log "Finding & saving installed software to \`./software_installed.txt\`..."
+apt list --installed > ./software_installed.txt
+log "Finding & saving enabled services to \`./enabled_services.txt\`..."
+service --status-all > ./enabled_services.txt
 log "Finding & saving media files to \`./media_files.txt\`..."
 find /home/ -type f \( -name "*.mp3" -o -name "*.mp4" -o -name "*.wav" -o -name "*.avi" -o -name "*.mkv" -o -name "*.flac" -o -name "*.mov" \) -print > ./media_files.txt
 log "Finding & saving possible hacking tools as packages to \`./packages.txt\`..."
@@ -610,42 +600,37 @@ log "Finding & saving World Writable files to \`./world_writable.txt\`..."
 find /dir -xdev -type d \( -perm -0002 -a ! -perm -1000 \) -print > ./world_writable.txt
 log "Finding & saving No-User files to \`./no_user.txt\`..."
 find /dir -xdev \( -nouser -o -nogroup \) -print > ./no_user.txt
-log "Please manually check the world-writable files and the no-user files."
 
+##### REMOVING MEDIA FILES #####
 log "Removing media files..."
 log "The following files will be removed:"
 cat ./media_files.txt
-# Prompt the user for confirmation
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
 ring_bell
 if [[ $choice =~ ^[Nn].* ]]; then
     log "No files were removed."
 else
-    # Proceed with removal
     while IFS= read -r file; do
         rm -rf "$file"
     done < ./media_files.txt
 
     log "Files have been removed."
 fi
-
 log "Removing packages..."
 log "The following files will be removed:"
 cat ./packages.txt
-# Prompt the user for confirmation
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
 ring_bell
 if [[ $choice =~ ^[Nn].* ]]; then
     log "No files were removed."
 else
-    # Proceed with removal
     while IFS= read -r file; do
         rm -rf "$file"
     done < ./packages.txt
     log "Files have been removed."
 fi
 
-# User Management
+##### USER MANAGEMENT #####
 log "User Management..."
 # Lock Root
 log "Locking root account..."
@@ -698,12 +683,9 @@ log "Non-root UID 0 users (saved to \`./non-root_uid0.txt\`)..."
 # Reading files for authorized users and admins
 log "Reading users.txt, admins.txt, addusers.txt, and addgroups.txt..."
 #TODO: user management
-
 # Changing Passwords
 NEW_PASSWORD="CyberPatr!0t"
 log "Changing Passwords of all users, admins, and root to \`$NEW_PASSWORD\`..."
-
-# for user in $(cut -f1 -d: /etc/passwd); do
 cut -d: -f1 /etc/passwd | while read user; do
     if [[ "$user" != "root" && "$user" != "nobody" && "$user" != "daemon" && "$user" != "systemd-timesync" \
     && "$user" != "bin" && "$user" != "sys" && "$user" != "games" && "$user" != "mail" \
@@ -724,11 +706,11 @@ done
 echo "root:$NEW_PASSWORD" | chpasswd
 log "Password for admin root changed."
 
+##### CHANGING POLICIES #####
 # Setting max password days
 log "Setting max password days..."
 cp /etc/login.defs /etc/login.defs.bak
 sed -i 's/PASS_MAX_DAYS.*$/PASS_MAX_DAYS 30/;s/PASS_MIN_DAYS.*$/PASS_MIN_DAYS 10/;s/PASS_WARN_AGE.*$/PASS_WARN_AGE 7/' /etc/login.defs
-
 # Change PAM (Pluggable Authentication Modules) settings
 log "Changing PAM settings (setting max password attempts, minimum password langths, etc.)..."
 cp /etc/pam.d/common-auth /etc/pam.d/common-auth.bak
@@ -746,7 +728,6 @@ sed -i 's/\(pam_cracklib\.so.*\)$/\1 maxclassrepeat=5 maxsequence=5 minclass=4 d
 cp /etc/default/useradd /etc/default/useradd.bak
 sed -i 's/^EXPIRE=[0-9]\+/EXPIRE=30/' /etc/default/useradd
 sed -i 's/^INACTIVE=[0-9]\+/INACTIVE=30/' /etc/default/useradd
-
 # Change password encryption method to SHA512
 log "Changing password encryption method to SHA512..."
 cp /etc/login.defs /etc/login_with_max_pw_days.defs.bak
@@ -754,33 +735,24 @@ sed -i '/^ENCRYPT_METHOD/c\ENCRYPT_METHOD SHA512' /etc/login.defs
 echo "SHA_CRYPT_MIN_ROUNDS 12000" >> /etc/login.defs
 echo "SHA_CRYPT_MAX_ROUNDS 15000" >> /etc/login.defs
 
-# Saving list of installed software
-apt list --installed > ./software_installed.txt
-
-# Saving list of services
-service --status-all > ./enabled_services.txt
-
-# Calculate time
+##### CALCULATING TIME #####
 end_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
 end_secs=$(date +%s.%N)
 duration=$(echo "$end_secs - $start_secs" | bc)
 final_min=$(echo "$duration / 60" | bc)
 final_sec=$(echo "$duration % 60" | bc)
 
-# Running one last apt autoremove
-log "Running \`apt autoremove -y\`..."
-apt autoremove -y --purge
-
-# Ensuring language is still set to English (US)
+##### ENSURING LANG IS SET TO ENGLISH (US) #####
 log "Ensuring language is set to English (US)..."
 update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP
 
-# Final Notes
-log "Finished! in $final_min minutes and $final_sec seconds..."
+##### FINAL NOTES FOR USER #####
+log "Finished in $final_min minute(s) and $final_sec second(s)..."
 log
 log "Final Notes:"
 log "Please manually check the world-writable files and the no-user files."
 log "Please make sure only the required services are enabled."
+log "Please check all the .txt files in the current directory (`pwd`) for any information saved by this script."
 service --status-all
 log "Make sure updates are installed daily."
 read -p "Run \`software-properties-gtk &\`? (Y/n): " check_auto_update
@@ -802,7 +774,7 @@ log
 #     log "Unsupported desktop environment (standalone window managers are not supported). Please open settings manually (if needed)."
 # fi
 
-# Wishing Goodluck
+##### WISH GOODLUCK #####
 log;log;log;
 log "Thank you for using this script. Good luck for the competition!"
 log
@@ -813,6 +785,7 @@ log "==================================="
 log
 log_info "End time: " $end_time # log end time
 
+##### REBOOT #####
 read -p "Reboot the system? (y/N): " reboot_choice
 ring_bell
 if [[ $reboot_choice =~ ^[Yy].* ]]; then
@@ -822,4 +795,5 @@ else
     log "Remember to manually reboot the system when you're ready."
 fi
 
+##### EXIT #####
 exit 0
