@@ -18,7 +18,7 @@
 # ====================================================================================
 
 unalias -a
-version="v1.4.2"
+version="v1.4.7"
 start_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
 start_secs=$(date +%s.%N)
 log_file="./linux_script.log"
@@ -172,9 +172,23 @@ apt remove snapd
 apt update -y && apt full-upgrade -y
 apt autoremove -y #--purge
 
+# Setting language to US English and removing other languages
+log "Setting language to US English (and removing all other languages beside `en` and `en_US.UTF-8`)..."
+LANG_TO_KEEP="en_US.UTF-8"
+LOCALE_TO_KEEP="en"
+locale-gen $LANG_TO_KEEP
+update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP
+for locale in $(locale -a); do
+    if [[ "$locale" != "$LANG_TO_KEEP" && "$locale" != "$LOCALE_TO_KEEP" ]]; then
+        localectl set-locale $locale --delete
+        log "Removed locale: $locale"
+    fi
+done
+dpkg-reconfigure locales
+
 # Installing Software
 log "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "language-pack-en" "localepurge")
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     apt-get install -y "$app"
@@ -701,7 +715,7 @@ log "Password for admin root changed."
 # Setting max password days
 log "Setting max password days..."
 cp /etc/login.defs /etc/login.defs.bak
-sed -i 's/PASS_MAX_DAYS.*$/PASS_MAX_DAYS 90/;s/PASS_MIN_DAYS.*$/PASS_MIN_DAYS 10/;s/PASS_WARN_AGE.*$/PASS_WARN_AGE 7/' /etc/login.defs
+sed -i 's/PASS_MAX_DAYS.*$/PASS_MAX_DAYS 30/;s/PASS_MIN_DAYS.*$/PASS_MIN_DAYS 10/;s/PASS_WARN_AGE.*$/PASS_WARN_AGE 7/' /etc/login.defs
 
 # Change PAM (Pluggable Authentication Modules) settings
 log "Changing PAM settings (setting max password attempts, minimum password langths, etc.)..."
@@ -725,8 +739,8 @@ sed -i 's/^INACTIVE=[0-9]\+/INACTIVE=30/' /etc/default/useradd
 log "Changing password encryption method to SHA512..."
 cp /etc/login.defs /etc/login_with_max_pw_days.defs.bak
 sed -i '/^ENCRYPT_METHOD/c\ENCRYPT_METHOD SHA512' /etc/login.defs
-echo "SHA_CRYPT_MIN_ROUNDS 10000" >> /etc/login.defs
-echo "SHA_CRYPT_MAX_ROUNDS 12000" >> /etc/login.defs
+echo "SHA_CRYPT_MIN_ROUNDS 12000" >> /etc/login.defs
+echo "SHA_CRYPT_MAX_ROUNDS 15000" >> /etc/login.defs
 
 # Saving list of installed software
 apt list --installed > ./software_installed.txt
@@ -744,11 +758,6 @@ $final_sec=$(echo "$duration % 60" | bc)
 # Running one last apt autoremove
 log "Running \`apt autoremove -y\`..."
 apt autoremove -y #--purge
-
-# Making sure the language is English (US)
-log "Setting language to English (US)..."
-update-locale LANG=en_US.UTF-8
-localepurge
 
 # Final Notes
 log "Finished! in $final_min minutes and $final_sec seconds..."
