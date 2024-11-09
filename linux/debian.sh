@@ -740,8 +740,8 @@ apt autoremove -y #--purge
 
 # Making sure the language is English (US)
 log "Setting language to English (US)..."
-localepurge
 update-locale LANG=en_US.UTF-8
+localepurge
 
 # Final Notes
 log "Finished! in $final_min minutes and $final_sec seconds..."
