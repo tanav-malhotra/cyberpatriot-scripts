@@ -792,7 +792,11 @@ log "Please manually check the world-writable files and the no-user files."
 log "Please make sure only the required services are enabled."
 service --status-all
 log "Make sure updates are installed daily."
-software-properties-gtk &
+read -p "Run `software-properties-gtk &`? (Y/n): " check_auto_update
+ring_bell
+if [[ $check_auto_update =~ ^[Nn].* ]]; then
+    software-properties-gtk &
+fi
 log
 # log "Launching settings..."
 # if [[ "$DESKTOP_SESSION" == "gnome" ]]; then
