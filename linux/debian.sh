@@ -799,10 +799,12 @@ log
 #     gnome-control-center > /dev/null 2>&1 &
 # elif [[ "$DESKTOP_SESSION" == "cinnamon" ]]; then
 #     cinnamon-settings > /dev/null 2>&1 &
-# elif [[ "$DESKTOP_SESSION" == "xfce" ]]; then
-#     xfce4-settings-manager > /dev/null 2>&1 &
 # elif [[ "$DESKTOP_SESSION" == "kde" ]]; then
 #     systemsettings5 > /dev/null 2>&1 &
+# elif [[ "$DESKTOP_SESSION" == "xfce" ]]; then
+#     xfce4-settings-manager > /dev/null 2>&1 &
+# else
+#     log "Unsupported desktop environment (standalone window managers are not supported). Please open settings manually (if needed)."
 # fi
 
 # Wishing Goodluck
