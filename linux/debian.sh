@@ -691,7 +691,7 @@ log "Password for admin root changed."
 # Setting max password days
 log "Setting max password days..."
 cp /etc/login.defs /etc/login.defs.bak
-sed -i 's/PASS_MAX_DAYS.*$/PASS_MAX_DAYS 60/;s/PASS_MIN_DAYS.*$/PASS_MIN_DAYS 7/;s/PASS_WARN_AGE.*$/PASS_WARN_AGE 7/' /etc/login.defs
+sed -i 's/PASS_MAX_DAYS.*$/PASS_MAX_DAYS 90/;s/PASS_MIN_DAYS.*$/PASS_MIN_DAYS 10/;s/PASS_WARN_AGE.*$/PASS_WARN_AGE 7/' /etc/login.defs
 
 # Change PAM (Pluggable Authentication Modules) settings
 log "Changing PAM settings (setting max password attempts, minimum password langths, etc.)..."
