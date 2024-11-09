@@ -173,11 +173,12 @@ apt update -y && apt full-upgrade -y
 apt autoremove -y #--purge
 
 # Setting language to US English and removing other languages
-log "Setting language to US English (and removing all other languages beside `en` and `en_US.UTF-8`)..."
 LANG_TO_KEEP="en_US.UTF-8"
 LOCALE_TO_KEEP="en"
+log "Setting language to $LANG_TO_KEEP and locale to $LOCALE_TO_KEEP..."
 locale-gen $LANG_TO_KEEP
 update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP
+log "Removing every other language and locale (other than $LOCALE_TO_KEEP and $LANG_TO_KEEP)..."
 for locale in $(locale -a); do
     if [[ "$locale" != "$LANG_TO_KEEP" && "$locale" != "$LOCALE_TO_KEEP" ]]; then
         localectl set-locale $locale --delete
