@@ -674,12 +674,19 @@ log "Reading users.txt, admins.txt, addusers.txt, and addgroups.txt..."
 #TODO: user management
 
 # Changing Passwords
-$NEW_PASSWORD="CyberPatr!0t"
+NEW_PASSWORD="CyberPatr!0t"
 log "Changing Passwords of all users, admins, and root to \`$NEW_PASSWORD\`..."
 
-for user in $(cut -f1 -d: /etc/passwd); do
-    if [[ "$user" != "root" && "$user" != "nobody" && "$user" != "daemon" && "$user" != "systemd-timesync" ]]; then
-        if id -nG "$user" | grep -qw 'sudo'; then
+# for user in $(cut -f1 -d: /etc/passwd); do
+cut -d: -f1 /etc/passwd | while read user; do
+    if [[ "$user" != "root" && "$user" != "nobody" && "$user" != "daemon" && "$user" != "systemd-timesync" \
+    && "$user" != "bin" && "$user" != "sys" && "$user" != "games" && "$user" != "mail" \
+    && "$user" != "ftp" && "$user" != "httpd" && "$user" != "apache" && "$user" != "sshd" \
+    && "$user" != "postfix" && "$user" != "nfsnobody" && "$user" != "named" \
+    && "$user" != "mysql" && "$user" != "postgres" && "$user" != "backup" \
+    && "$user" != "www-data" && "$user" != "systemd-journal" && "$user" != "messagebus" \
+    && "$user" != "tss" && "$user" != "rpc" ]]; then
+        if id -nG "$user" | grep -qwE 'sudo|wheel|sudoers|admin'; then
             ROLE="admin"
         else
             ROLE="user"
