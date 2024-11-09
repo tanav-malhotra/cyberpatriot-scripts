@@ -18,7 +18,7 @@
 # ====================================================================================
 
 unalias -a
-version="v1.4.7"
+version="v1.5.1"
 start_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
 start_secs=$(date +%s.%N)
 log_file="./linux_script.log"
