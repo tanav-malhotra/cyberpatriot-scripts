@@ -188,7 +188,7 @@ dpkg-reconfigure locales
 
 # Installing Software
 log "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog")
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     apt-get install -y "$app"
@@ -215,11 +215,10 @@ Unattended-Upgrade::Allowed-Origins {
 	"${distro_id} ${distro_codename}-security";
 	"${distro_id} ${distro_codename}-updates";
 };
-
-Unattended-Upgrade::Package-Blacklist {
-	"libproxy1v5";		# because school blocks the word "proxy"
-};
 EOL
+# Unattended-Upgrade::Package-Blacklist {
+# 	"libproxy1v5";		# because school blocks the word "proxy"
+# };
 
 # Firewall
 log "Setting up firewall..."
@@ -394,9 +393,9 @@ apt autoremove -y #--purge
 # Setting up fail2ban
 log "Ban IPs with too many incorrect login attempts..."
 #systemctl reload-or-restart fail2ban.service
-systemctl enable fail2ban.service
-systemctl restart fail2ban.service
-systemctl start fail2ban.service
+systemctl enable fail2ban
+systemctl start fail2ban
+systemctl restart fail2ban
 
 # Disabling Certain Interfaces
 log "USB settings..."
@@ -560,13 +559,18 @@ df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nog
 df --local -P | awk {'if (NR!=1)print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -4000 # Audit SUID executable
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -2000 # Audit SGID executables
 
-# Miscellaneous
-#snap refresh
-apt install rsyslog -y
+# Setting up rsyslog
+log "Setting up rsyslog..."
 systemctl enable rsyslog
-systemctl restart rsyslog
 systemctl start rsyslog
+systemctl restart rsyslog
+
+# Setting up AppArmor
+log "Setting up AppArmor..."
 aa-enforce /etc/apparmor.d/*
+systemctl enable apparmor
+systemctl start apparmor
+systemctl restart apparmor
 
 # Finding and saving open ports
 log "Finding and saving open ports to \`./open_ports.txt\`..."
