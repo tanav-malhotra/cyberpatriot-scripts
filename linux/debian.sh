@@ -352,7 +352,7 @@ log "Public key added to $AUTHORIZED_KEYS."
 # Removing Software
 apt list --installed > ./software_that_was_installed.txt
 log "Removing prohibited software and hacking tools (and making sure `snapd` was removed)..."
-apps=("wireshark" "telnet" "vsftpd" "proftpd" "snmpd" "mysql-server" "mysql-client" "postgresql" "xrdp" "tightvncserver" "samba" "nmap" "apache2" "*nginx*" "lighttpd" "tcpdump" "netcat-traditional" "nikto" "ophcrack" "ettercap*" "deluge" "dovecot-core" "*netcat*" "john" "vuze" "frostwire" "aircrack-ng" "metasploit-framework" "nessus" "snort" "kismet" "yersinia" "burp-suite" "burpsuite" "hydra" "oclhashcat" "hashcat" "maltego" "zaproxy" "cain" "*angryip*" "ipscan" "medusa" "xinetd" "openbsd-inetd" "inetutils-inetd" "avahi-daemon" "tcpd" "snapd")
+apps=("wireshark" "telnet" "vsftpd" "proftpd" "snmpd" "mysql-server" "mysql-client" "postgresql" "xrdp" "tightvncserver" "samba" "nmap" "php" "apache2*" "*nginx*" "lighttpd" "tcpdump" "netcat-traditional" "nikto" "ophcrack" "ettercap*" "deluge" "dovecot-core" "*netcat*" "john" "vuze" "frostwire" "aircrack-ng" "metasploit-framework" "nessus" "snort" "kismet" "yersinia" "burp-suite" "burpsuite" "hydra" "oclhashcat" "hashcat" "maltego" "zaproxy" "cain" "*angryip*" "ipscan" "medusa" "xinetd" "openbsd-inetd" "inetutils-inetd" "avahi-daemon" "tcpd" "snapd")
 for app in "${apps[@]}"; do
     log "Removing $app..."
     apt-get purge -y "$app"
@@ -665,7 +665,7 @@ usermod -g 0 root
 # log "Setting default shell for users..."
 # chsh -s /bin/bash
 cp /etc/sudoers /etc/sudoers.bak
-cp /etc/sudoers.d /etc/sudoers.d.bak
+cp -r /etc/sudoers.d /etc/sudoers.d.bak
 cp /etc/passwd /etc/passwd.bak
 touch /etc/lightdm/lightdm.conf
 touch /etc/gdm/custom.conf
@@ -674,10 +674,20 @@ cp /etc/lightdm/lightdm.conf /etc/lightdm/lightdm.conf.bak
 cp /etc/lightdm/users.conf /etc/lightdm/users.conf.bak
 cp /etc/gdm/custom.conf /etc/gdm/custom.conf.bak
 cp /etc/pam.d/gdm-password /etc/pam.d/gdm-password.bak
+sed -i '/NOPASSWD:/s/\(NOPASSWD:.*\)/NOPASSWD:/g' /etc/sudoers
 sed -i 's/nopasswd//g' /etc/sudoers
 sed -i 's/!authenticate//g' /etc/sudoers
 sed -i 's/nopasswd//g' /etc/sudoers.d
 sed -i 's/!authenticate//g' /etc/sudoers.d
+log "Running `visudo -c`..."
+visudo -c
+if [ $? -eq 0 ]; then
+    log "Sudoers files validated successfully. No syntax errors found."
+else
+    log "error: Syntax errors detected in sudoers files, namely `/etc/sudoers`! It is CRITICAL to fix these errors to prevent losing `sudo` access."
+    read
+    visudo
+fi
 log "Turning off guest login..."
 groupdel autologin
 sed -i 's/allow-guest=true/allow-guest=false/' /etc/lightdm/lightdm.conf
