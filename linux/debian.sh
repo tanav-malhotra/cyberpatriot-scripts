@@ -188,7 +188,7 @@ dpkg-reconfigure locales
 
 # Installing Software
 log "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog")
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     apt-get install -y "$app"
@@ -523,6 +523,7 @@ net.ipv6.conf.all.disable_ipv6 = 1
 net.ipv6.conf.default.disable_ipv6 = 1
 net.ipv6.conf.lo.disable_ipv6 = 1
 # Incase IPv6 is necessary
+net.ipv6.conf.all.rp_filter = 1
 net.ipv6.conf.default.router_solicitations = 0
 net.ipv6.conf.default.accept_ra_rtr_pref = 0
 net.ipv6.conf.default.accept_ra_pinfo = 0
@@ -530,6 +531,7 @@ net.ipv6.conf.default.accept_ra_defrtr = 0
 net.ipv6.conf.default.autoconf = 0
 net.ipv6.conf.default.dad_transmits = 0
 net.ipv6.conf.default.max_addresses = 1
+net.ipv6.conf.default.rp_filter = 1
 EOL
 sysctl -p
 
@@ -639,8 +641,13 @@ else
 fi
 
 # Preventing IP Spoofing
-log "Preventing IP Spoofing in /etc/host.conf..."
-#TODO: fix IP spoofing
+log "Preventing IP Spoofing..."
+iptables -A INPUT -s 10.0.0.0/8 -i eth0 -j DROP
+iptables -A INPUT -s 172.16.0.0/12 -i eth0 -j DROP
+iptables -A INPUT -s 192.168.0.0/16 -i eth0 -j DROP
+iptables -A INPUT -i eth0 -m limit --limit 2/min -j LOG --log-prefix "Dropped Packet: "
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -m state --state NEW -j DROP
 
 # User Management
 log "User Management..."
