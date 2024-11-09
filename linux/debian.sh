@@ -26,6 +26,10 @@ output_file="./linux_script_output.txt"
 starting_dir=$(pwd)
 distro_id=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 distro_codename=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
+debug=0
+help=0
+license=0
+version_arg=0
 # Make log file
 touch "$log_file"
 # echo > "$log_file"
@@ -52,7 +56,9 @@ log() {
 }
 log_info() { # does not print out to terminal
     echo $@ >> "$log_file"
-    echo $@ >> "$output_file"
+    if [[ $debug -eq 1]]; then
+        echo $@ >> "$output_file"
+    fi
 }
 ring_bell() {
     # for i in {1..10}; do
@@ -72,10 +78,6 @@ else
     sleep 1
 fi
 
-debug=0
-help=0
-license=0
-version_arg=0
 # Check for debug mode
 if [ $# -gt 0 ]; then
     # Loop over all arguments
@@ -92,6 +94,7 @@ if [ $# -gt 0 ]; then
             ;;
             --debug)
                 debug=1
+                touch $output_file
             ;;
             *)
             echo "Unknown option: $arg"
@@ -104,10 +107,10 @@ fi
 if [[ $help -eq 1 ]]; then
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
-    echo "  --debug      Enable debug mode"
-    echo "  --help       Display this help message"
-    echo "  --license    Show license information"
-    echo "  --version    Show version information"
+    echo "    --debug      Enable debug mode"
+    echo "    --help       Display this help message"
+    echo "    --license    Show license information"
+    echo "    --version    Show version information"
     echo ""
     echo "Description: A sophisticated script for Debian-based Linux systems, designed for CyberPatriot competitions."
     exit 0
