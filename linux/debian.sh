@@ -171,7 +171,7 @@ apt remove snapd
 apt update -y && apt full-upgrade -y
 apt autoremove -y #--purge
 
-# Setting language to US English and removing other languages
+# Setting language to English (US) and removing other languages
 LANG_TO_KEEP="en_US.UTF-8"
 LOCALE_TO_KEEP="en"
 log "Setting language to $LANG_TO_KEEP and locale to $LOCALE_TO_KEEP..."
@@ -758,8 +758,8 @@ final_sec=$(echo "$duration % 60" | bc)
 log "Running \`apt autoremove -y\`..."
 apt autoremove -y #--purge
 
-# Ensuring language is still set to US English
-log "Ensuring language is set to US English..."
+# Ensuring language is still set to English (US)
+log "Ensuring language is set to English (US)..."
 update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP
 
 # Final Notes
