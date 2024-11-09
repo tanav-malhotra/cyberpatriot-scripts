@@ -543,7 +543,7 @@ cat <<EOL > "/etc/audit/audit.rules"
 -e 2
 EOL
 cat <<EOL > "/etc/audit/auditd.conf"
-max_log_file = 100000000000
+max_log_file = 100
 space_left_action = email
 action_mail_acct = root
 admin_space_left_action = halt
