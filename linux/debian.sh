@@ -123,10 +123,15 @@ elif [[ $debug -eq 1 ]]; then
     
     # Display debug information
     log "Debug mode enabled."
+    log
+    log "Info:"
     log "Current Directory: $starting_dir"
     log "Start: $start_time"
     log "Distro ID: $distro_id"
     log "Distro Codename: $distro_codename"
+    if [[ -x "$(command -v systemctl)" ]]; then
+        log "Systemd detected..."
+    fi
     sleep 5
 else
     touch "$log_file"
@@ -326,6 +331,8 @@ if sshd -t; then
         systemctl start sshd
         systemctl restart sshd
     elif [[ -x "$(command -v service)" ]]; then
+        update-rc.d sshd defaults
+        service sshd start
         service sshd restart
     else
         log "error: Unable to restart sshd service."
@@ -358,18 +365,41 @@ log "Public key added to $AUTHORIZED_KEYS."
 
 ##### IP BANNING (FAIL2BAN) #####
 log "Ban IPs with too many incorrect login attempts..."
-#systemctl reload-or-restart fail2ban.service
-systemctl enable fail2ban
-systemctl start fail2ban
-systemctl restart fail2ban
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl enable fail2ban
+    systemctl start fail2ban
+    systemctl restart fail2ban
+elif [[ -x "$(command -v service)" ]]; then
+    update-rc.d fail2ban defaults
+    service fail2ban start
+    service fail2ban restart
+else
+    log "error: Unable to restart fail2ban service."
+fi
 
 ##### INTERFACE SETTINGS (e.g. USB) #####
 log "Setting USB settings..."
-service autofs stop
-systemctl disable autofs
-systemctl enable USBGaurdd
-systemctl start USBGaurdd
-systemctl restart USBGaurdd
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl stop autofs
+    systemctl disable autofs
+    systemctl mask autofs
+elif [[ -x "$(command -v service)" ]]; then
+    service autofs stop
+    update-rc.d autofs remove
+else
+    log "error: Unable to restart autofs service."
+fi
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl enable USBGaurdd
+    systemctl start USBGaurdd
+    systemctl restart USBGaurdd
+elif [[ -x "$(command -v service)" ]]; then
+    update-rc.d USBGaurdd defaults
+    service USBGaurdd start
+    service USBGaurdd restart
+else
+    log "error: Unable to restart USBGaurdd service."
+fi
 #log "Disabling USB..."
 #echo 'install usb-storage /bin/true' >> /etc/modprobe.d/disable-usb-storage.conf
 #log "Disabling FireWire..."
@@ -544,9 +574,17 @@ admin_space_left_action = halt
 max_log_file_action = keep_logs
 EOL
 auditctl -e 1
-systemctl enable auditd
-systemctl start auditd
-systemctl restart auditd
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl enable auditd
+    systemctl start auditd
+    systemctl restart auditd
+elif [[ -x "$(command -v service)" ]]; then
+    update-rc.d auditd defaults
+    service auditd start
+    service auditd restart
+else
+    log "error: Unable to restart auditd service."
+fi
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -0002 # Auditing world writable files
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nouser # Auditing unowned files/directories
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nogroup # Auditing ungrouped files/directories
@@ -554,16 +592,32 @@ df --local -P | awk {'if (NR!=1)print $6'} | xargs -I '{}' find '{}' -xdev -type
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -2000 # Audit SGID executables
 # Setting up rsyslog
 log "Setting up rsyslog..."
-systemctl enable rsyslog
-systemctl start rsyslog
-systemctl restart rsyslog
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl enable rsyslog
+    systemctl start rsyslog
+    systemctl restart rsyslog
+elif [[ -x "$(command -v service)" ]]; then
+    update-rc.d rsyslog defaults
+    service rsyslog start
+    service rsyslog restart
+else
+    log "error: Unable to restart rsyslog service."
+fi
 
 ##### APPARMOR #####
 log "Setting up AppArmor..."
 aa-enforce /etc/apparmor.d/*
-systemctl enable apparmor
-systemctl start apparmor
-systemctl restart apparmor
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl enable apparmor
+    systemctl start apparmor
+    systemctl restart apparmor
+elif [[ -x "$(command -v service)" ]]; then
+    update-rc.d apparmor defaults
+    service apparmor start
+    service apparmor restart
+else
+    log "error: Unable to restart apparmor service."
+fi
 
 ##### FINDING & SAVING INFO #####
 log "Finding and saving open ports to \`./open_ports.txt\`..."
