@@ -749,11 +749,11 @@ apt list --installed > ./software_installed.txt
 service --status-all > ./enabled_services.txt
 
 # Calculate time
-$end_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
-$end_secs=$(date +%s.%N)
-$duration=$(echo "$end_secs - $start_secs" | bc)
-$final_min=$(echo "$duration / 60" | bc)
-$final_sec=$(echo "$duration % 60" | bc)
+end_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
+end_secs=$(date +%s.%N)
+duration=$(echo "$end_secs - $start_secs" | bc)
+final_min=$(echo "$duration / 60" | bc)
+final_sec=$(echo "$duration % 60" | bc)
 
 # Running one last apt autoremove
 log "Running \`apt autoremove -y\`..."
