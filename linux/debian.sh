@@ -186,14 +186,32 @@ done
 dpkg-reconfigure locales
 
 ##### SOFTWARE MANAGEMENT #####
+apt list --installed > ./software_that_was_installed.txt
 log "Installing software..."
 apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     apt-get install -y "$app"
 done
+log "Removing prohibited software and hacking tools (and making sure \`snapd\` was removed)..."
+apps=("wireshark" "telnet" "vsftpd" "proftpd" "snmpd" "mysql-server" "mysql-client" "postgresql" "xrdp" "tightvncserver" "samba" "nmap" "php" "apache2*" "*nginx*" "lighttpd" "tcpdump" "netcat-traditional" "nikto" "ophcrack" "ettercap*" "deluge" "dovecot-core" "*netcat*" "john" "vuze" "frostwire" "aircrack-ng" "metasploit-framework" "nessus" "snort" "kismet" "yersinia" "burp-suite" "burpsuite" "hydra" "oclhashcat" "hashcat" "maltego" "zaproxy" "cain" "*angryip*" "ipscan" "medusa" "xinetd" "openbsd-inetd" "inetutils-inetd" "avahi-daemon" "tcpd" "snapd")
+for app in "${apps[@]}"; do
+    log "Removing $app..."
+    apt-get purge -y "$app"
+done
+hacking_tools=("john" "nmap" "vuze" "frostwire" "kismet" "freeciv" "minetest" "minetest-server" "medusa" "hydra" "truecrack" "ophcrack" "nikto" "cryptcat" "nc" "netcat" "tightvncserver" "x11vnc" "nfs" "xinetd" "samba" "postgresql" "sftpd" "vsftpd" "apache" "apache2" "ftp" "mysql" "php" "snmp" "pop3" "icmp" "sendmail" "dovecot" "bind9" "nginx" "telnet" "rlogind" "rshd" "rcmd" "rexecd" "rbootd" "rquotad" "rstatd" "rusersd" "rwalld" "rexd" "fingerd" "tftpd")
+for tool in "${hacking_tools[@]}"; do
+    log "Removing $tool..."
+    apt-get purge -y "$tool"
+done
+log "Removing games..."
+games=("gnome-games" "iagno" "lightsoff" "four-in-a-row" "gnome-robots" "pegsolitaire" "gnome-2048" "hitori" "gnome-klotski" "gnome-mines" "gnome-mahjongg" "gnome-sudoku" "quadrapassel" "swell-foop" "gnome-tetravex" "gnome-taquin" "aisleriot" "gnome-chess" "five-or-more" "gnome-nibbles" "tali" "freeciv" "wesnoth")
+# games=$(dpkg -l | grep "game" | awk '{print $2}') # find "game" in package descriptions
+for game in "${games[@]}"; do
+    log "Removing $game..."
+    apt-get purge -y "$game"
+done
 apt autoremove -y --purge
-
 
 # Checking for updates daily
 log "Checking for updates daily..."
@@ -340,13 +358,10 @@ if [ $? -eq 0 ]; then
 else
     log "error: Failed to generate SSH key."
 fi
-
 # Append the public key to authorized_keys
 cat "$KEY_DIR/$KEY_NAME.pub" >> "$AUTHORIZED_KEYS"
-
 # Set the correct permissions for the authorized_keys file
 chmod 600 "$AUTHORIZED_KEYS"
-
 log "Public key added to $AUTHORIZED_KEYS."
 
 # Setting up fail2ban
