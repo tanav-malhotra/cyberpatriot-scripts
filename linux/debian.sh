@@ -519,36 +519,6 @@ net.ipv6.conf.default.max_addresses = 1
 EOL
 sysctl -p
 
-# Setting max password days
-log "Setting max password days..."
-cp /etc/login.defs /etc/login.defs.bak
-sed -i 's/PASS_MAX_DAYS.*$/PASS_MAX_DAYS 90/;s/PASS_MIN_DAYS.*$/PASS_MIN_DAYS 10/;s/PASS_WARN_AGE.*$/PASS_WARN_AGE 7/' /etc/login.defs
-
-# Change PAM (Pluggable Authentication Modules) settings
-log "Changing PAM settings (setting max password attempts, minimum password langths, etc.)..."
-cp /etc/pam.d/common-auth /etc/pam.d/common-auth.bak
-sed -i 's/\w*nullok\w*//g' /etc/pam.d/common-auth
-#sed -i 's/\(pam_tally2\.so.*\)$/\1 deny=5 audit silent unlock_time=1800/' /etc/pam.d/common-auth # lockout policy
-#echo 'auth required pam_tally2.so deny=5 onerr=fail unlock_time=1800' >> /etc/pam.d/common-auth
-#echo 'auth required pam_unix.so' >> /etc/pam.d/common-auth
-echo "auth required pam_faillock.so preauth deny=5 unlock_time=1800" >> /etc/pam.d/common-auth
-echo "auth required pam_faillock.so authfail deny=5 unlock_time=1800" >> /etc/pam.d/common-auth
-# sed -i 's/deny=[0-9]\+/deny=5/' /etc/pam.d/common-auth
-# sed -i 's/unlock_time=[0-9]\+/unlock_time=1800/' /etc/pam.d/common-auth
-cp /etc/pam.d/common-password /etc/pam.d/common-password.bak
-sed -i 's/\(pam_unix\.so.*\)$/\1 remember=5 minlen=12/' /etc/pam.d/common-password
-sed -i 's/\(pam_cracklib\.so.*\)$/\1 maxclassrepeat=5 maxsequence=5 minclass=4 dcredit=-1 ocredit=-1 lcredit=-1 ucredit=-1 minlen=12 difok=8 retry=5/' /etc/pam.d/common-password # try difok=5
-cp /etc/default/useradd /etc/default/useradd.bak
-sed -i 's/^EXPIRE=[0-9]\+/EXPIRE=30/' /etc/default/useradd
-sed -i 's/^INACTIVE=[0-9]\+/INACTIVE=30/' /etc/default/useradd
-
-# Change password encryption method to SHA512
-log "Changing password encryption method to SHA512..."
-cp /etc/login.defs /etc/login_with_max_pw_days.defs.bak
-sed -i '/^ENCRYPT_METHOD/c\ENCRYPT_METHOD SHA512' /etc/login.defs
-echo "SHA_CRYPT_MIN_ROUNDS 10000" >> /etc/login.defs
-echo "SHA_CRYPT_MAX_ROUNDS 12000" >> /etc/login.defs
-
 # Setting up auditing
 log "Setting up auditing..."
 cat <<EOL > "/etc/audit/audit.rules"
@@ -720,6 +690,36 @@ for user in $(cut -f1 -d: /etc/passwd); do
 done
 echo "root:$NEW_PASSWORD" | chpasswd
 log "Password for admin root changed."
+
+# Setting max password days
+log "Setting max password days..."
+cp /etc/login.defs /etc/login.defs.bak
+sed -i 's/PASS_MAX_DAYS.*$/PASS_MAX_DAYS 90/;s/PASS_MIN_DAYS.*$/PASS_MIN_DAYS 10/;s/PASS_WARN_AGE.*$/PASS_WARN_AGE 7/' /etc/login.defs
+
+# Change PAM (Pluggable Authentication Modules) settings
+log "Changing PAM settings (setting max password attempts, minimum password langths, etc.)..."
+cp /etc/pam.d/common-auth /etc/pam.d/common-auth.bak
+sed -i 's/\w*nullok\w*//g' /etc/pam.d/common-auth
+#sed -i 's/\(pam_tally2\.so.*\)$/\1 deny=5 audit silent unlock_time=1800/' /etc/pam.d/common-auth # lockout policy
+#echo 'auth required pam_tally2.so deny=5 onerr=fail unlock_time=1800' >> /etc/pam.d/common-auth
+#echo 'auth required pam_unix.so' >> /etc/pam.d/common-auth
+echo "auth required pam_faillock.so preauth deny=5 unlock_time=1800" >> /etc/pam.d/common-auth
+echo "auth required pam_faillock.so authfail deny=5 unlock_time=1800" >> /etc/pam.d/common-auth
+# sed -i 's/deny=[0-9]\+/deny=5/' /etc/pam.d/common-auth
+# sed -i 's/unlock_time=[0-9]\+/unlock_time=1800/' /etc/pam.d/common-auth
+cp /etc/pam.d/common-password /etc/pam.d/common-password.bak
+sed -i 's/\(pam_unix\.so.*\)$/\1 remember=5 minlen=12/' /etc/pam.d/common-password
+sed -i 's/\(pam_cracklib\.so.*\)$/\1 maxclassrepeat=5 maxsequence=5 minclass=4 dcredit=-1 ocredit=-1 lcredit=-1 ucredit=-1 minlen=12 difok=8 retry=5/' /etc/pam.d/common-password # try difok=5
+cp /etc/default/useradd /etc/default/useradd.bak
+sed -i 's/^EXPIRE=[0-9]\+/EXPIRE=30/' /etc/default/useradd
+sed -i 's/^INACTIVE=[0-9]\+/INACTIVE=30/' /etc/default/useradd
+
+# Change password encryption method to SHA512
+log "Changing password encryption method to SHA512..."
+cp /etc/login.defs /etc/login_with_max_pw_days.defs.bak
+sed -i '/^ENCRYPT_METHOD/c\ENCRYPT_METHOD SHA512' /etc/login.defs
+echo "SHA_CRYPT_MIN_ROUNDS 10000" >> /etc/login.defs
+echo "SHA_CRYPT_MAX_ROUNDS 12000" >> /etc/login.defs
 
 # Saving list of installed software
 apt list --installed > ./software_installed.txt
