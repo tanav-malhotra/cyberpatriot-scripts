@@ -132,11 +132,7 @@ check_file_integrity() {
     echo "Installing AIDE..." | tee -a $LOGFILE
     apt install -y aide
     echo "\`aide --check\`..." | tee -a $LOGFILE
-    if command -v aide >/dev/null 2>&1; then
-        aide --check | tee -a $LOGFILE
-    else
-        echo "error: AIDE not installed. Skipping file integrity check." | tee -a $LOGFILE
-    fi
+    aide --check | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check for suspicious GRUB modifications
