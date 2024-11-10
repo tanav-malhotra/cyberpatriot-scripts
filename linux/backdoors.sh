@@ -19,6 +19,11 @@
 
 ##### VARS #####
 LOGFILE="./backdoors_script.log"
+AIDE_CONF="/etc/aide/aide.conf"
+AIDE_DB="/var/lib/aide/aide.db"
+AIDE_DB_NEW="/var/lib/aide/aide.db.new"
+AIDE_BIN="/usr/bin/aide"
+AIDE_CONF_DIR="/etc/aide"
 
 ##### CHECK FOR SUDO #####
 echo "Checking for \`sudo\` access (which may request your password)..."
@@ -140,6 +145,56 @@ check_file_integrity() {
     echo "Checking file integrity (requires AIDE setup)..." | tee -a $LOGFILE
     echo "Installing AIDE..." | tee -a $LOGFILE
     apt install -y aide
+    echo "Configuring AIDE for CyberPatriot..." | tee -a $LOGFILE
+    cat > $AIDE_CONF <<EOF
+# AIDE configuration for CyberPatriot
+database = $AIDE_DB
+database_out = $AIDE_DB_NEW
+gzip_dbout = yes
+
+# Exclude some directories that may change frequently
+exclude = /tmp
+exclude = /var/tmp
+exclude = /var/log
+exclude = /var/run
+exclude = /var/cache
+
+# Directories to be monitored
+dir = /etc
+dir = /bin
+dir = /sbin
+dir = /usr
+dir = /lib
+dir = /lib64
+dir = /root
+dir = /home
+dir = /opt
+dir = /var/spool
+dir = /var/lib
+dir = /var/opt
+
+# Files to be monitored
+file = /etc/passwd
+file = /etc/shadow
+file = /etc/group
+file = /etc/gshadow
+file = /etc/hostname
+file = /etc/hosts
+file = /etc/sudoers
+EOF
+
+    echo "AIDE configuration complete." | tee -a $LOGFILE
+
+    # 3. Initialize AIDE database
+    echo "Initializing AIDE database..." | tee -a $LOGFILE
+    $AIDE_BIN --init
+    if [ $? -eq 0 ]; then
+        mv $AIDE_DB_NEW $AIDE_DB
+        echo "AIDE database initialized successfully." | tee -a $LOGFILE
+    else
+        echo "error: Failed to initialize AIDE database. Please check logs." | tee -a $LOGFILE
+        exit 1
+    fi
     echo "\`aide --check\`..." | tee -a $LOGFILE
     aide --check | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
@@ -173,7 +228,9 @@ check_logs() {
 }
 
 ##### RUN FUNCTIONS #####
-echo "Searching for backdoors..."
+echo "Updating apt..." | tee -a $LOGFILE
+apt update
+echo "Searching for backdoors..." | tee -a $LOGFILE
 line_sep | tee -a $LOGFILE
 check_processes
 read
