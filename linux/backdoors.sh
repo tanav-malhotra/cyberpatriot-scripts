@@ -113,8 +113,8 @@ check_users() {
 # check sudoers configuration
 check_sudoers() {
     echo "Checking sudoers configuration..." | tee -a $LOGFILE
-    echo "\`vi-c\`..." | tee -a $LOGFILE
-    vi-c | tee -a $LOGFILE
+    echo "\`visudo -c\`..." | tee -a $LOGFILE
+    visudo -c | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check for hidden network connections
