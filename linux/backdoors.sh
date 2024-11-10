@@ -178,15 +178,15 @@ check_logs() {
     echo "Checking system logs..." | tee -a $LOGFILE
     echo "\`cat /var/log/auth.log\`..." | tee -a $LOGFILE
     read
-    cat /var/log/auth.log | tee -a $LOGFILE | less
+    cat /var/log/auth.log | tee -a $LOGFILE
     read
     echo "\`cat /var/log/syslog\`..." | tee -a $LOGFILE
     read
-    cat /var/log/syslog | tee -a $LOGFILE | less
+    cat /var/log/syslog | tee -a $LOGFILE
     read
     echo "\`cat /var/log/daemon.log\`..." | tee -a $LOGFILE
     read
-    cat /var/log/daemon.log | tee -a $LOGFILE | less
+    cat /var/log/daemon.log | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check for file integrity (AIDE)
@@ -241,7 +241,7 @@ EOF
         mv $AIDE_DB_NEW $AIDE_DB
         echo "AIDE database initialized successfully." | tee -a $LOGFILE
     else
-        echo "error: Failed to initialize AIDE database. Please check logs." | tee -a $LOGFILE
+        echo "error: Failed to initialize AIDE database. Please check logs." | tee -a $LOGFILE # TODO: fix this error showing up every time
         exit 1
     fi
     echo "\`aide --check\`..." | tee -a $LOGFILE
