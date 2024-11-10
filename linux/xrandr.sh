@@ -17,6 +17,16 @@
 # with the '--license' option.
 # ====================================================================================
 
+##### CHECK FOR SUDO #####
+echo "Checking for \`sudo\` access (which may request your password)..."
+if [[ $EUID -ne 0 ]]; then
+    echo "\`sudo\` access is required. Please run \`sudo !!\`"
+    exit 1
+else
+    echo "\`sudo\` access confirmed. Proceeding..."
+    sleep 1
+fi
+
 ##### CHANGE SCREEN RESOULTION #####
 RESOLUTION="1920x1080"
 OUTPUT=$(xrandr | grep " connected" | awk '{ print $1 }')
