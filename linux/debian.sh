@@ -22,7 +22,7 @@ unalias -a
 version="v1.5.2"
 start_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
 start_secs=$(date +%s.%N)
-log_file="./linux_script.log"
+LOGFILE="./linux_script.log"
 output_file="./linux_script_output.txt"
 starting_dir=$(pwd)
 distro_id=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
@@ -49,11 +49,11 @@ EOF
     echo
 }
 log() {
-    echo $@ >> "$log_file"
+    echo $@ >> "$LOGFILE"
     echo $@
 }
 log_info() { # does not print out to terminal
-    echo $@ >> "$log_file"
+    echo $@ >> "$LOGFILE"
     if [[ $debug -eq 1 ]]; then
         echo $@ >> "$output_file"
     fi
@@ -116,7 +116,7 @@ elif [[ $license -eq 1 ]]; then
     curl https://www.gnu.org/licenses/gpl-3.0.txt | less
     exit 0
 elif [[ $debug -eq 1 ]]; then
-    touch "$log_file"
+    touch "$LOGFILE"
     touch $output_file
     # Redirect both stdout and stderr to tee
     exec > >(tee -a "$output_file") 2>&1
@@ -134,7 +134,7 @@ elif [[ $debug -eq 1 ]]; then
     fi
     sleep 5
 else
-    touch "$log_file"
+    touch "$LOGFILE"
     log_info "Start time: $start_time" # log start time
 fi
 
