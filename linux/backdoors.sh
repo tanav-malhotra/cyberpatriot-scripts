@@ -233,8 +233,6 @@ file = /etc/sudoers
 EOF
 
     echo "AIDE configuration complete." | tee -a $LOGFILE
-
-    # 3. Initialize AIDE database
     echo "Initializing AIDE database..." | tee -a $LOGFILE
     $AIDE_BIN --init
     if [ $? -eq 0 ]; then
@@ -295,5 +293,4 @@ echo "Copyright (c) 2024 Tanav Malhotra"
 echo "GNU General Public License v3.0"
 echo "==================================="
 echo
-
 exit 0
