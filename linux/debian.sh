@@ -250,6 +250,10 @@ EOL
 log "Setting up firewall..."
 ufw enable
 ufw default deny incoming
+ufw default allow outgoing
+ufw allow ssh
+ufw allow 80/tcp
+ufw allow 443/tcp
 ufw logging on
 ufw logging high
 
@@ -435,8 +439,9 @@ chmod 440 /etc/inetd.conf
 chmod 440 /etc/xinetd.conf
 chmod 400 /etc/inetd.d
 chmod 644 /etc/hosts.allow
-chmod 440 /etc/sudoers
-chmod 640 /etc/shadow
+chmod 640 /etc/sudoers
+chmod 640 /etc/passwd
+chmod 600 /etc/shadow
 chown root:root /etc/shadow
 # Setting critical file and directory permissions
 log "Setting critical file and directory permissions and ownership..."

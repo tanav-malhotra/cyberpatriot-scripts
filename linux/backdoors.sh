@@ -17,7 +17,7 @@
 # with the '--license' option.
 # ====================================================================================
 
-# Check for sudo access
+##### CHECK FOR SUDO #####
 echo "Checking for \`sudo\` access (which may request your password)..."
 if [[ $EUID -ne 0 ]]; then
     echo "\`sudo\` access is required. Please run \`sudo !!\`"
@@ -27,8 +27,7 @@ else
     sleep 1
 fi
 
-##### FINDING BACKDOORS #####
-echo "Searching for backdoors..."
+##### FUNCTIONS #####
 # line seperator
 line_sep() {
     echo "----------------------------------"
@@ -73,6 +72,7 @@ check_users() {
     echo "Checking for unusual user accounts..." | tee -a $LOGFILE
     cat /etc/passwd | tee -a $LOGFILE
     cat /etc/shadow | tee -a $LOGFILE
+    groups username | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check sudoers configuration
@@ -115,10 +115,24 @@ check_grub() {
     cat /etc/default/grub | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
+# check suspicious services
+check_services() {
+    echo "Checking for suspicious services..." | tee -a $LOGFILE
+    systemctl list-units --type=service --state=running | tee -a $LOGFILE
+    line_sep | tee -a $LOGFILE
+}
+# check system logs
+check_logs() {
+    echo "Checking system logs..." | tee -a $LOGFILE
+    cat /var/log/auth.log | tee -a $LOGFILE | less
+    cat /var/log/syslog | tee -a $LOGFILE | less
+    cat /var/log/daemon.log | tee -a $LOGFILE | less
+    line_sep | tee -a $LOGFILE
+}
 
 ##### RUN FUNCTIONS #####
+echo "Searching for backdoors..."
 line_sep | tee -a $LOGFILE
-
 check_processes
 check_ports
 check_cron_jobs
@@ -131,6 +145,8 @@ check_rootkit
 check_kernel_modules
 check_file_integrity
 check_grub
+check_services
+check_logs
 
 echo "Finished searching for backdoors..."
 echo "Log saved to: $LOGFILE"
