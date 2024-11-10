@@ -94,8 +94,15 @@ check_users() {
     echo "\`cat /etc/shadow\`..." | tee -a $LOGFILE
     cat /etc/shadow | tee -a $LOGFILE
     read
-    echo "\`groups username\`..." | tee -a $LOGFILE
-    groups username | tee -a $LOGFILE
+    cut -d: -f1 /etc/passwd | while read user; do
+        if id -nG "$user" | grep -qwE 'sudo|wheel|sudoers|admin'; then
+            ROLE="admin"
+        else
+            ROLE="user"
+        fi
+        echo "Groups for $ROLE $user:" | tee -a $LOGFILE
+        groups $user | tee -a $LOGFILE
+    done
     line_sep | tee -a $LOGFILE
 }
 # check sudoers configuration
@@ -115,6 +122,8 @@ check_network_connections() {
 # check for rootkits using chkrootkit
 check_rootkit() {
     echo "Checking for rootkits using chkrootkit..." | tee -a $LOGFILE
+    echo "Installing chkrootkit..." | tee -a $LOGFILE
+    apt install -y chkrootkit
     echo "\`chkrootkit\`..." | tee -a $LOGFILE
     chkrootkit | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
