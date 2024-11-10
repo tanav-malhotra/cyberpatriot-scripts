@@ -147,11 +147,10 @@ check_file_integrity
 check_grub
 check_services
 check_logs
-
 echo "Finished searching for backdoors..."
 echo "Log saved to: $LOGFILE"
 
-# Wishing Goodluck
+##### WISH GOODLUCK #####
 echo;echo;echo;
 echo "Thank you for using this script. Good luck for the competition!"
 echo
