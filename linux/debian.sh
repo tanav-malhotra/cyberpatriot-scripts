@@ -150,21 +150,21 @@ log;log;
 sleep 1
 
 ##### MAKE SURE USER IS READY TO RUN SCRIPT #####
-read -p "Do you want to make all of the bash scripts in this directory executable? (Y/n): " $confirmation
 ring_bell
+read -p "Do you want to make all of the bash scripts in this directory executable? (Y/n): " $confirmation
 if [[ $confirmation =~ ^[Nn].* ]]; then
     log "Make sure you manually run \`sudo chmod +x\` on any script you want to run."
 else
     chmod +x *.sh
 fi
-read -p "Have all of the Forensics Questions been answered? (Y/n): " $confirmation
 ring_bell
+read -p "Have all of the Forensics Questions been answered? (Y/n): " $confirmation
 if [[ $confirmation =~ ^[Nn].* ]]; then
     log "error: Please complete these first and only then rerun the script."
     exit 1
 fi
-read -p "Have you created the required admins.txt, users.txt, addusers.txt, & addgroups.txt files in the current directory? (Y/n): " $confirmation
 ring_bell
+read -p "Have you created the required admins.txt, users.txt, addusers.txt, & addgroups.txt files in the current directory? (Y/n): " $confirmation
 if [[ $confirmation =~ ^[Nn].* ]]; then
     log "error: Please create these files first by using the information from the README file located on your desktop."
     exit 1
@@ -305,12 +305,12 @@ if [[ -z "$current_port" ]]; then
     current_port=22  # Default to 22 if no port is found
 fi
 # Ask if the user wants to change the SSH port
-read -p "Do you want to change the SSH port? (y/N): " change_port
 ring_bell
+read -p "Do you want to change the SSH port? (y/N): " change_port
 if [[ $change_port =~ ^[Yy].* ]]; then
     while true; do
-        read -p "Enter the new SSH port (1-65535): " new_port
         ring_bell
+        read -p "Enter the new SSH port (1-65535): " new_port
         
         # Validate the input
         if [[ "$new_port" =~ ^[0-9]+$ ]] && [ "$new_port" -ge 1 ] && [ "$new_port" -le 65535 ]; then
@@ -641,8 +641,8 @@ deborphan --guess-all > ./unused_software.txt
 # log "The following files will be removed:"
 # cat ./unused_software.txt
 # # Prompt the user for confirmation
-# read -p "Do you want to proceed with the deletion? (Y/n): " choice
 # ring_bell
+# read -p "Do you want to proceed with the deletion? (Y/n): " choice
 # if [[ $choice =~ ^[Nn].* ]]; then
 #     log "No software was removed."
 # else
@@ -670,8 +670,8 @@ find /dir -xdev \( -nouser -o -nogroup \) -print > ./no_user.txt
 log "Removing media files..."
 log "The following files will be removed:"
 cat ./media_files.txt
-read -p "Do you want to proceed with the deletion? (Y/n): " choice
 ring_bell
+read -p "Do you want to proceed with the deletion? (Y/n): " choice
 if [[ $choice =~ ^[Nn].* ]]; then
     log "No files were removed."
 else
@@ -684,8 +684,8 @@ fi
 log "Removing packages..."
 log "The following files will be removed:"
 cat ./packages.txt
-read -p "Do you want to proceed with the deletion? (Y/n): " choice
 ring_bell
+read -p "Do you want to proceed with the deletion? (Y/n): " choice
 if [[ $choice =~ ^[Nn].* ]]; then
     log "No files were removed."
 else
@@ -820,8 +820,8 @@ log "Please make sure only the required services are enabled."
 log "Please check all the .txt files in the current directory (`pwd`) for any information saved by this script."
 service --status-all
 log "Make sure updates are installed daily."
-read -p "Run \`software-properties-gtk &\`? (Y/n): " check_auto_update
 ring_bell
+read -p "Run \`software-properties-gtk &\`? (Y/n): " check_auto_update
 if [[ $check_auto_update =~ ^[Nn].* ]]; then
     software-properties-gtk &
 fi
@@ -851,8 +851,8 @@ log
 log_info "End time: " $end_time # log end time
 
 ##### REBOOT #####
-read -p "Reboot the system? (y/N): " reboot_choice
 ring_bell
+read -p "Reboot the system? (y/N): " reboot_choice
 if [[ $reboot_choice =~ ^[Yy].* ]]; then
     log "Rebooting..."
     reboot
