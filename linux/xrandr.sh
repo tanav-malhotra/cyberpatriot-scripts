@@ -33,6 +33,10 @@ else
     xrandr -s $RESOLUTION
 fi
 
+##### ADD SCRIPT TO START UP #####
+echo "Adding this script to crontab as a cronjob..."
+(crontab -l; echo "@reboot $0") | crontab -
+
 ##### WISH GOOD LUCK #####
 echo;echo;echo;
 echo "Thank you for using this script. Good luck for the competition!"
