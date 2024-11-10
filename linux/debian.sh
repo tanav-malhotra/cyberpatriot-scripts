@@ -222,19 +222,24 @@ apt autoremove -y --purge
 
 ##### CHECK FOR UPDATES DAILY #####
 log "Checking for updates daily..."
+touch /etc/apt/apt.conf.d/10periodic
+touch /etc/apt/apt.conf.d/10removal
 touch /etc/apt/apt.conf.d/20auto-upgrades
-touch /etc/apt/apt.conf.d/50auto-upgrades
+touch /etc/apt/apt.conf.d/50unattended-upgrades
+cp /etc/apt/apt.conf.d/10periodic /etc/apt/apt.conf.d/10periodic.bak
+cp /etc/apt/apt.conf.d/10removal /etc/apt/apt.conf.d/10removal.bak
 cp /etc/apt/apt.conf.d/20auto-upgrades /etc/apt/apt.conf.d/20auto-upgrades.bak
-cp /etc/apt/apt.conf.d/50auto-upgrades /etc/apt/apt.conf.d/50auto-upgrades.bak
+cp /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/apt.conf.d/50unattended-upgrades.bak
 dpkg-reconfigure unattended-upgrades
-# sed -i 's/APT::Periodic::Update-Package-Lists "0";/APT::Periodic::Update-Package-Lists "1";/' /etc/apt/apt.conf.d/20auto-upgrades
+echo "APT::Periodic::AutocleanInterval "7";" >> /etc/apt/apt.conf.d/10periodic
+echo "APT::Get::Remove-Unused "true";" >> /etc/apt/apt.conf.d/10removal
 cat <<EOL > "/etc/apt/apt.conf.d/20auto-upgrades"
 APT::Periodic::Update-Package-Lists "1";
 APT::Periodic::Download-Upgradeable-Packages "1";
 APT::Periodic::AutocleanInterval "7";
 APT::Periodic::Unattended-Upgrade "1";
 EOL
-cat <<EOL > "/etc/apt/apt.conf.d/50auto-upgrades"
+cat <<EOL > "/etc/apt/apt.conf.d/50unattended-upgrades"
 Unattended-Upgrade::Allowed-Origins {
 	"${distro_id} stable";
 	"${distro_id} ${distro_codename}-security";
