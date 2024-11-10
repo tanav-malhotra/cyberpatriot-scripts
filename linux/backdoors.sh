@@ -150,7 +150,7 @@ check_logs
 echo "Finished searching for backdoors..."
 echo "Log saved to: $LOGFILE"
 
-##### WISH GOODLUCK #####
+##### WISH GOOD LUCK #####
 echo;echo;echo;
 echo "Thank you for using this script. Good luck for the competition!"
 echo

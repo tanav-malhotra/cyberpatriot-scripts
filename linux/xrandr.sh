@@ -17,6 +17,7 @@
 # with the '--license' option.
 # ====================================================================================
 
+##### CHANGE SCREEN RESOULTION #####
 RESOLUTION="1920x1080"
 OUTPUT=$(xrandr | grep " connected" | awk '{ print $1 }')
 AVAILABLE_RESOLUTIONS=$(xrandr | grep "$OUTPUT" -A 10 | grep -oP "\d+x\d+")
@@ -32,7 +33,7 @@ else
     xrandr -s $RESOLUTION
 fi
 
-# Wishing Goodluck
+##### WISH GOOD LUCK #####
 echo;echo;echo;
 echo "Thank you for using this script. Good luck for the competition!"
 echo

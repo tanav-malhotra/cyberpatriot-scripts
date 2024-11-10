@@ -17,7 +17,7 @@
 # with the '--license' option.
 # ====================================================================================
 
-# Check for sudo access
+##### CHECK FOR SUDO #####
 echo "Checking for \`sudo\` access (which may request your password)..."
 if [[ $EUID -ne 0 ]]; then
     echo "\`sudo\` access is required. Please run \`sudo !!\`"
@@ -33,7 +33,7 @@ echo "Scripts:"
 cat ./scripts.txt
 read
 
-# Wishing Goodluck
+##### WISH GOOD LUCK #####
 echo;echo;echo;
 echo "Thank you for using this script. Good luck for the competition!"
 echo

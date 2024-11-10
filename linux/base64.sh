@@ -17,7 +17,7 @@
 # with the '--license' option.
 # ====================================================================================
 
-# Decode Base64 encoded string
+##### DECODE BASE64 STRING #####
 if [ -z "$1" ]; then
     read -p "Enter Base64 encoded string: " encoded_string
 else
@@ -26,7 +26,7 @@ decoded_string=$(echo "$encoded_string" | base64 --decode)
 echo "Decoded string: $decoded_string"
 read
 
-# Wishing Goodluck
+##### WISH GOOD LUCK #####
 echo;echo;echo;
 echo "Thank you for using this script. Good luck for the competition!"
 echo

@@ -834,7 +834,7 @@ log
 #     log "Unsupported desktop environment (standalone window managers are not supported). Please open settings manually (if needed)."
 # fi
 
-##### WISH GOODLUCK #####
+##### WISH GOOD LUCK #####
 log;log;log;
 log "Thank you for using this script. Good luck for the competition!"
 log

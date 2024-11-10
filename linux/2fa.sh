@@ -17,10 +17,10 @@
 # with the '--license' option.
 # ====================================================================================
 
-# Check for access
-log "Checking for \`\` access (which may request your password)..."
+##### CHECK FOR SUDO #####
+log "Checking for \`sudo\` access (which may request your password)..."
 if [[ $EUID -ne 0 ]]; then
-    log "\`\` access is required. Please run \` !!\`"
+    log "\`\` access is required. Please run \`sudo !!\`"
     exit 1
 else
     log "\`\` access confirmed. Proceeding..."
@@ -38,7 +38,7 @@ ufw logging high
 #     ufw allow from "$IP" to any port 22
 # done
 
-# Set up Google Authenticator for the user
+##### SET UP GOOGLE AUTH #####
 if [ -f "/home/$USER/.google_authenticator" ]; then
     echo "Google Authenticator is already set up for user $USER."
 else
@@ -47,23 +47,23 @@ else
     echo "Please scan the QR code displayed and save the emergency codes."
 fi
 
-# Configure PAM to use Google Authenticator
+##### CONFIGURE PAM #####
 echo "Updating PAM configuration for SSH."
 if ! grep -q "auth required pam_google_authenticator.so" /etc/pam.d/sshd; then
     echo "auth required pam_google_authenticator.so" | tee -a /etc/pam.d/sshd
 fi
 
-# Update SSH config to require 2FA
+##### SSH CONFIG FOR 2FA #####
 echo "Updating SSH configuration."
 if ! grep -q "ChallengeResponseAuthentication yes" /etc/ssh/sshd_config; then
     echo "ChallengeResponseAuthentication yes" | tee -a /etc/ssh/sshd_config
 fi
 
-# Restart SSH service to apply changes
+##### RESTART SSH #####
 systemctl restart sshd
 echo "UFW is configured and Google Authenticator setup is complete."
 
-# Wishing Goodluck
+##### WISH GOOD LUCK #####
 echo;echo;echo;
 echo "Thank you for using this script. Good luck for the competition!"
 echo
