@@ -295,4 +295,5 @@ echo "Copyright (c) 2024 Tanav Malhotra"
 echo "GNU General Public License v3.0"
 echo "==================================="
 echo
+
 exit 0
