@@ -17,6 +17,9 @@
 # with the '--license' option.
 # ====================================================================================
 
+##### VARS #####
+LOGFILE="./backdoors_script.log"
+
 ##### CHECK FOR SUDO #####
 echo "Checking for \`sudo\` access (which may request your password)..."
 if [[ $EUID -ne 0 ]]; then
