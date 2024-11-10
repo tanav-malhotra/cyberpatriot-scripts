@@ -37,74 +37,98 @@ line_sep() {
 }
 # unusual or suspicious processes
 check_processes() {
-    echo "Checking for suspicious processes..." | tee -a $LOGFILE
+    echo "Checking for suspicious processes (\`ps aux\`)..." | tee -a $LOGFILE
     ps aux | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # open listening ports
 check_ports() {
-    echo "Checking for open ports..." | tee -a $LOGFILE
+    echo "Checking for open ports (\`netstat -tulnp\`)..." | tee -a $LOGFILE
     netstat -tulnp | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check cron jobs
 check_cron_jobs() {
     echo "Checking for suspicious cron jobs..." | tee -a $LOGFILE
+    echo "\`crontab -l -u root\`..." | tee -a $LOGFILE
     crontab -l -u root | tee -a $LOGFILE
+    read
+    echo "\`ls /etc/cron.d\`..." | tee -a $LOGFILE
     ls /etc/cron.d | tee -a $LOGFILE
-    ls /etc/cron.daily | tee -a $LOGFILE
+    read
+    echo "\`ls /etc/cron.hourly\`..." | tee -a $LOGFILE
     ls /etc/cron.hourly | tee -a $LOGFILE
+    read
+    echo "\`ls /etc/cron.daily\`..." | tee -a $LOGFILE
+    ls /etc/cron.daily | tee -a $LOGFILE
+    read
+    echo "\`ls /etc/cron.weekly\`..." | tee -a $LOGFILE
+    ls /etc/cron.weekly | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check for recently modified files
 check_recent_files() {
     echo "Checking for recently modified files..." | tee -a $LOGFILE
+    echo "\`find / -type f -ctime -7\`..." | tee -a $LOGFILE
     find / -type f -ctime -7 | tee -a $LOGFILE
-    find / -type f -name '.*' | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check SSH configuration and logs
 check_ssh() {
     echo "Checking SSH configuration and logs..." | tee -a $LOGFILE
+    echo "\`cat /etc/ssh/sshd_config\`..." | tee -a $LOGFILE
     cat /etc/ssh/sshd_config | tee -a $LOGFILE
+    read
+    echo "\`/var/log/auth.log | grep ssh\`..." | tee -a $LOGFILE
     cat /var/log/auth.log | grep ssh | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check for unusual user accounts
 check_users() {
     echo "Checking for unusual user accounts..." | tee -a $LOGFILE
+    echo "\`cat /etc/passwd\`..." | tee -a $LOGFILE
     cat /etc/passwd | tee -a $LOGFILE
+    read
+    echo "\`cat /etc/shadow\`..." | tee -a $LOGFILE
     cat /etc/shadow | tee -a $LOGFILE
+    read
+    echo "\`groups username\`..." | tee -a $LOGFILE
     groups username | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check sudoers configuration
 check_sudoers() {
     echo "Checking sudoers configuration..." | tee -a $LOGFILE
+    echo "\`vi-c\`..." | tee -a $LOGFILE
     vi-c | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check for hidden network connections
 check_network_connections() {
     echo "Checking for hidden network connections..." | tee -a $LOGFILE
+    echo "\`lsof -i\`..." | tee -a $LOGFILE
     lsof -i | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check for rootkits using chkrootkit
 check_rootkit() {
     echo "Checking for rootkits using chkrootkit..." | tee -a $LOGFILE
+    echo "\`chkrootkit\`..." | tee -a $LOGFILE
     chkrootkit | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check for loaded kernel modules
 check_kernel_modules() {
     echo "Checking for unusual kernel modules..." | tee -a $LOGFILE
+    echo "\`lsmod\`..." | tee -a $LOGFILE
     lsmod | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check for file integrity (AIDE)
 check_file_integrity() {
     echo "Checking file integrity (requires AIDE setup)..." | tee -a $LOGFILE
+    apt install -y aide
+    echo "\`aide --check\`..." | tee -a $LOGFILE
     if command -v aide >/dev/null 2>&1; then
         aide --check | tee -a $LOGFILE
     else
@@ -115,20 +139,27 @@ check_file_integrity() {
 # check for suspicious GRUB modifications
 check_grub() {
     echo "Checking for suspicious GRUB configurations..." | tee -a $LOGFILE
+    echo "\`cat /etc/default/grub\`..." | tee -a $LOGFILE
     cat /etc/default/grub | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check suspicious services
 check_services() {
     echo "Checking for suspicious services..." | tee -a $LOGFILE
+    echo "\`systemctl list-units --type=service --state=running\`..." | tee -a $LOGFILE
     systemctl list-units --type=service --state=running | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check system logs
 check_logs() {
     echo "Checking system logs..." | tee -a $LOGFILE
+    echo "\`cat /var/log/auth.log\`..." | tee -a $LOGFILE
     cat /var/log/auth.log | tee -a $LOGFILE | less
+    read
+    echo "\`cat /var/log/syslog\`..." | tee -a $LOGFILE
     cat /var/log/syslog | tee -a $LOGFILE | less
+    read
+    echo "\`cat /var/log/daemon.log\`..." | tee -a $LOGFILE
     cat /var/log/daemon.log | tee -a $LOGFILE | less
     line_sep | tee -a $LOGFILE
 }
