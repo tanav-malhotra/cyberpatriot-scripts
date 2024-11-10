@@ -44,6 +44,8 @@ check_processes() {
 # open listening ports
 check_ports() {
     echo "Checking for open ports (\`netstat -tulnp\`)..." | tee -a $LOGFILE
+    echo "Installing netstat..." | tee -a $LOGFILE
+    apt install -y netstat
     netstat -tulnp | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
@@ -127,12 +129,13 @@ check_kernel_modules() {
 # check for file integrity (AIDE)
 check_file_integrity() {
     echo "Checking file integrity (requires AIDE setup)..." | tee -a $LOGFILE
+    echo "Installing AIDE..." | tee -a $LOGFILE
     apt install -y aide
     echo "\`aide --check\`..." | tee -a $LOGFILE
     if command -v aide >/dev/null 2>&1; then
         aide --check | tee -a $LOGFILE
     else
-        echo "AIDE not installed. Skipping file integrity check." | tee -a $LOGFILE
+        echo "error: AIDE not installed. Skipping file integrity check." | tee -a $LOGFILE
     fi
     line_sep | tee -a $LOGFILE
 }
