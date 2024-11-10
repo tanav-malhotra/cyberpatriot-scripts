@@ -137,19 +137,33 @@ check_logs() {
 echo "Searching for backdoors..."
 line_sep | tee -a $LOGFILE
 check_processes
+read
 check_ports
+read
 check_cron_jobs
+read
 check_recent_files
+read
 check_ssh
+read
 check_users
+read
 check_sudoers
+read
 check_network_connections
+read
 check_rootkit
+read
 check_kernel_modules
+read
 check_file_integrity
+read
 check_grub
+read
 check_services
+read
 check_logs
+read
 echo "Finished searching for backdoors..."
 echo "Log saved to: $LOGFILE"
 
