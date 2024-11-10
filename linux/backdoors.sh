@@ -50,7 +50,7 @@ check_processes() {
 check_ports() {
     echo "Checking for open ports (\`netstat -tulnp\`)..." | tee -a $LOGFILE
     echo "Installing netstat..." | tee -a $LOGFILE
-    apt install -y netstat
+    apt install -y net-tools
     netstat -tulnp | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
