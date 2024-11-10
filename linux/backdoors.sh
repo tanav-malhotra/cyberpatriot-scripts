@@ -43,14 +43,16 @@ line_sep() {
 # unusual or suspicious processes
 check_processes() {
     echo "Checking for suspicious processes (\`ps aux\`)..." | tee -a $LOGFILE
+    read
     ps aux | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # open listening ports
 check_ports() {
-    echo "Checking for open ports (\`netstat -tulnp\`)..." | tee -a $LOGFILE
     echo "Installing netstat..." | tee -a $LOGFILE
     apt install -y net-tools
+    echo "Checking for open ports (\`netstat -tulnp\`)..." | tee -a $LOGFILE
+    read
     netstat -tulnp | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
@@ -58,18 +60,23 @@ check_ports() {
 check_cron_jobs() {
     echo "Checking for suspicious cron jobs..." | tee -a $LOGFILE
     echo "\`crontab -l -u root\`..." | tee -a $LOGFILE
+    read
     crontab -l -u root | tee -a $LOGFILE
     read
     echo "\`ls /etc/cron.d\`..." | tee -a $LOGFILE
+    read
     ls /etc/cron.d | tee -a $LOGFILE
     read
     echo "\`ls /etc/cron.hourly\`..." | tee -a $LOGFILE
+    read
     ls /etc/cron.hourly | tee -a $LOGFILE
     read
     echo "\`ls /etc/cron.daily\`..." | tee -a $LOGFILE
+    read
     ls /etc/cron.daily | tee -a $LOGFILE
     read
     echo "\`ls /etc/cron.weekly\`..." | tee -a $LOGFILE
+    read
     ls /etc/cron.weekly | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
@@ -77,6 +84,7 @@ check_cron_jobs() {
 check_recent_files() {
     echo "Checking for recently modified files..." | tee -a $LOGFILE
     echo "\`find / -type f -ctime -7\`..." | tee -a $LOGFILE
+    read
     find / -type f -ctime -7 | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
@@ -84,9 +92,11 @@ check_recent_files() {
 check_ssh() {
     echo "Checking SSH configuration and logs..." | tee -a $LOGFILE
     echo "\`cat /etc/ssh/sshd_config\`..." | tee -a $LOGFILE
+    read
     cat /etc/ssh/sshd_config | tee -a $LOGFILE
     read
     echo "\`/var/log/auth.log | grep ssh\`..." | tee -a $LOGFILE
+    read
     cat /var/log/auth.log | grep ssh | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
@@ -94,9 +104,11 @@ check_ssh() {
 check_users() {
     echo "Checking for unusual user accounts..." | tee -a $LOGFILE
     echo "\`cat /etc/passwd\`..." | tee -a $LOGFILE
+    read
     cat /etc/passwd | tee -a $LOGFILE
     read
     echo "\`cat /etc/shadow\`..." | tee -a $LOGFILE
+    read
     cat /etc/shadow | tee -a $LOGFILE
     read
     cut -d: -f1 /etc/passwd | while read user; do
@@ -107,6 +119,7 @@ check_users() {
         fi
         echo "Groups for $ROLE $user:" | tee -a $LOGFILE
         groups $user | tee -a $LOGFILE
+        read
     done
     line_sep | tee -a $LOGFILE
 }
@@ -114,6 +127,7 @@ check_users() {
 check_sudoers() {
     echo "Checking sudoers configuration..." | tee -a $LOGFILE
     echo "\`visudo -c\`..." | tee -a $LOGFILE
+    read
     visudo -c | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
@@ -121,6 +135,7 @@ check_sudoers() {
 check_network_connections() {
     echo "Checking for hidden network connections..." | tee -a $LOGFILE
     echo "\`lsof -i\`..." | tee -a $LOGFILE
+    read
     lsof -i | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
@@ -130,6 +145,7 @@ check_rootkit() {
     echo "Installing chkrootkit..." | tee -a $LOGFILE
     apt install -y chkrootkit
     echo "\`chkrootkit\`..." | tee -a $LOGFILE
+    read
     chkrootkit | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
@@ -137,7 +153,40 @@ check_rootkit() {
 check_kernel_modules() {
     echo "Checking for unusual kernel modules..." | tee -a $LOGFILE
     echo "\`lsmod\`..." | tee -a $LOGFILE
+    read
     lsmod | tee -a $LOGFILE
+    line_sep | tee -a $LOGFILE
+}
+# check for suspicious GRUB modifications
+check_grub() {
+    echo "Checking for suspicious GRUB configurations..." | tee -a $LOGFILE
+    echo "\`cat /etc/default/grub\`..." | tee -a $LOGFILE
+    read
+    cat /etc/default/grub | tee -a $LOGFILE
+    line_sep | tee -a $LOGFILE
+}
+# check suspicious services
+check_services() {
+    echo "Checking for suspicious services..." | tee -a $LOGFILE
+    echo "\`systemctl list-units --type=service --state=running\`..." | tee -a $LOGFILE
+    read
+    systemctl list-units --type=service --state=running | tee -a $LOGFILE
+    line_sep | tee -a $LOGFILE
+}
+# check system logs
+check_logs() {
+    echo "Checking system logs..." | tee -a $LOGFILE
+    echo "\`cat /var/log/auth.log\`..." | tee -a $LOGFILE
+    read
+    cat /var/log/auth.log | tee -a $LOGFILE | less
+    read
+    echo "\`cat /var/log/syslog\`..." | tee -a $LOGFILE
+    read
+    cat /var/log/syslog | tee -a $LOGFILE | less
+    read
+    echo "\`cat /var/log/daemon.log\`..." | tee -a $LOGFILE
+    read
+    cat /var/log/daemon.log | tee -a $LOGFILE | less
     line_sep | tee -a $LOGFILE
 }
 # check for file integrity (AIDE)
@@ -196,34 +245,8 @@ EOF
         exit 1
     fi
     echo "\`aide --check\`..." | tee -a $LOGFILE
+    read
     aide --check | tee -a $LOGFILE
-    line_sep | tee -a $LOGFILE
-}
-# check for suspicious GRUB modifications
-check_grub() {
-    echo "Checking for suspicious GRUB configurations..." | tee -a $LOGFILE
-    echo "\`cat /etc/default/grub\`..." | tee -a $LOGFILE
-    cat /etc/default/grub | tee -a $LOGFILE
-    line_sep | tee -a $LOGFILE
-}
-# check suspicious services
-check_services() {
-    echo "Checking for suspicious services..." | tee -a $LOGFILE
-    echo "\`systemctl list-units --type=service --state=running\`..." | tee -a $LOGFILE
-    systemctl list-units --type=service --state=running | tee -a $LOGFILE
-    line_sep | tee -a $LOGFILE
-}
-# check system logs
-check_logs() {
-    echo "Checking system logs..." | tee -a $LOGFILE
-    echo "\`cat /var/log/auth.log\`..." | tee -a $LOGFILE
-    cat /var/log/auth.log | tee -a $LOGFILE | less
-    read
-    echo "\`cat /var/log/syslog\`..." | tee -a $LOGFILE
-    cat /var/log/syslog | tee -a $LOGFILE | less
-    read
-    echo "\`cat /var/log/daemon.log\`..." | tee -a $LOGFILE
-    cat /var/log/daemon.log | tee -a $LOGFILE | less
     line_sep | tee -a $LOGFILE
 }
 
@@ -252,13 +275,13 @@ check_rootkit
 read
 check_kernel_modules
 read
-check_file_integrity
-read
 check_grub
 read
 check_services
 read
 check_logs
+read
+check_file_integrity
 read
 echo "Finished searching for backdoors..."
 echo "Log saved to: $LOGFILE"
