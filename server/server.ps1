@@ -13,6 +13,6 @@
 # for full details.
 #
 # You can also view the license by running this script
-# with the '--license' option.
+# with the '-License' option.
 # ====================================================================================
 

@@ -12,7 +12,7 @@
 :: of merchantability and fitness for a particular purpose. See the GPL-3.0
 :: for full details.
 ::
-:: You can also view the license by running this script
-:: with the '--license' option.
+:: You can also view the license by running the `windows.ps1` script
+:: with the '-License' option.
 :: ====================================================================================
 
