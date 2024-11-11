@@ -46,7 +46,7 @@ function log_info {
 log_info "Checking for admininstrative access..."
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     log_info "error: Please run this script as an administrator."
-    Write-Error "error: Please run this script as an administrator."
+    Write-Error "Please run this script as an administrator."
     exit
 }
 
@@ -353,7 +353,7 @@ try {
 }
 catch {
     log_info "error: Failed to rename 'Administrator' account."
-    Write-Error "error: Failed to rename 'Administrator' account."
+    Write-Error "Failed to rename 'Administrator' account."
 }
 
 ##### CREATE GLOBAL OBJECTS CONFIGURATION #####
