@@ -142,11 +142,13 @@ $appsToRemove = @(
     "*bittorrent*",
     "*netcat*",
     "*teamviewer*",
-    "*webcompanion*"
+    "*webcompanion*",
+    "*groove*",
+    "*Paint3D*"
 )
 foreach ($app in $appsToRemove) {
     log "Removing $app..."
-    Get-AppxPackage -AllUsers -Name $app | Remove-AppxPackage -ErrorAction SilentlyContinue # for windows apps
+    Get-AppxPackage -AllUsers | Where-Object { $_.Name -like $app } | Remove-AppxPackage -ErrorAction SilentlyContinue
     Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like $app } | ForEach-Object { $_.Uninstall() } # for traditional apps installed from internet
 }
 $app = "*tftp*"
@@ -157,7 +159,7 @@ switch -WildCard ($appChoice) {
     }
     Default {
         log "Removing $app..."
-        Get-AppxPackage -AllUsers -Name $app | Remove-AppxPackage -ErrorAction SilentlyContinue # for windows apps
+        Get-AppxPackage -AllUsers | Where-Object { $_.Name -like $app } | Remove-AppxPackage -ErrorAction SilentlyContinue
         Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like $app } | ForEach-Object { $_.Uninstall() } # for traditional apps installed from internet
     }
 }
@@ -169,17 +171,26 @@ switch -WildCard ($appChoice) {
     }
     Default {
         log "Removing $app..."
-        Get-AppxPackage -AllUsers -Name $app | Remove-AppxPackage -ErrorAction SilentlyContinue # for windows apps
+        Get-AppxPackage -AllUsers | Where-Object { $_.Name -like $app } | Remove-AppxPackage -ErrorAction SilentlyContinue
         Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like $app } | ForEach-Object { $_.Uninstall() } # for traditional apps installed from internet
     }
 }
-
 # installing software
 log "Installing software..."
 # TODO: see if any software needs to be installed
 
 ##### AUTOMATIC UPDATES #####
-# TODO
+# start update service and set to automatic
+Start-Service -Name wuauserv
+Set-Service -Name wuauserv -StartupType Automatic
+# modify registry to check for updates automatically
+$regPath = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings"
+Set-ItemProperty -Path $regPath -Name "FlightSetting" -Value 0
+Set-ItemProperty -Path $regPath -Name "UserPreference" -Value 1
+# force a manual check for updates to initialize the update process
+$updateSession = New-Object -ComObject Microsoft.Update.Session
+$updateSearcher = $updateSession.CreateUpdateSearcher()
+$searchResult = $updateSearcher.Search("IsInstalled=0")
 
 ##### WINDOWS DEFENDER #####
 log "Enabling and updating Windows Defender..."
@@ -251,6 +262,44 @@ $registryValueName = "ConsentPromptBehaviorAdmin"
 $desiredBehavior = 4 # 3 = prompt for credentials, 4 = prompt for consent
 Set-ItemProperty -Path $registryPath -Name $registryValueName -Value $desiredBehavior
 
+##### REMOVING MEDIA FILES #####
+$mediaExtensions = @("*.mp3", "*.mp4", "*.avi", "*.mkv", "*.flac", "*.wav", "*.mov", "*.wmv")
+$mediaFiles = Get-ChildItem -Path "C:\Users\*" -Recurse -File | Where-Object { $mediaExtensions -contains $_.Extension.ToLower() }
+$mediaFiles | Select-Object FullName | Out-File -FilePath "media_files.txt"
+$mediaFiles | ForEach-Object {
+    $confirmDelete = Read-Host "Do you want to delete '$($_.FullName)'? (Y/n): "
+    if ($confirmDelete.ToLower() -eq 'n') {
+        log "Skipped: $($_.FullName)"
+    } else {
+        Remove-Item -Path $_.FullName -Force
+        log "Deleted: $($_.FullName)"
+    }
+}
+
+##### AUDIT POLICIES #####
+try {
+    auditpol /set /category:"Account Logon" /success:enable 
+    auditpol /set /category:"Account Logon" /failure:enable
+    auditpol /set /category:"Account Management" /success:enable
+    auditpol /set /category:"Account Management" /failure:enable
+    auditpol /set /category:"DS Access" /success:enable
+    auditpol /set /category:"DS Access" /failure:enable
+    auditpol /set /category:"Logon/Logoff" /success:enable
+    auditpol /set /category:"Logon/Logoff" /failure:enable
+    auditpol /set /category:"Object Access" /success:enable
+    auditpol /set /category:"Object Access" /failure:enable
+    auditpol /set /category:"Policy Change" /success:enable
+    auditpol /set /category:"Policy Change" /failure:enable
+    auditpol /set /category:"Privilege Use" /success:enable
+    auditpol /set /category:"Privilege Use" /failure:enable
+    auditpol /set /category:"Detailed Tracking" /success:enable
+    auditpol /set /category:"Detailed Tracking" /failure:enable
+    auditpol /set /category:"System" /success:enable 
+    auditpol /set /category:"System" /failure:enable
+} catch {
+    log "error: Failed to set audit policies."
+}
+
 ##### SERVICE MANAGEMENT #####
 log "Managing services..."
 log "Disabling certain services..."
@@ -289,6 +338,8 @@ sc stop HomeGroupListener
 sc config HomeGroupListener start= disabled
 sc stop telnet
 sc config telnet start= disabled
+sc stop upnphost
+sc config upnphost start= disabled
 # enabling
 log "Enabling certain services..."
 sc config EventLog start= auto
