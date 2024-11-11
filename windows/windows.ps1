@@ -39,6 +39,9 @@ function log_info {
     $Message | Out-File -Append -FilePath $LOGFILE
 }
 
+##### ARGS #####
+#TODO: -License, -Debug, -Help, -Version
+
 ##### CHECK FOR ADMIN #####
 log_info "Checking for admininstrative access..."
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
