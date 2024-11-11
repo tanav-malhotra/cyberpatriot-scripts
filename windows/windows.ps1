@@ -60,7 +60,8 @@ foreach ($user in $users) {
             net user $user.Name $newPassword
             log "Password for user $($user.Name) changed successfully."
         } catch {
-            log "Failed to change password for user $($user.Name): $_"
+            log_info "error: Failed to change password for user $($user.Name): $_"
+            Write-Error "Failed to change password for user $($user.Name): $_"
         }
     }
 }
@@ -70,7 +71,8 @@ try {
     log "Enabling 'Limit local account use of blank passwords to console logon only'..."
     Set-ItemProperty -Path $registryPath -Name $registryName -Value 1
 } catch {
-    log "Failed to enable the setting: $_"
+    log_info "error: Failed to enable the setting: $_"
+    Write-Error "Failed to enable the setting: $_"
 }
 net accounts /maxpwage:30
 net accounts /minpwage:1
@@ -470,7 +472,8 @@ try {
     auditpol /set /category:"System" /success:enable 
     auditpol /set /category:"System" /failure:enable
 } catch {
-    log "error: Failed to set audit policies."
+    log_info "error: Failed to set audit policies."
+    Write-Error "Failed to set audit policies."
 }
 # global audit policies
 $OSWMI = Get-WmiObject Win32_OperatingSystem -Property Caption,Version
