@@ -154,8 +154,8 @@ foreach ($app in $appsToRemove) {
 log "Installing software..."
 # TODO: see if any software needs to be installed
 
-##### ANTIVIRUS #####
-# install antivirus and make another script for antivirus
+##### AUTOMATIC UPDATES #####
+# TDOD
 
 ##### WINDOWS DEFENDER #####
 log "Enabling and updating Windows Defender..."
@@ -269,6 +269,9 @@ sc config telnet start= disabled
 log "Enabling certain services..."
 sc config EventLog start= auto
 sc start EventLog
+
+##### ANTIVIRUS #####
+# install antivirus and make another script for antivirus
 
 ##### UPDATE #####
 # log "Checking for Windows updates..."
