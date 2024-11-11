@@ -95,7 +95,7 @@ Remove-Item C:\secpol.cfg
 New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" `
 	-Name "PasswordComplexity" -Value 1 -PropertyType DWord -Force
 log "Password complexity applied."
-# Disable Password Reversible Encryption (Decryption)
+# Disable Password Reversible Encryption for passwords (Decryption)
 New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Password" `
 	-Name "DisableReversibleEncryption" -Value 1 -PropertyType DWord -Force
 Set-ItemProperty -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'DisablePasswordReversibleEncryption' -Value 1
@@ -142,7 +142,6 @@ $appsToRemove = @(
     "*bittorrent*",
     "*netcat*",
     "*teamviewer*",
-    "*tftp*",
     "*webcompanion*"
 )
 foreach ($app in $appsToRemove) {
@@ -150,12 +149,37 @@ foreach ($app in $appsToRemove) {
     Get-AppxPackage -AllUsers -Name $app | Remove-AppxPackage -ErrorAction SilentlyContinue # for windows apps
     Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like $app } | ForEach-Object { $_.Uninstall() } # for traditional apps installed from internet
 }
+$app = "*tftp*"
+$appChoice = Read-Host "Do you want to remove $app? (Y/n): "
+switch -WildCard ($appChoice) {
+    "N" -or "n" {
+        log "Canceled."
+    }
+    Default {
+        log "Removing $app..."
+        Get-AppxPackage -AllUsers -Name $app | Remove-AppxPackage -ErrorAction SilentlyContinue # for windows apps
+        Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like $app } | ForEach-Object { $_.Uninstall() } # for traditional apps installed from internet
+    }
+}
+$app = "*telnet*"
+$appChoice = Read-Host "Do you want to remove $app? (Y/n): "
+switch -WildCard ($appChoice) {
+    "N" -or "n" {
+        log "Canceled."
+    }
+    Default {
+        log "Removing $app..."
+        Get-AppxPackage -AllUsers -Name $app | Remove-AppxPackage -ErrorAction SilentlyContinue # for windows apps
+        Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like $app } | ForEach-Object { $_.Uninstall() } # for traditional apps installed from internet
+    }
+}
+
 # installing software
 log "Installing software..."
 # TODO: see if any software needs to be installed
 
 ##### AUTOMATIC UPDATES #####
-# TDOD
+# TODO
 
 ##### WINDOWS DEFENDER #####
 log "Enabling and updating Windows Defender..."
