@@ -419,10 +419,11 @@ do {
 
 ##### CONFIGURE WINDOWS SMARTSCREEN #####
 log "Blocking windows smartscreen..."
-$regPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+# $regPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+$regPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System"
 $regKey = "SmartScreenEnabled"
-# Set SmartScreen to Warn
-Set-ItemProperty -Path $regPath -Name $regKey -Value "Warn"
+# Set SmartScreen to Block
+Set-ItemProperty -Path $regPath -Name $regKey -Value "Block"
 
 ##### PROMPT ADMINS BEFORE ELEVATING THEIR PRIVILEGES #####
 log "Prompting admins before elevating their privileges..."
@@ -507,6 +508,7 @@ gpupdate /force # reload group policies
 #Disable-WindowsOptionalFeature -FeatureName SMB1Protocol -Online -NoRestart
 #Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name "SMB2" -Value 0
 #Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name "SMB1" -Value 0
+# TODO
 
 ##### SERVICE MANAGEMENT #####
 log "Managing services..."
