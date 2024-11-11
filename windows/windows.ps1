@@ -191,6 +191,12 @@ sc start EventLog
 ##### DISABLING AUTOPLAY #####
 Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoDriveTypeAutoRun" -Value 0xFF
 
+##### CONFIGURE WINDOWS SMARTSCREEN #####
+$regPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+$regKey = "SmartScreenEnabled"
+# Set SmartScreen to Block
+Set-ItemProperty -Path $regPath -Name $regKey -Value "Block"
+
 ##### UPDATE #####
 # log "Checking for Windows updates..."
 # Install-Module PSWindowsUpdate -Force -ErrorAction SilentlyContinue
