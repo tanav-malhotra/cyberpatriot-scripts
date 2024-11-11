@@ -506,12 +506,12 @@ foreach ($policy in $policies) {
 gpupdate /force # reload group policies
 
 ##### DISABLING WINDOWS FEATURES #####
-# log "Disabling certain windows features..."
-# Disable-WindowsOptionalFeature -FeatureName RSAT-Routing -Online -NoRestart
-# Disable-WindowsOptionalFeature -FeatureName FS-SMB1 -Online -NoRestart
-# Disable-WindowsOptionalFeature -FeatureName SMB1Protocol -Online -NoRestart
-# Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name "SMB2" -Value 0
-# Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name "SMB1" -Value 0
+#log "Disabling certain windows features..."
+#Disable-WindowsOptionalFeature -FeatureName RSAT-Routing -Online -NoRestart
+#Disable-WindowsOptionalFeature -FeatureName FS-SMB1 -Online -NoRestart
+#Disable-WindowsOptionalFeature -FeatureName SMB1Protocol -Online -NoRestart
+#Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name "SMB2" -Value 0
+#Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name "SMB1" -Value 0
 # TODO
 
 ##### SERVICE MANAGEMENT #####
