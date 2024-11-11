@@ -164,6 +164,7 @@ Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameter
 ##### DISBALE GUEST LOGIN #####
 log "Disabling guest login..."
 Set-LocalUser -Name "Guest" -Enabled $false
+Disable-LocalUser -Name "Guest"
 
 ##### SOFTWARE MANAGEMENT #####
 log "Managing software..."
