@@ -45,7 +45,8 @@ function log_info {
 ##### CHECK FOR ADMIN #####
 log_info "Checking for admininstrative access..."
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    log "error: Please run this script as an administrator."
+    log_info "error: Please run this script as an administrator."
+    Write-Error "error: Please run this script as an administrator."
     exit
 }
 
@@ -163,8 +164,7 @@ Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameter
 
 ##### DISBALE GUEST LOGIN #####
 log "Disabling guest login..."
-Set-LocalUser -Name "Guest" -Enabled $false
-Disable-LocalUser -Name "Guest"
+net user guest /active:no
 
 ##### SOFTWARE MANAGEMENT #####
 log "Managing software..."
@@ -228,6 +228,9 @@ Start-Service -Name wuauserv
 Set-Service -Name wuauserv -StartupType Automatic
 # modify registry to check for updates automatically
 $regPath = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings"
+if (-not (Test-Path $regPath)) {
+    New-Item -Path $regPath -Force
+}
 Set-ItemProperty -Path $regPath -Name "FlightSetting" -Value 0
 Set-ItemProperty -Path $regPath -Name "UserPreference" -Value 1
 # force a manual check for updates to initialize the update process
@@ -239,11 +242,11 @@ $searchResult = $updateSearcher.Search("IsInstalled=0")
 log "Enabling and updating Windows Defender..."
 # Enable Windows Defender
 Set-MpPreference -DisableRealtimeMonitoring $false
+Start-Service -Name WinDefend
 # Update Windows Defender
 Update-MpSignature
 # rules
 setx /M MP_FORCE_USE_SANDBOX 1
-Set-MpPreference -EnableRealtimeMonitoring $true
 Add-MpPreference -AttackSurfaceReductionRules_Ids e6db77e5-3df2-4cf1-b95a-636979351e5b -AttackSurfaceReductionRules_Actions Enabled
 Set-MpPreference -AttackSurfaceReductionRules_Ids D1E49AAC-8F56-4280-B9BA-993A6D -AttackSurfaceReductionRules_Actions Enabled
 Add-MpPreference -AttackSurfaceReductionRules_Ids C1DB55AB-C21A-4637-BB3F-A12568109D35 -AttackSurfaceReductionRules_Actions Enabled

@@ -17,9 +17,9 @@
 # ====================================================================================
 
 ##### CHECK FOR ADMIN #####
-log_info "Checking for admininstrative access..."
+Write-Host "Checking for admininstrative access..."
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    log "error: Please run this script as an administrator."
+    Write-Error "Please run this script as an administrator."
     exit
 }
 
@@ -38,12 +38,7 @@ Invoke-WebRequest -Uri $ps7Url -OutFile "$env:TEMP\install-powershell.ps1"
 Write-Host "Running the PowerShell 7 installation script..."
 Start-Process powershell.exe -ArgumentList "-ExecutionPolicy Bypass -File `"$env:TEMP\install-powershell.ps1`"" -Wait
 $installedPS7 = Get-Command pwsh -ErrorAction SilentlyContinue
-if ($installedPS7) {
-    Write-Host "PowerShell 7 installed successfully. Launching PowerShell 7..."
-    Start-Process pwsh
-} else {
-    Write-Host "error: PowerShell 7 installation failed."
-}
+Start-Process pwsh
 
 ##### EXIT #####
 exit
