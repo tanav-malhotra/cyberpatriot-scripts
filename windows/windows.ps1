@@ -60,7 +60,6 @@ foreach ($user in $users) {
         }
     }
 }
-
 $registryPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa"
 $registryName = "LimitBlankPasswordUse"
 try {
@@ -117,8 +116,43 @@ log "Disabling guest login..."
 Set-LocalUser -Name "Guest" -Enabled $false
 
 ##### SOFTWARE MANAGEMENT #####
-#remove bittorrent, teamviewer, open tftp server, netcat, wireshark, adaware webcompanion
-#install any other software needed (try to update things through command-line)
+# removing software
+log "Removing prohibited software..."
+$appsToRemove = @(
+    "*xbox*",
+    "*zune*",
+    "*3dbuilder*",
+    "*bingnews*",
+    "*solitaire*",
+    "*skypeapp*",
+    "*getstarted*",
+    "*oneconnect*",
+    "*people*",
+    "*communicationsapps*",
+    "*feedbackhub*",
+    "*officehub*",
+    "*onenote*",
+    "*mixedreality*",
+    "*wallet*",
+    "*yourphone*",
+    "*candycrush*",
+    "*twitter*",
+    "*netflix*",
+    "*wireshark*",
+    "*bittorrent*",
+    "*netcat*",
+    "*teamviewer*",
+    "*tftp*",
+    "*webcompanion*"
+)
+foreach ($app in $appsToRemove) {
+    log "Removing $app..."
+    Get-AppxPackage -AllUsers -Name $app | Remove-AppxPackage -ErrorAction SilentlyContinue # for windows apps
+    Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like $app } | ForEach-Object { $_.Uninstall() } # for traditional apps installed from internet
+}
+# installing software
+log "Installing software..."
+# TODO: see if any software needs to be installed
 
 ##### ANTIVIRUS #####
 # install antivirus and make another script for antivirus
