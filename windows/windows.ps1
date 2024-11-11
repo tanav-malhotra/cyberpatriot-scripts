@@ -89,8 +89,11 @@ New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" `
 	-Name "PasswordComplexity" -Value 1 -PropertyType DWord -Force
 log "Password complexity applied."
 # Disable Password Reversible Encryption for passwords (Decryption)
-New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Password" `
-	-Name "DisableReversibleEncryption" -Value 1 -PropertyType DWord -Force
+$path = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Password"
+if (-not (Test-Path $path)) {
+    New-Item -Path $path -Force
+}
+New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Password" -Name "DisableReversibleEncryption" -Value 1 -PropertyType DWord -Force
 Set-ItemProperty -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'DisablePasswordReversibleEncryption' -Value 1
 
 #### FIREWALL #####
