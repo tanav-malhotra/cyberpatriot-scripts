@@ -32,8 +32,15 @@ function log {
     Write-Host $Message
     $Message | Out-File -Append -FilePath $LOGFILE
 }
+function log_info {
+    param (
+        [string]$Message,
+    )
+    $Message | Out-File -Append -FilePath $LOGFILE
+}
 
 ##### CHECK FOR ADMIN #####
+log_info "Checking for admininstrative access..."
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     log "error: Please run this script as an administrator."
     exit
@@ -95,15 +102,18 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Passw
 Set-ItemProperty -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'DisablePasswordReversibleEncryption' -Value 1
 
 #### FIREWALL #####
+log "Setting up firewall..."
 Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled True
 Set-NetFirewallRule -DisplayGroup "Windows Firewall" -Enabled True
 New-NetFirewallRule -DisplayName "Allow HTTP" -Direction Inbound -Protocol TCP -LocalPort 80 -Action Allow
 
 ##### DISABLE IPv6 #####
+log "Disabling IPv6..."
 Set-NetAdapterBinding -Name "*" -ComponentID ms_tcpip6 -Enabled $false
 Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters' -Name 'DisabledComponents' -Value 0xFFFFFFFF
 
 ##### DISBALE GUEST LOGIN #####
+log "Disabling guest login..."
 Set-LocalUser -Name "Guest" -Enabled $false
 
 ##### SOFTWARE MANAGEMENT #####
@@ -114,12 +124,29 @@ Set-LocalUser -Name "Guest" -Enabled $false
 # install antivirus and make another script for antivirus
 
 ##### WINDOWS DEFENDER #####
+log "Enabling and updating Windows Defender..."
 # Enable Windows Defender
 Set-MpPreference -DisableRealtimeMonitoring $false
 # Update Windows Defender
 Update-MpSignature
 
+##### CREATE GLOBAL OBJECTS CONGIFURATION #####
+# $policyName = "SeCreateGlobalPrivilege"
+# $adminSID = (New-Object System.Security.Principal.NTAccount("Administrators")).Translate([System.Security.Principal.SecurityIdentifier]).Value
+# secedit /export /cfg "C:\secpol.cfg"
+# (gc "C:\secpol.cfg") -replace "$policyName.*", "$policyName = *$adminSID" | Out-File "C:\secpol.cfg"
+# secedit /configure /db secedit.sdb /cfg "C:\secpol.cfg" /overwrite
+log "Preventing users from creating global objects..."
+$secpolPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+$createGlobalObjectsKey = "SeCreateGlobalPrivilege"
+$currentPrivileges = Get-ItemProperty -Path $secpolPath -Name $createGlobalObjectsKey
+$usersSID = (New-Object System.Security.Principal.NTAccount("Users")).Translate([System.Security.Principal.SecurityIdentifier]).Value
+$adminsSID = (New-Object System.Security.Principal.NTAccount("Administrators")).Translate([System.Security.Principal.SecurityIdentifier]).Value
+$currentPrivileges.Value = $currentPrivileges.Value -replace $usersSID, ""
+Set-ItemProperty -Path $secpolPath -Name $createGlobalObjectsKey -Value $currentPrivileges.Value
+
 ##### AUDIT CREDENTIAL VALIDATION #####
+log "Enabling Audit Credential Validation..."
 do {
     $auditChoice = Read-Host "Do you want to enable Audit Credential Validation for (1) Success only, (2) Failure only, or (3) Both? Enter the number corresponding to your choice: "
     switch ($auditChoice) {
@@ -149,6 +176,8 @@ do {
 } while (-not $validChoice)
 
 ##### SERVICE MANAGEMENT #####
+log "Managing services..."
+log "Disabling certain services..."
 # disabling
 sc stop TapiSrv
 sc config TapiSrv start= disabled
@@ -185,17 +214,27 @@ sc config HomeGroupListener start= disabled
 sc stop telnet
 sc config telnet start= disabled
 # enabling
+log "Enabling certain services..."
 sc config EventLog start= auto
 sc start EventLog
 
 ##### DISABLING AUTOPLAY #####
+log "Disabling AutoPlay..."
 Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoDriveTypeAutoRun" -Value 0xFF
 
 ##### CONFIGURE WINDOWS SMARTSCREEN #####
+log "Blocking windows smartscreen..."
 $regPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
 $regKey = "SmartScreenEnabled"
 # Set SmartScreen to Block
 Set-ItemProperty -Path $regPath -Name $regKey -Value "Block"
+
+##### PROMPT ADMINS BEFORE ELEVATING THEIR PRIVILEGES #####
+log "Prompting admins before elevating their privileges..."
+$registryPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+$registryValueName = "ConsentPromptBehaviorAdmin"
+$desiredBehavior = 4 # 3 = prompt for credentials, 4 = prompt for consent
+Set-ItemProperty -Path $registryPath -Name $registryValueName -Value $desiredBehavior
 
 ##### UPDATE #####
 # log "Checking for Windows updates..."
