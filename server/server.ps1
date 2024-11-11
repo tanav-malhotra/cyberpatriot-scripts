@@ -259,8 +259,13 @@ Add-MpPreference -AttackSurfaceReductionRules_Ids d3e037e1-3eb8-44c8-a917-579279
 
 ##### DISABLE WINDOWS REMOTE MANAGEMENT #####
 log "Disabling Windows Remote Managerment..."
-Set-Item wsman:\localhost\client\trustedhosts * -Force
-Set-PSSessionConfiguration -Name "Microsoft.PowerShell" -SecurityDescriptorSddl "O:NSG:BAD:P(A;;GA;;;BA)(A;;GA;;;WD)(A;;GA;;;IU)S:P(AU;FA;GA;;;WD)(AU;SA;GXGW;;;WD)"
+# Set-Item wsman:\localhost\client\trustedhosts * -Force
+# Set-PSSessionConfiguration -Name "Microsoft.PowerShell" -SecurityDescriptorSddl "O:NSG:BAD:P(A;;GA;;;BA)(A;;GA;;;WD)(A;;GA;;;IU)S:P(AU;FA;GA;;;WD)(AU;SA;GXGW;;;WD)"
+Stop-Service -Name winrm -Force
+Set-Service -Name winrm -StartupType Disabled
+winrm delete winrm/config/Listener?Address=*+Transport=HTTP
+winrm delete winrm/config/Listener?Address=*+Transport=HTTPS
+Disable-PSRemoting -Force
 
 ##### DISABLE RDP #####
 log "Securing RDP settings..."

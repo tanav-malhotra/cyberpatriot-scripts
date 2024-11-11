@@ -259,8 +259,13 @@ Add-MpPreference -AttackSurfaceReductionRules_Ids d3e037e1-3eb8-44c8-a917-579279
 
 ##### DISABLE WINDOWS REMOTE MANAGEMENT #####
 log "Disabling Windows Remote Managerment..."
-Set-Item wsman:\localhost\client\trustedhosts * -Force
-Set-PSSessionConfiguration -Name "Microsoft.PowerShell" -SecurityDescriptorSddl "O:NSG:BAD:P(A;;GA;;;BA)(A;;GA;;;WD)(A;;GA;;;IU)S:P(AU;FA;GA;;;WD)(AU;SA;GXGW;;;WD)"
+# Set-Item wsman:\localhost\client\trustedhosts * -Force
+# Set-PSSessionConfiguration -Name "Microsoft.PowerShell" -SecurityDescriptorSddl "O:NSG:BAD:P(A;;GA;;;BA)(A;;GA;;;WD)(A;;GA;;;IU)S:P(AU;FA;GA;;;WD)(AU;SA;GXGW;;;WD)"
+Stop-Service -Name winrm -Force
+Set-Service -Name winrm -StartupType Disabled
+winrm delete winrm/config/Listener?Address=*+Transport=HTTP
+winrm delete winrm/config/Listener?Address=*+Transport=HTTPS
+Disable-PSRemoting -Force
 
 ##### DISABLE RDP #####
 log "Securing RDP settings..."
@@ -473,21 +478,21 @@ Set-PolicyFileEntry -Path $env:systemroot\system32\GroupPolicy\Machine\registry.
 Set-PolicyFileEntry -Path $env:systemroot\system32\GroupPolicy\Machine\registry.pol -Key "SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -ValueName NoAutoUpdate -Type DWord -Data 0
 
 ##### DISABLING WINDOWS FEATURES #####
-log "Disabling certain windows features..."
-Disable-WindowsOptionalFeature -FeatureName RSAT-Routing -Online -NoRestart
-Disable-WindowsOptionalFeature -FeatureName FS-SMB1 -Online -NoRestart
-Disable-WindowsOptionalFeature -FeatureName SMB1Protocol -Online -NoRestart
-Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name "SMB2" -Value 0
-Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name "SMB1" -Value 0
+#log "Disabling certain windows features..."
+#Disable-WindowsOptionalFeature -FeatureName RSAT-Routing -Online -NoRestart
+#Disable-WindowsOptionalFeature -FeatureName FS-SMB1 -Online -NoRestart
+#Disable-WindowsOptionalFeature -FeatureName SMB1Protocol -Online -NoRestart
+#Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name "SMB2" -Value 0
+#Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name "SMB1" -Value 0
 
 ##### SERVICE MANAGEMENT #####
 log "Managing services..."
 log "Disabling certain services..."
 # disabling
 sc stop TapiSrv
-sc config TapiSrv start= disabled
+sc config TapiSrv start=disabled
 sc stop TlntSvr
-sc config TlntSvr start= disabled
+sc config TlntSvr start=disabled
 sc stop ftpsvc
 sc config ftpsvc start= disabled
 sc stop SNMP
