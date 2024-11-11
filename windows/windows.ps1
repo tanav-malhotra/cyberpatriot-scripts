@@ -199,7 +199,7 @@ $appsToRemove = @(
     "*webcompanion*",
     "*groove*",
     "*Paint3D*",
-    "*tftp*",
+    "*tftp*", # remove if tftp is needed as a critical service
     "*telnet*"
 )
 foreach ($app in $appsToRemove) {
