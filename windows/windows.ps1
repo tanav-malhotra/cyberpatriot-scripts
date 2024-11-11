@@ -187,6 +187,7 @@ $appsToRemove = @(
     "*feedbackhub*",
     "*officehub*",
     "*onenote*",
+    "*onedrive*",
     "*mixedreality*",
     "*wallet*",
     "*yourphone*",
@@ -243,6 +244,18 @@ log "Enabling and updating Windows Defender..."
 Set-MpPreference -DisableRealtimeMonitoring $false
 # Update Windows Defender
 Update-MpSignature
+# rules
+setx /M MP_FORCE_USE_SANDBOX 1
+Set-MpPreference -EnableRealtimeMonitoring $true
+Add-MpPreference -AttackSurfaceReductionRules_Ids e6db77e5-3df2-4cf1-b95a-636979351e5b -AttackSurfaceReductionRules_Actions Enabled
+Set-MpPreference -AttackSurfaceReductionRules_Ids D1E49AAC-8F56-4280-B9BA-993A6D -AttackSurfaceReductionRules_Actions Enabled
+Add-MpPreference -AttackSurfaceReductionRules_Ids C1DB55AB-C21A-4637-BB3F-A12568109D35 -AttackSurfaceReductionRules_Actions Enabled
+Add-MpPreference -AttackSurfaceReductionRules_Ids 9E6C4E1F-7D60-472F-BA1A-A39EF669E4B2 -AttackSurfaceReductionRules_Actions Enabled
+Add-MpPreference -AttackSurfaceReductionRules_Ids 26190899-1602-49e8-8b27-eb1d0a1ce869 -AttackSurfaceReductionRules_Actions Enabled
+Add-MpPreference -AttackSurfaceReductionRules_Ids 3b576869-a4ec-4529-8536-b80a7769e899 -AttackSurfaceReductionRules_Actions Enabled
+Add-MpPreference -AttackSurfaceReductionRules_Ids 5beb7efe-fd9a-4556-801d-275e5ffc04cc -AttackSurfaceReductionRules_Actions Enabled
+Add-MpPreference -AttackSurfaceReductionRules_Ids 75668c1f-73b5-4cf0-bb93-3ecf5cb7cc84 -AttackSurfaceReductionRules_Actions Enabled
+Add-MpPreference -AttackSurfaceReductionRules_Ids d3e037e1-3eb8-44c8-a917-57927947596d -AttackSurfaceReductionRules_Actions Enabled
 
 ##### DISABLE WINDOWS REMOTE MANAGEMENT #####
 log "Disabling Windows Remote Managerment..."
@@ -250,7 +263,21 @@ Set-Item wsman:\localhost\client\trustedhosts * -Force
 Set-PSSessionConfiguration -Name "Microsoft.PowerShell" -SecurityDescriptorSddl "O:NSG:BAD:P(A;;GA;;;BA)(A;;GA;;;WD)(A;;GA;;;IU)S:P(AU;FA;GA;;;WD)(AU;SA;GXGW;;;WD)"
 
 ##### DISABLE RDP #####
-#TODO
+log "Securing RDP settings..."
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "UserAuthentication" -Value 1 # network level authentication (NLA)
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "SecurityLayer" -Value 1 # require NLA for connection
+$userInput = Read-Host "Do you want to disable RDP? (Y/n): "
+if ($userInput.ToLower() -eq 'y') {
+    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 1
+    Stop-Service -Name "TermService" -Force
+    Set-Service -Name "TermService" -StartupType Disabled
+    log "RDP has been stopped and disabled."
+} else {
+    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
+    Start-Service -Name "TermService"
+    Set-Service -Name "TermService" -StartupType Enabled
+    log "RDP service started and enabled."
+}
 
 ##### REG KEYS #####
 log "Setting registry keys..."
@@ -307,6 +334,22 @@ reg ADD HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transc
 reg ADD HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging /v EnableScriptBlockLogging /t REG_DWORD /d 1 /f
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ModuleLogging" /v EnableModuleLogging /t REG_DWORD /d 1 /f
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" /v EnableScriptBlockLogging /t REG_DWORD /d 1 /f
+
+##### RENAMING ADMIN ACCOUNT #####
+log "Renaming 'Administrator' account to 'CyberPatriot'..."
+try {
+    $adminName = "Administrator"
+    $newAdminname = "CyberPatriot"
+    $adminAccount = Get-LocalUser -Name $adminName
+
+    Rename-LocalUser -Name $adminName -NewName $newAdminname
+    $adminGroup = Get-LocalGroup -Name "Administrators"
+    $adminGroup.Members.Remove($adminAccount)
+    $adminGroup.Members.Add($newAdminname)
+}
+catch {
+    log "error: Failed to rename 'Administrator' account."
+}
 
 ##### CREATE GLOBAL OBJECTS CONFIGURATION #####
 log "Preventing users from creating global objects..."
