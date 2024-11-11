@@ -175,6 +175,24 @@ do {
     }
 } while (-not $validChoice)
 
+##### DISABLING AUTOPLAY #####
+log "Disabling AutoPlay..."
+Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoDriveTypeAutoRun" -Value 0xFF
+
+##### CONFIGURE WINDOWS SMARTSCREEN #####
+log "Blocking windows smartscreen..."
+$regPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+$regKey = "SmartScreenEnabled"
+# Set SmartScreen to Block
+Set-ItemProperty -Path $regPath -Name $regKey -Value "Block"
+
+##### PROMPT ADMINS BEFORE ELEVATING THEIR PRIVILEGES #####
+log "Prompting admins before elevating their privileges..."
+$registryPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+$registryValueName = "ConsentPromptBehaviorAdmin"
+$desiredBehavior = 4 # 3 = prompt for credentials, 4 = prompt for consent
+Set-ItemProperty -Path $registryPath -Name $registryValueName -Value $desiredBehavior
+
 ##### SERVICE MANAGEMENT #####
 log "Managing services..."
 log "Disabling certain services..."
@@ -217,24 +235,6 @@ sc config telnet start= disabled
 log "Enabling certain services..."
 sc config EventLog start= auto
 sc start EventLog
-
-##### DISABLING AUTOPLAY #####
-log "Disabling AutoPlay..."
-Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoDriveTypeAutoRun" -Value 0xFF
-
-##### CONFIGURE WINDOWS SMARTSCREEN #####
-log "Blocking windows smartscreen..."
-$regPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
-$regKey = "SmartScreenEnabled"
-# Set SmartScreen to Block
-Set-ItemProperty -Path $regPath -Name $regKey -Value "Block"
-
-##### PROMPT ADMINS BEFORE ELEVATING THEIR PRIVILEGES #####
-log "Prompting admins before elevating their privileges..."
-$registryPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
-$registryValueName = "ConsentPromptBehaviorAdmin"
-$desiredBehavior = 4 # 3 = prompt for credentials, 4 = prompt for consent
-Set-ItemProperty -Path $registryPath -Name $registryValueName -Value $desiredBehavior
 
 ##### UPDATE #####
 # log "Checking for Windows updates..."
