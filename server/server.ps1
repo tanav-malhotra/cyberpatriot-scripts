@@ -89,14 +89,17 @@ New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" `
 	-Name "PasswordComplexity" -Value 1 -PropertyType DWord -Force
 log "Password complexity applied."
 # Disable Password Reversible Encryption for passwords (Decryption)
-New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Password" `
-	-Name "DisableReversibleEncryption" -Value 1 -PropertyType DWord -Force
+$path = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Password"
+if (-not (Test-Path $path)) {
+    New-Item -Path $path -Force
+}
+New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Password" -Name "DisableReversibleEncryption" -Value 1 -PropertyType DWord -Force
 Set-ItemProperty -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'DisablePasswordReversibleEncryption' -Value 1
 
 #### FIREWALL #####
 log "Setting up firewall..."
 Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled True
-Set-NetFirewallRule -DisplayGroup "Windows Firewall" -Enabled True
+Get-NetFirewallRule | Where-Object {$_.DisplayGroup -eq "Windows Firewall"} | Set-NetFirewallRule -Enabled True
 New-NetFirewallRule -DisplayName "Allow HTTP" -Direction Inbound -Protocol TCP -LocalPort 80 -Action Allow
 # rules
 netsh advfirewall firewall add rule name="Block appvlp.exe netconns" program="C:\Program Files (x86)\Microsoft Office\root\client\AppVLP.exe" protocol=tcp dir=out enable=yes action=block profile=any

@@ -99,7 +99,7 @@ Set-ItemProperty -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies
 #### FIREWALL #####
 log "Setting up firewall..."
 Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled True
-Set-NetFirewallRule -DisplayGroup "Windows Firewall" -Enabled True
+Get-NetFirewallRule | Where-Object {$_.DisplayGroup -eq "Windows Firewall"} | Set-NetFirewallRule -Enabled True
 New-NetFirewallRule -DisplayName "Allow HTTP" -Direction Inbound -Protocol TCP -LocalPort 80 -Action Allow
 # rules
 netsh advfirewall firewall add rule name="Block appvlp.exe netconns" program="C:\Program Files (x86)\Microsoft Office\root\client\AppVLP.exe" protocol=tcp dir=out enable=yes action=block profile=any
