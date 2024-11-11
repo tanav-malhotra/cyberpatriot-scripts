@@ -27,14 +27,14 @@ if (Test-Path $LOGFILE) {
 ##### FUNCTIONS #####
 function log {
     param (
-        [string]$Message,
+        [string]$Message
     )
     Write-Host $Message
     $Message | Out-File -Append -FilePath $LOGFILE
 }
 function log_info {
     param (
-        [string]$Message,
+        [string]$Message
     )
     $Message | Out-File -Append -FilePath $LOGFILE
 }
@@ -213,8 +213,8 @@ foreach ($app in $appsToRemove) {
 }
 $app = "*tftp*"
 $appChoice = Read-Host "Do you want to remove $app? (Y/n): "
-switch -WildCard ($appChoice) {
-    "N" -or "n" {
+switch -WildCard ($appChoice.ToLower()) {
+    "n" {
         log "Canceled."
     }
     Default {
