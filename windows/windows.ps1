@@ -108,15 +108,45 @@ Set-LocalUser -Name "Guest" -Enabled $false
 
 ##### SOFTWARE MANAGEMENT #####
 #remove bittorrent, teamviewer, open tftp server, netcat, wireshark, adaware webcompanion
+#install any other software needed (try to update things through command-line)
 
 ##### ANTIVIRUS #####
-
+# install antivirus and make another script for antivirus
 
 ##### WINDOWS DEFENDER #####
 # Enable Windows Defender
 Set-MpPreference -DisableRealtimeMonitoring $false
 # Update Windows Defender
 Update-MpSignature
+
+##### AUDIT CREDENTIAL VALIDATION #####
+do {
+    $auditChoice = Read-Host "Do you want to enable Audit Credential Validation for (1) Success only, (2) Failure only, or (3) Both? Enter the number corresponding to your choice: "
+    switch ($auditChoice) {
+        "1" {
+            # Enable Success only
+            auditpol /set /subcategory:"Credential Validation" /success:enable /failure:disable
+            log "Audit Credential Validation has been enabled for Success events only."
+            $validChoice = $true
+        }
+        "2" {
+            # Enable Failure only
+            auditpol /set /subcategory:"Credential Validation" /success:disable /failure:enable
+            log "Audit Credential Validation has been enabled for Failure events only."
+            $validChoice = $true
+        }
+        "3" {
+            # Enable both Success and Failure
+            auditpol /set /subcategory:"Credential Validation" /success:enable /failure:enable
+            log "Audit Credential Validation has been enabled for both Success and Failure events."
+            $validChoice = $true
+        }
+        Default {
+            log "Invalid selection. Please try again."
+            $validChoice = $false
+        }
+    }
+} while (-not $validChoice)
 
 ##### SERVICE MANAGEMENT #####
 # disabling
@@ -195,7 +225,7 @@ Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies
 # log "All updates completed."
 
 ##### RESTART #####
-$choice = Read-Host "Do you want to restart the computer? (Y/n)"
+$choice = Read-Host "Do you want to restart the computer? (Y/n): "
 if ($choice -eq 'N' -or $choice -eq 'n') {
     log "Restart canceled."
 } else {
