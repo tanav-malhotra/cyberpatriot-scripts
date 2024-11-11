@@ -71,23 +71,13 @@ try {
 } catch {
     log "Failed to enable the setting: $_"
 }
-# each user max password age 60
-$users = Get-LocalUser | Where-Object { $_.Name -ne 'Administrator' -and $_.Name -ne 'DefaultAccount' }
-foreach ($user in $users) {
-	Set-LocalUser -Name $user.Name -MaximumPasswordAge (New-TimeSpan -Days 60)
-}
-net accounts /maxpwage:60
+net accounts /maxpwage:30
 net accounts /minpwage:1
 net accounts /minpwlen:12
 net accounts /uniquepw:5
 net accounts /lockoutthreshold:5 # attempts
 net accounts /lockoutduration:30 # minutes
 net accounts /lockoutwindow:30 # minutes before failed login attempts threshold counter is reset to 0
-# make admin max pw age shorter
-$admins = Get-LocalGroupMember -Group "Administrators"
-foreach ($admin in $admins) {
-	Set-LocalUser -Name $admin.Name -MaximumPasswordAge (New-TimeSpan -Days 30)
-}
 # Apply password complexity setting using secedit
 log "Applying password complexity setting..."
 secedit /export /cfg C:\secpol.cfg
