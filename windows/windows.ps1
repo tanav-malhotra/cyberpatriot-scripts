@@ -199,7 +199,8 @@ $appsToRemove = @(
     "*teamviewer*",
     "*webcompanion*",
     "*groove*",
-    "*Paint3D*"
+    "*Paint3D*",
+    "*telnet*"
 )
 foreach ($app in $appsToRemove) {
     log "Removing $app..."
@@ -207,18 +208,6 @@ foreach ($app in $appsToRemove) {
     Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like $app } | ForEach-Object { $_.Uninstall() } # for traditional apps installed from internet
 }
 $app = "*tftp*"
-$appChoice = Read-Host "Do you want to remove $app? (Y/n): "
-switch -WildCard ($appChoice) {
-    "N" -or "n" {
-        log "Canceled."
-    }
-    Default {
-        log "Removing $app..."
-        Get-AppxPackage -AllUsers | Where-Object { $_.Name -like $app } | Remove-AppxPackage -ErrorAction SilentlyContinue
-        Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like $app } | ForEach-Object { $_.Uninstall() } # for traditional apps installed from internet
-    }
-}
-$app = "*telnet*"
 $appChoice = Read-Host "Do you want to remove $app? (Y/n): "
 switch -WildCard ($appChoice) {
     "N" -or "n" {
