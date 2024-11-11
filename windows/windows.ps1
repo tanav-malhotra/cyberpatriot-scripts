@@ -279,6 +279,15 @@ if ($userInput.ToLower() -eq 'y') {
     log "RDP service started and enabled."
 }
 
+##### DISABLING TELNET #####
+log "Disabling telnet..."
+dism /online /Disable-feature /featurename:TelnetClient /NoRestart
+dism /online /Disable-feature /featurename:TelnetServer /NoRestart
+
+##### DISABLING AUTOPLAY #####
+log "Disabling AutoPlay..."
+Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoDriveTypeAutoRun" -Value 0xFF
+
 ##### REG KEYS #####
 log "Setting registry keys..."
 reg add HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU /v AutoInstallMinorUpdates /t REG_DWORD /d 1 /f
@@ -395,10 +404,6 @@ do {
         }
     }
 } while (-not $validChoice)
-
-##### DISABLING AUTOPLAY #####
-log "Disabling AutoPlay..."
-Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoDriveTypeAutoRun" -Value 0xFF
 
 ##### CONFIGURE WINDOWS SMARTSCREEN #####
 log "Blocking windows smartscreen..."
