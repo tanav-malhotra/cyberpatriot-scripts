@@ -264,7 +264,7 @@ Set-PSSessionConfiguration -Name "Microsoft.PowerShell" -SecurityDescriptorSddl 
 
 ##### DISABLE RDP #####
 log "Securing RDP settings..."
-Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "UserAuthentication" -Value 1 # network level authentication (NLA)
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "UserAuthentication" -Value 1 # Network Level Authentication (NLA)
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "SecurityLayer" -Value 1 # require NLA for connection
 $userInput = Read-Host "Do you want to disable RDP? (Y/n): "
 if ($userInput.ToLower() -eq 'y') {
