@@ -16,6 +16,14 @@
 # with the '-License' option.
 # ====================================================================================
 
+##### CHECK FOR ADMIN #####
+log_info "Checking for admininstrative access..."
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    log "error: Please run this script as an administrator."
+    exit
+}
+
+##### CHECKING PWSH INSTALLATION #####
 $installedPS7 = Get-Command pwsh -ErrorAction SilentlyContinue
 if ($installedPS7) {
     Write-Host "PowerShell 7 is already installed. Launching PowerShell 7..."
