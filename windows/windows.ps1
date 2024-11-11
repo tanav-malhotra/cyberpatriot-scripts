@@ -17,7 +17,7 @@
 # ====================================================================================
 
 ##### VARIABLES #####
-$LOGFILE = "windows_ps1_script.log"
+$LOGFILE = ".\windows_ps1_script.log"
 
 ##### REMOVE EXISTING LOG FILE #####
 if (Test-Path $LOGFILE) {
@@ -195,27 +195,17 @@ $appsToRemove = @(
     "*bittorrent*",
     "*netcat*",
     "*teamviewer*",
+    "*team-viewer*",
     "*webcompanion*",
     "*groove*",
     "*Paint3D*",
+    "*tftp*",
     "*telnet*"
 )
 foreach ($app in $appsToRemove) {
     log "Removing $app..."
-    Get-AppxPackage -AllUsers | Where-Object { $_.Name -like $app } | Remove-AppxPackage -ErrorAction SilentlyContinue
-    Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like $app } | ForEach-Object { $_.Uninstall() } # for traditional apps installed from internet
-}
-$app = "*tftp*"
-$appChoice = Read-Host "Do you want to remove $app? (Y/n): "
-switch -WildCard ($appChoice.ToLower()) {
-    "n" {
-        log "Canceled."
-    }
-    Default {
-        log "Removing $app..."
-        Get-AppxPackage -AllUsers | Where-Object { $_.Name -like $app } | Remove-AppxPackage -ErrorAction SilentlyContinue
-        Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like $app } | ForEach-Object { $_.Uninstall() } # for traditional apps installed from internet
-    }
+    Get-AppxPackage -AllUsers | Where-Object { $_.Name -like $app } | Remove-AppxPackage -ErrorAction SilentlyContinue # windows store apps
+    Get-CimInstance -ClassName Win32_Product | Where-Object { $_.Name -like $app } | ForEach-Object { $_.Uninstall() } # for traditional apps installed from internet
 }
 # installing software
 log "Installing software..."
@@ -431,8 +421,8 @@ do {
 log "Blocking windows smartscreen..."
 $regPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
 $regKey = "SmartScreenEnabled"
-# Set SmartScreen to Block
-Set-ItemProperty -Path $regPath -Name $regKey -Value "Block"
+# Set SmartScreen to Warn
+Set-ItemProperty -Path $regPath -Name $regKey -Value "Warn"
 
 ##### PROMPT ADMINS BEFORE ELEVATING THEIR PRIVILEGES #####
 log "Prompting admins before elevating their privileges..."
