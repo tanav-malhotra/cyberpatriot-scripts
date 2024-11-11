@@ -424,6 +424,14 @@ Set-PolicyFileEntry -Path $env:systemroot\system32\GroupPolicy\Machine\registry.
 Set-PolicyFileEntry -Path $env:systemroot\system32\GroupPolicy\Machine\registry.pol -Key "SOFTWARE\Policies\Microsoft\Windows NT\IIS" -ValueName PreventIISInstall -Type DWord -Data 1
 Set-PolicyFileEntry -Path $env:systemroot\system32\GroupPolicy\Machine\registry.pol -Key "SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -ValueName NoAutoUpdate -Type DWord -Data 0
 
+##### DISABLING WINDOWS FEATURES #####
+log "Disabling certain windows features..."
+Disable-WindowsOptionalFeature -FeatureName RSAT-Routing -Online -NoRestart
+Disable-WindowsOptionalFeature -FeatureName FS-SMB1 -Online -NoRestart
+Disable-WindowsOptionalFeature -FeatureName SMB1Protocol -Online -NoRestart
+Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name "SMB2" -Value 0
+Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name "SMB1" -Value 0
+
 ##### SERVICE MANAGEMENT #####
 log "Managing services..."
 log "Disabling certain services..."
