@@ -280,7 +280,7 @@ if ($userInput.ToLower() -eq 'y') {
 } else {
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
     Start-Service -Name "TermService"
-    Set-Service -Name "TermService" -StartupType Enabled
+    Set-Service -Name "TermService" -StartupType Automatic
     log "RDP service started and enabled."
 }
 
@@ -362,7 +362,8 @@ try {
     $adminGroup.Members.Add($newAdminname)
 }
 catch {
-    log "error: Failed to rename 'Administrator' account."
+    log_info "error: Failed to rename 'Administrator' account."
+    Write-Error "error: Failed to rename 'Administrator' account."
 }
 
 ##### CREATE GLOBAL OBJECTS CONFIGURATION #####
@@ -372,13 +373,29 @@ log "Preventing users from creating global objects..."
 # secedit /export /cfg "C:\secpol.cfg"
 # (gc "C:\secpol.cfg") -replace "$policyName.*", "$policyName = *$adminSID" | Out-File "C:\secpol.cfg"
 # secedit /configure /db secedit.sdb /cfg "C:\secpol.cfg" /overwrite
+
+# $secpolPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+# $createGlobalObjectsKey = "SeCreateGlobalPrivilege"
+# $currentPrivileges = Get-ItemProperty -Path $secpolPath -Name $createGlobalObjectsKey
+# $usersSID = (New-Object System.Security.Principal.NTAccount("Users")).Translate([System.Security.Principal.SecurityIdentifier]).Value
+# $adminsSID = (New-Object System.Security.Principal.NTAccount("Administrators")).Translate([System.Security.Principal.SecurityIdentifier]).Value
+# $currentPrivileges.Value = $currentPrivileges.Value -replace $usersSID, ""
+# Set-ItemProperty -Path $secpolPath -Name $createGlobalObjectsKey -Value $currentPrivileges.Value
+
 $secpolPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
 $createGlobalObjectsKey = "SeCreateGlobalPrivilege"
-$currentPrivileges = Get-ItemProperty -Path $secpolPath -Name $createGlobalObjectsKey
+if (-not (Test-Path -Path $secpolPath)) {
+    New-Item -Path $secpolPath -Force
+}
+$currentPrivileges = Get-ItemProperty -Path $secpolPath -Name $createGlobalObjectsKey -ErrorAction SilentlyContinue
+if ($null -eq $currentPrivileges) {
+    log "Creating SeCreateGlobalPrivilege key with an empty value..."
+    Set-ItemProperty -Path $secpolPath -Name $createGlobalObjectsKey -Value ""
+}
 $usersSID = (New-Object System.Security.Principal.NTAccount("Users")).Translate([System.Security.Principal.SecurityIdentifier]).Value
 $adminsSID = (New-Object System.Security.Principal.NTAccount("Administrators")).Translate([System.Security.Principal.SecurityIdentifier]).Value
-$currentPrivileges.Value = $currentPrivileges.Value -replace $usersSID, ""
-Set-ItemProperty -Path $secpolPath -Name $createGlobalObjectsKey -Value $currentPrivileges.Value
+$newPrivilegesValue = $currentPrivileges.$createGlobalObjectsKey -replace $usersSID, ""
+Set-ItemProperty -Path $secpolPath -Name $createGlobalObjectsKey -Value $newPrivilegesValue
 
 ##### AUDIT CREDENTIAL VALIDATION #####
 log "Enabling Audit Credential Validation..."
@@ -472,10 +489,26 @@ auditpol /resourceSACL /set /type:Key /user:Administrator /success /failure /acc
 
 ##### GROUP POLICIES #####
 log "Setting up group policies..."
-Set-PolicyFileEntry -Path $env:systemroot\system32\GroupPolicy\Machine\registry.pol -Key "SOFTWARE\Policies\Microsoft\Messenger\Client" -ValueName PreventAutoRun -Type DWord -Data 1
-Set-PolicyFileEntry -Path $env:systemroot\system32\GroupPolicy\Machine\registry.pol -Key "SOFTWARE\Policies\Microsoft\SearchCompanion" -ValueName DisableContentFileUpdates -Type DWord -Data 1
-Set-PolicyFileEntry -Path $env:systemroot\system32\GroupPolicy\Machine\registry.pol -Key "SOFTWARE\Policies\Microsoft\Windows NT\IIS" -ValueName PreventIISInstall -Type DWord -Data 1
-Set-PolicyFileEntry -Path $env:systemroot\system32\GroupPolicy\Machine\registry.pol -Key "SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -ValueName NoAutoUpdate -Type DWord -Data 0
+# Set-PolicyFileEntry -Path $env:systemroot\system32\GroupPolicy\Machine\registry.pol -Key "SOFTWARE\Policies\Microsoft\Messenger\Client" -ValueName PreventAutoRun -Type DWord -Data 1
+# Set-PolicyFileEntry -Path $env:systemroot\system32\GroupPolicy\Machine\registry.pol -Key "SOFTWARE\Policies\Microsoft\SearchCompanion" -ValueName DisableContentFileUpdates -Type DWord -Data 1
+# Set-PolicyFileEntry -Path $env:systemroot\system32\GroupPolicy\Machine\registry.pol -Key "SOFTWARE\Policies\Microsoft\Windows NT\IIS" -ValueName PreventIISInstall -Type DWord -Data 1
+# Set-PolicyFileEntry -Path $env:systemroot\system32\GroupPolicy\Machine\registry.pol -Key "SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -ValueName NoAutoUpdate -Type DWord -Data 0
+
+$policies = @(
+    @{ Path = "HKLM:\SOFTWARE\Policies\Microsoft\Messenger\Client"; ValueName = "PreventAutoRun"; Data = 1 },
+    @{ Path = "HKLM:\SOFTWARE\Policies\Microsoft\SearchCompanion"; ValueName = "DisableContentFileUpdates"; Data = 1 },
+    @{ Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\IIS"; ValueName = "PreventIISInstall"; Data = 1 },
+    @{ Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU"; ValueName = "NoAutoUpdate"; Data = 0 }
+)
+foreach ($policy in $policies) {
+    if (-not (Test-Path -Path $policy.Path)) {
+        log "Creating registry path $($policy.Path)..."
+        New-Item -Path $policy.Path -Force
+    }
+    log "Setting registry value: $($policy.Path)\$($policy.ValueName) to $($policy.Data)..."
+    Set-ItemProperty -Path $policy.Path -Name $policy.ValueName -Value $policy.Data
+}
+gpupdate /force # reload group policies
 
 ##### DISABLING WINDOWS FEATURES #####
 #log "Disabling certain windows features..."
@@ -489,56 +522,56 @@ Set-PolicyFileEntry -Path $env:systemroot\system32\GroupPolicy\Machine\registry.
 log "Managing services..."
 log "Disabling certain services..."
 # disabling
-sc stop TapiSrv
-sc config TapiSrv start=disabled
-sc stop TlntSvr
-sc config TlntSvr start=disabled
-sc stop ftpsvc
-sc config ftpsvc start= disabled
-sc stop SNMP
-sc config SNMP start= disabled
-sc stop SessionEnv
-sc config SessionEnv start= disabled
-sc stop TermService
-sc config TermService start= disabled
-sc stop UmRdpService
-sc config UmRdpService start= disabled
-sc stop SharedAccess
-sc config SharedAccess start= disabled
-sc stop remoteRegistry 
-sc config remoteRegistry start= disabled
-sc stop SSDPSRV
-sc config SSDPSRV start= disabled
-sc stop W3SVC
-sc config W3SVC start= disabled
-sc stop SNMPTRAP
-sc config SNMPTRAP start= disabled
-sc stop remoteAccess
-sc config remoteAccess start= disabled
-sc stop RpcSs
-sc config RpcSs start= disabled
-sc stop HomeGroupProvider
-sc config HomeGroupProvider start= disabled
-sc stop HomeGroupListener
-sc config HomeGroupListener start= disabled
-sc stop telnet
-sc config telnet start= disabled
-sc stop upnphost
-sc config upnphost start= disabled
-sc stop IISADMIN
-sc config IISADMIN start= disabled
-sc stop ConfRoom
-sc config ConfRoom start= disabled
-sc stop RDSessMgr
-sc config RDSessMgr start= disabled
-sc stop ssdpsrv
-sc config ssdpsrv start= disabled
-sc stop Messenger
-sc config Messenger start= disabled
+cmd.exe /c "sc stop TapiSrv"
+cmd.exe /c "sc config TapiSrv start= disabled"
+cmd.exe /c "sc stop TlntSvr"
+cmd.exe /c "sc config TlntSvr start= disabled"
+cmd.exe /c "sc stop ftpsvc"
+cmd.exe /c "sc config ftpsvc start= disabled"
+cmd.exe /c "sc stop SNMP"
+cmd.exe /c "sc config SNMP start= disabled"
+cmd.exe /c "sc stop SessionEnv"
+cmd.exe /c "sc config SessionEnv start= disabled"
+cmd.exe /c "sc stop TermService"
+cmd.exe /c "sc config TermService start= disabled"
+cmd.exe /c "sc stop UmRdpService"
+cmd.exe /c "sc config UmRdpService start= disabled"
+cmd.exe /c "sc stop SharedAccess"
+cmd.exe /c "sc config SharedAccess start= disabled"
+cmd.exe /c "sc stop remoteRegistry "
+cmd.exe /c "sc config remoteRegistry start= disabled"
+cmd.exe /c "sc stop SSDPSRV"
+cmd.exe /c "sc config SSDPSRV start= disabled"
+cmd.exe /c "sc stop W3SVC"
+cmd.exe /c "sc config W3SVC start= disabled"
+cmd.exe /c "sc stop SNMPTRAP"
+cmd.exe /c "sc config SNMPTRAP start= disabled"
+cmd.exe /c "sc stop remoteAccess"
+cmd.exe /c "sc config remoteAccess start= disabled"
+cmd.exe /c "sc stop RpcSs"
+cmd.exe /c "sc config RpcSs start= disabled"
+cmd.exe /c "sc stop HomeGroupProvider"
+cmd.exe /c "sc config HomeGroupProvider start= disabled"
+cmd.exe /c "sc stop HomeGroupListener"
+cmd.exe /c "sc config HomeGroupListener start= disabled"
+cmd.exe /c "sc stop telnet"
+cmd.exe /c "sc config telnet start= disabled"
+cmd.exe /c "sc stop upnphost"
+cmd.exe /c "sc config upnphost start= disabled"
+cmd.exe /c "sc stop IISADMIN"
+cmd.exe /c "sc config IISADMIN start= disabled"
+cmd.exe /c "sc stop ConfRoom"
+cmd.exe /c "sc config ConfRoom start= disabled"
+cmd.exe /c "sc stop RDSessMgr"
+cmd.exe /c "sc config RDSessMgr start= disabled"
+cmd.exe /c "sc stop ssdpsrv"
+cmd.exe /c "sc config ssdpsrv start= disabled"
+cmd.exe /c "sc stop Messenger"
+cmd.exe /c "sc config Messenger start= disabled"
 # enabling
 log "Enabling certain services..."
-sc config EventLog start= auto
-sc start EventLog
+cmd.exe /c "sc config EventLog start= auto"
+cmd.exe /c "sc start EventLog"
 
 ##### ANTIVIRUS #####
 # install antivirus and make another script for antivirus scanning
