@@ -16,32 +16,40 @@
 # with the '-License' option.
 # ====================================================================================
 
+##### VARIABLES #####
+$LOGFILE = "windows_ps1_script.log"
+
+##### REMOVE EXISTING LOG FILE #####
+if (Test-Path $LOGFILE) {
+    Remove-Item $LOGFILE -Force
+}
+
 ##### FUNCTIONS #####
 function log {
     param (
         [string]$Message,
     )
     Write-Host $Message
-    $Message | Out-File -Append -FilePath ".\windows_ps1_script.log"
+    $Message | Out-File -Append -FilePath $LOGFILE
 }
 
 ##### CHECK FOR ADMIN #####
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Host "error: Please run this script as an administrator."
+    log "error: Please run this script as an administrator."
     exit
 }
 
 ##### PASSWORD SETTINGS #####
-Write-Host "Setting password settings and lockout policy..."
+log "Setting password settings and lockout policy..."
 $newPassword = "CyberPatr!0t"
 $users = Get-WmiObject -Class Win32_UserAccount -Filter "LocalAccount = 'True' AND Disabled = 'False'"
 foreach ($user in $users) {
     if ($user.Name -ne "Administrator" -and $user.Name -ne "DefaultAccount" -and $user.Name -ne "Guest") {
         try {
             net user $user.Name $newPassword
-            Write-Host "Password for user $($user.Name) changed successfully."
+            log "Password for user $($user.Name) changed successfully."
         } catch {
-            Write-Host "Failed to change password for user $($user.Name): $_"
+            log "Failed to change password for user $($user.Name): $_"
         }
     }
 }
@@ -49,10 +57,10 @@ foreach ($user in $users) {
 $registryPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa"
 $registryName = "LimitBlankPasswordUse"
 try {
-    Write-Host "Enabling 'Limit local account use of blank passwords to console logon only'..."
+    log "Enabling 'Limit local account use of blank passwords to console logon only'..."
     Set-ItemProperty -Path $registryPath -Name $registryName -Value 1
 } catch {
-    Write-Host "Failed to enable the setting: $_"
+    log "Failed to enable the setting: $_"
 }
 # each user max password age 60
 $users = Get-LocalUser | Where-Object { $_.Name -ne 'Administrator' -and $_.Name -ne 'DefaultAccount' }
@@ -72,7 +80,7 @@ foreach ($admin in $admins) {
 	Set-LocalUser -Name $admin.Name -MaximumPasswordAge (New-TimeSpan -Days 30)
 }
 # Apply password complexity setting using secedit
-Write-Host "Applying password complexity setting..."
+log "Applying password complexity setting..."
 secedit /export /cfg C:\secpol.cfg
 (Get-Content C:\secpol.cfg).replace("PasswordComplexity = 0", "PasswordComplexity = 1") | 
     Set-Content C:\secpol.cfg
@@ -80,7 +88,7 @@ secedit /configure /db secedit.sdb /cfg C:\secpol.cfg /overwrite
 Remove-Item C:\secpol.cfg
 New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" `
 	-Name "PasswordComplexity" -Value 1 -PropertyType DWord -Force
-Write-Host "Password complexity applied."
+log "Password complexity applied."
 # Disable Password Reversible Encryption (Decryption)
 New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Password" `
 	-Name "DisableReversibleEncryption" -Value 1 -PropertyType DWord -Force
@@ -154,42 +162,42 @@ sc start EventLog
 Set-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoDriveTypeAutoRun" -Value 0xFF
 
 ##### UPDATE #####
-# Write-Host "Checking for Windows updates..."
+# log "Checking for Windows updates..."
 # Install-Module PSWindowsUpdate -Force -ErrorAction SilentlyContinue
 # Import-Module PSWindowsUpdate
 # try {
 #     Get-WindowsUpdate -AcceptAll -Install -AutoReboot
-#     Write-Host "Windows updates completed."
+#     log "Windows updates completed."
 # } catch {
-#     Write-Host "Failed to complete Windows updates: $_"
+#     log "Failed to complete Windows updates: $_"
 # }
 # # Update all applications using Winget
-# Write-Host "Updating applications via Winget..."
+# log "Updating applications via Winget..."
 # try {
 #     winget upgrade --all --silent --accept-package-agreements --accept-source-agreements
-#     Write-Host "Application updates completed."
+#     log "Application updates completed."
 # } catch {
-#     Write-Host "Failed to update applications via Winget: $_"
+#     log "Failed to update applications via Winget: $_"
 # }
 # # Update drivers using Device Manager
-# Write-Host "Updating drivers..."
+# log "Updating drivers..."
 # try {
 #     # Get a list of drivers that can be updated
 #     $devices = Get-PnpDevice | Where-Object { $_.Status -eq "OK" }
 #     foreach ($device in $devices) {
-#         Write-Host "Updating driver for: $($device.Name)"
+#         log "Updating driver for: $($device.Name)"
 #         Update-PnpDevice -InstanceId $device.InstanceId -Confirm:$false
 #     }
-#     Write-Host "Driver updates completed."
+#     log "Driver updates completed."
 # } catch {
-#     Write-Host "Failed to update drivers: $_"
+#     log "Failed to update drivers: $_"
 # }
-# Write-Host "All updates completed."
+# log "All updates completed."
 
 ##### RESTART #####
 $choice = Read-Host "Do you want to restart the computer? (Y/n)"
 if ($choice -eq 'N' -or $choice -eq 'n') {
-    Write-Host "Restart canceled."
+    log "Restart canceled."
 } else {
     Restart-Computer -Force
 }
