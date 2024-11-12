@@ -494,7 +494,7 @@ gpupdate /force # reload group policies
 #Disable-WindowsOptionalFeature -FeatureName SMB1Protocol -Online -NoRestart
 #Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name "SMB2" -Value 0
 #Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name "SMB1" -Value 0
-# TODO
+#TODO
 
 ##### SERVICE MANAGEMENT #####
 log "Managing services..."
