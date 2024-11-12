@@ -410,17 +410,19 @@ Set-ItemProperty -Path $registryPath -Name $registryValueName -Value $desiredBeh
 
 ##### REMOVING MEDIA FILES #####
 log "Finding media files..."
-$mediaExtensions = @("*.mp3", "*.mp4", "*.avi", "*.mkv", "*.flac", "*.wav", "*.mov", "*.wmv")
-$mediaFiles = Get-ChildItem -Path "C:\Users\*" -Recurse -File | Where-Object { $mediaExtensions -contains $_.Extension.ToLower() }
-$mediaFiles | Select-Object FullName | Out-File -FilePath "$current_dir\media_files.txt"
-log "Media files (and their full path) saved to 'media_files.txt'."
-Get-Content "$current_dir\media_files.txt"
-$confirmDeletion = Read-Host "Do you want to delete all media files (images, videos, and audio) from C:\Users? (Y/n): "
-foreach ($extension in $mediaExtensions) {
-    Get-ChildItem -Path "C:\Users\*" -Include $extension -File -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
-        Remove-Item -Path $_.FullName -Force -ErrorAction Continue
-        log "Deleted:" $_.FullName
-    }
+$mediaFiles = Get-ChildItem -Path "C:\Users\*" -Recurse -Include ".mp3", ".mp4", ".avi", ".mkv", ".flac", ".wav", ".mov", ".wmv"
+$imageFiles = Get-ChildItem -Path "C:\Users\*" -Recurse -Include ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".webp", ".heif", ".ico", ".svg", ".raw", ".dng", ".eps"
+Write-Host "Media (Video/Audio):"
+$mediaFiles
+Write-Host "Images:"
+$imageFiles
+$confirmDeletion = Read-Host "Do you want to delete all media files (videos, and audio) from C:\Users\*? (Y/n): "
+if ($confirmDeletion.ToLower() -eq 'n') {
+    $mediaFiles | Remove-Item -Force
+}
+$confirmDeletion = Read-Host "Do you want to delete all images from C:\Users\*? (Y/n): "
+if ($confirmDeletion.ToLower() -eq 'n') {
+    $imageFiles | Remove-Item -Force
 }
 
 ##### AUDIT POLICIES #####
@@ -579,7 +581,7 @@ cmd.exe /c "sc start EventLog"
 
 ##### RESTART #####
 $choice = Read-Host "Do you want to restart the computer? (Y/n): "
-if ($choice -eq 'N' -or $choice -eq 'n') {
+if ($choice.ToLower() -eq 'n') {
     log "Restart canceled."
 } else {
     Restart-Computer -Force
