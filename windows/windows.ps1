@@ -343,18 +343,24 @@ reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ModuleLogging" /v E
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" /v EnableScriptBlockLogging /t REG_DWORD /d 1 /f
 
 ##### RENAMING ADMIN ACCOUNT #####
-log "Renaming 'Administrator' account to 'CyberPatriot'..."
+log "Renaming 'Administrator' account to 'CyberPatriot' (and updating group memberships)..."
 try {
     $adminName = "Administrator"
-    $newAdminname = "CyberPatriot"
-    $adminAccount = Get-LocalUser -Name $adminName
+    $newAdminName = "CyberPatriot"
+    # $adminAccount = Get-LocalUser -Name $adminName
 
-    Rename-LocalUser -Name $adminName -NewName $newAdminname
+    # Rename-LocalUser -Name $adminName -NewName $newAdminName
+    # $adminGroup = Get-LocalGroup -Name "Administrators"
+    # $adminGroup.Members.Remove($adminAccount)
+    # $adminGroup.Members.Add($newAdminName)
+
+    $adminAccount = Get-LocalUser -Name $adminName
+    Rename-LocalUser -Name $adminName -NewName $newAdminName
+    $newAdminAccount = Get-LocalUser -Name $newAdminName
     $adminGroup = Get-LocalGroup -Name "Administrators"
     $adminGroup.Members.Remove($adminAccount)
-    $adminGroup.Members.Add($newAdminname)
-}
-catch {
+    $adminGroup.Members.Add($newAdminAccount)
+} catch {
     log_info "error: Failed to rename 'Administrator' account."
     Write-Error "Failed to rename 'Administrator' account."
 }
@@ -408,7 +414,7 @@ $registryValueName = "ConsentPromptBehaviorAdmin"
 $desiredBehavior = 4 # 3 = prompt for credentials, 4 = prompt for consent
 Set-ItemProperty -Path $registryPath -Name $registryValueName -Value $desiredBehavior
 
-##### REMOVING MEDIA FILES #####
+MEDIA FILES #####
 log "Finding media files..."
 $mediaFiles = Get-ChildItem -Path "C:\Users\*" -Recurse -Include ".mp3", ".mp4", ".avi", ".mkv", ".flac", ".wav", ".mov", ".wmv"
 $imageFiles = Get-ChildItem -Path "C:\Users\*" -Recurse -Include ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".webp", ".heif", ".ico", ".svg", ".raw", ".dng", ".eps"

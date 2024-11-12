@@ -347,18 +347,24 @@ reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ModuleLogging" /v E
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" /v EnableScriptBlockLogging /t REG_DWORD /d 1 /f
 
 ##### RENAMING ADMIN ACCOUNT #####
-log "Renaming 'Administrator' account to 'CyberPatriot'..."
+log "Renaming 'Administrator' account to 'CyberPatriot' (and updating group memberships)..."
 try {
     $adminName = "Administrator"
-    $newAdminname = "CyberPatriot"
-    $adminAccount = Get-LocalUser -Name $adminName
+    $newAdminName = "CyberPatriot"
+    # $adminAccount = Get-LocalUser -Name $adminName
 
-    Rename-LocalUser -Name $adminName -NewName $newAdminname
+    # Rename-LocalUser -Name $adminName -NewName $newAdminName
+    # $adminGroup = Get-LocalGroup -Name "Administrators"
+    # $adminGroup.Members.Remove($adminAccount)
+    # $adminGroup.Members.Add($newAdminName)
+
+    $adminAccount = Get-LocalUser -Name $adminName
+    Rename-LocalUser -Name $adminName -NewName $newAdminName
+    $newAdminAccount = Get-LocalUser -Name $newAdminName
     $adminGroup = Get-LocalGroup -Name "Administrators"
     $adminGroup.Members.Remove($adminAccount)
-    $adminGroup.Members.Add($newAdminname)
-}
-catch {
+    $adminGroup.Members.Add($newAdminAccount)
+} catch {
     log_info "error: Failed to rename 'Administrator' account."
     Write-Error "Failed to rename 'Administrator' account."
 }
