@@ -414,7 +414,7 @@ $registryValueName = "ConsentPromptBehaviorAdmin"
 $desiredBehavior = 4 # 3 = prompt for credentials, 4 = prompt for consent
 Set-ItemProperty -Path $registryPath -Name $registryValueName -Value $desiredBehavior
 
-MEDIA FILES #####
+##### REMOVING MEDIA FILES #####
 log "Finding media files..."
 $mediaFiles = Get-ChildItem -Path "C:\Users\*" -Recurse -Include ".mp3", ".mp4", ".avi", ".mkv", ".flac", ".wav", ".mov", ".wmv"
 $imageFiles = Get-ChildItem -Path "C:\Users\*" -Recurse -Include ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".webp", ".heif", ".ico", ".svg", ".raw", ".dng", ".eps"
