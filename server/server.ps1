@@ -365,34 +365,7 @@ catch {
 
 ##### CREATE GLOBAL OBJECTS CONFIGURATION #####
 log "Preventing users from creating global objects..."
-# $policyName = "SeCreateGlobalPrivilege"
-# $adminSID = (New-Object System.Security.Principal.NTAccount("Administrators")).Translate([System.Security.Principal.SecurityIdentifier]).Value
-# secedit /export /cfg "C:\secpol.cfg"
-# (gc "C:\secpol.cfg") -replace "$policyName.*", "$policyName = *$adminSID" | Out-File "C:\secpol.cfg"
-# secedit /configure /db secedit.sdb /cfg "C:\secpol.cfg" /overwrite
-#
-# $secpolPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
-# $createGlobalObjectsKey = "SeCreateGlobalPrivilege"
-# $currentPrivileges = Get-ItemProperty -Path $secpolPath -Name $createGlobalObjectsKey
-# $usersSID = (New-Object System.Security.Principal.NTAccount("Users")).Translate([System.Security.Principal.SecurityIdentifier]).Value
-# $adminsSID = (New-Object System.Security.Principal.NTAccount("Administrators")).Translate([System.Security.Principal.SecurityIdentifier]).Value
-# $currentPrivileges.Value = $currentPrivileges.Value -replace $usersSID, ""
-# Set-ItemProperty -Path $secpolPath -Name $createGlobalObjectsKey -Value $currentPrivileges.Value
-#
-# $secpolPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
-# $createGlobalObjectsKey = "SeCreateGlobalPrivilege"
-# if (-not (Test-Path -Path $secpolPath)) {
-#     New-Item -Path $secpolPath -Force
-# }
-# $currentPrivileges = Get-ItemProperty -Path $secpolPath -Name $createGlobalObjectsKey -ErrorAction SilentlyContinue
-# if ($null -eq $currentPrivileges) {
-#     log "Creating SeCreateGlobalPrivilege key with an empty value..."
-#     Set-ItemProperty -Path $secpolPath -Name $createGlobalObjectsKey -Value ""
-# }
-# $usersSID = (New-Object System.Security.Principal.NTAccount("Users")).Translate([System.Security.Principal.SecurityIdentifier]).Value
-# $adminsSID = (New-Object System.Security.Principal.NTAccount("Administrators")).Translate([System.Security.Principal.SecurityIdentifier]).Value
-# $newPrivilegesValue = $currentPrivileges.$createGlobalObjectsKey -replace $usersSID, ""
-# Set-ItemProperty -Path $secpolPath -Name $createGlobalObjectsKey -Value $newPrivilegesValue
+#TODO
 
 secedit /export /cfg C:\temp\secpol.cfg
 (Get-Content -Path C:\temp\secpol.cfg) -replace "SeCreateGlobalPrivilege =.*", "SeCreateGlobalPrivilege = *S-1-5-32-544" |
