@@ -17,7 +17,8 @@
 # ====================================================================================
 
 ##### VARIABLES #####
-$LOGFILE = ".\windows_ps1_script.log"
+$current_dir = (Get-Location).Path
+$LOGFILE = "$current_dir\windows_ps1_script.log"
 
 ##### REMOVE EXISTING LOG FILE #####
 if (Test-Path $LOGFILE) {
@@ -40,7 +41,7 @@ function log_info {
 }
 
 ##### ARGS #####
-#TODO: -License, -Debug, -Help, -Version
+#TODO: -Help, -Version, -License, -Debug
 
 ##### CHECK FOR ADMIN #####
 log_info "Checking for admininstrative access..."
