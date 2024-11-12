@@ -412,15 +412,14 @@ Set-ItemProperty -Path $registryPath -Name $registryValueName -Value $desiredBeh
 log "Finding media files..."
 $mediaExtensions = @("*.mp3", "*.mp4", "*.avi", "*.mkv", "*.flac", "*.wav", "*.mov", "*.wmv")
 $mediaFiles = Get-ChildItem -Path "C:\Users\*" -Recurse -File | Where-Object { $mediaExtensions -contains $_.Extension.ToLower() }
-$mediaFiles | Select-Object FullName | Out-File -FilePath "media_files.txt"
+$mediaFiles | Select-Object FullName | Out-File -FilePath "$current_dir\media_files.txt"
 log "Media files (and their full path) saved to 'media_files.txt'."
-$mediaFiles | ForEach-Object {
-    $confirmDelete = Read-Host "Do you want to delete '$($_.FullName)'? (Y/n): "
-    if ($confirmDelete.ToLower() -eq 'n') {
-        log "Skipped: $($_.FullName)"
-    } else {
-        Remove-Item -Path $_.FullName -Force
-        log "Deleted: $($_.FullName)"
+Get-Content "$current_dir\media_files.txt"
+$confirmDeletion = Read-Host "Do you want to delete all media files (images, videos, and audio) from C:\Users? (Y/n): "
+foreach ($extension in $mediaExtensions) {
+    Get-ChildItem -Path "C:\Users\*" -Include $extension -File -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+        Remove-Item -Path $_.FullName -Force -ErrorAction Continue
+        log "Deleted:" $_.FullName
     }
 }
 
