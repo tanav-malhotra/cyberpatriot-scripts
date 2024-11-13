@@ -67,13 +67,10 @@ ring_bell() {
 }
 
 ##### CHECK FOR SUDO #####
-echo "Checking for \`sudo\` access..."
+log_info "Checking for \`sudo\` access..."
 if [[ $EUID -ne 0 ]]; then
-    echo "\`sudo\` access is required. Please run \`sudo !!\`"
+    log "\`sudo\` access is required. Please run \`sudo !!\`"
     exit 1
-else
-    echo "\`sudo\` access confirmed. Proceeding..."
-    sleep 1
 fi
 
 ##### MANAGE ARGS #####
@@ -181,15 +178,15 @@ apt autoremove -y --purge
 LANG_TO_KEEP="en_US.UTF-8"
 LOCALE_TO_KEEP="en"
 log "Setting language to $LANG_TO_KEEP and locale to $LOCALE_TO_KEEP..."
-locale-gen $LANG_TO_KEEP
-update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP
-log "Removing every other language and locale (other than $LOCALE_TO_KEEP and $LANG_TO_KEEP)..."
-for locale in $(locale -a); do
-    if [[ "$locale" != "$LANG_TO_KEEP" && "$locale" != "$LOCALE_TO_KEEP" ]]; then
-        localectl set-locale $locale --delete
-        log "Removed locale: $locale"
-    fi
-done
+update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP LC_MESSAGES="POSIX" $LANG_TO_KEEP
+locale-gen --purge $LANG_TO_KEEP # languages you WANT to keep
+# log "Removing every other language and locale (other than $LOCALE_TO_KEEP and $LANG_TO_KEEP)..."
+# for locale in $(locale -a); do
+#     if [[ "$locale" != "$LANG_TO_KEEP" && "$locale" != "$LOCALE_TO_KEEP" && "$locale" != "POSIX" && "$locale" != "C" && "$locale" != "C.utf8" ]]; then
+#         localectl set-locale $locale --purge
+#         log "Removed locale: $locale"
+#     fi
+# done
 dpkg-reconfigure locales
 
 ##### SOFTWARE MANAGEMENT #####
@@ -419,14 +416,14 @@ fi
 
 ##### REMOVING BASH ALIASES #####
 log "Removing all bash aliases..."
-find / -type f -name "*.bashrc" 2>/dev/null | while read -r bashrc_file; do
+find / -type f -name "*bashrc" 2>/dev/null | while read -r bashrc_file; do
     if [ -f "$bashrc_file" ]; then
         cp "$bashrc_file" "$bashrc_file.bak"
         sed -i '/alias /d' "$bashrc_file"
         if ! diff "$bashrc_file" "$bashrc_file.bak" >/dev/null; then
-            echo "Aliases removed from $bashrc_file"
+            log "Aliases removed from $bashrc_file."
         else
-            echo "No aliases found in $bashrc_file"
+            log "No aliases found in $bashrc_file."
         fi
     fi
 done

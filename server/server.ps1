@@ -410,11 +410,22 @@ do {
 
 ##### CONFIGURE WINDOWS SMARTSCREEN #####
 log "Blocking windows smartscreen..."
-# $regPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
-$regPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System"
-$regKey = "SmartScreenEnabled"
-# Set SmartScreen to Block
-Set-ItemProperty -Path $regPath -Name $regKey -Value "Block"
+# $regPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System"
+#
+#$regPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer"
+#$regKey = "SmartScreenEnabled"
+#$desiredValue = "Block"  # or "Warn"
+#if (-not (Test-Path $regPath)) {
+#    log "Registry path '$regPath' does not exist. Creating it..."
+#    New-Item -Path $regPath -Force
+#}
+#try {
+#   Set-ItemProperty -Path $regPath -Name $regKey -Value $desiredValue -Type String
+#    log "Successfully set '$regKey' to '$desiredValue'."
+#} catch {
+#    log_info "error: Failed to set the registry key '$regKey' to '$desiredValue'. Error: $_"
+#    Write-Error "Failed to set the registry key '$regKey' to '$desiredValue'. Error: $_"
+#}
 
 ##### PROMPT ADMINS BEFORE ELEVATING THEIR PRIVILEGES #####
 log "Prompting admins before elevating their privileges..."
