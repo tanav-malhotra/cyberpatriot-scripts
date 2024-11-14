@@ -180,13 +180,6 @@ LOCALE_TO_KEEP="en"
 log "Setting language to $LANG_TO_KEEP and locale to $LOCALE_TO_KEEP..."
 update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP LC_MESSAGES="POSIX"
 locale-gen --purge $LANG_TO_KEEP # languages you WANT to keep
-# log "Removing every other language and locale (other than $LOCALE_TO_KEEP and $LANG_TO_KEEP)..."
-# for locale in $(locale -a); do
-#     if [[ "$locale" != "$LANG_TO_KEEP" && "$locale" != "$LOCALE_TO_KEEP" && "$locale" != "POSIX" && "$locale" != "C" && "$locale" != "C.utf8" ]]; then
-#         localectl set-locale $locale --purge # this didn't work --delete not found (didn't test --purge)
-#         log "Removed locale: $locale"
-#     fi
-# done
 
 ##### SOFTWARE MANAGEMENT #####
 apt list --installed > ./software_that_was_installed.txt
