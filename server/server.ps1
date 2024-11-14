@@ -24,6 +24,7 @@ $LOGFILE = "$current_dir\windows_ps1_script.log"
 if (Test-Path $LOGFILE) {
     Remove-Item $LOGFILE -Force
 }
+"" | Out-File $LOGFILE
 
 ##### FUNCTIONS #####
 function log {
@@ -32,13 +33,13 @@ function log {
     )
     # Write-Host ($args -join ' ')
     Write-Host $Message
-    Write-Host $Message | Out-File -Append -FilePath $LOGFILE
+    $Message | Out-File -Append -FilePath $LOGFILE
 }
 function log_info {
     param (
         [string]$Message
     )
-    Write-Host $Message | Out-File -Append -FilePath $LOGFILE
+    $Message | Out-File -Append -FilePath $LOGFILE
 }
 
 ##### ARGS #####
