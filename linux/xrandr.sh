@@ -41,26 +41,26 @@ else
 fi
 
 ##### SET RESOLUTION ON REBOOT #####
-echo "Setting resolution on system startup..."
-(crontab -l; echo "@reboot $0") | crontab -
-ORIGINAL_USER_HOME=$(eval echo "~$SUDO_USER")
-echo "xrandr -s $RESOLUTION" >> $ORIGINAL_USER_HOME/.xprofile
-SERVICE_FILE="/etc/systemd/system/set-resolution.service"
-cat > "$SERVICE_FILE" <<EOL
-[Unit]
-Description=Set Display Resolution
+# echo "Setting resolution on system startup..."
+# (crontab -l; echo "@reboot $0") | crontab -
+# ORIGINAL_USER_HOME=$(eval echo "~$SUDO_USER")
+# echo "xrandr -s $RESOLUTION" >> $ORIGINAL_USER_HOME/.xprofile # TODO: fix error
+# SERVICE_FILE="/etc/systemd/system/set-resolution.service"
+# cat > "$SERVICE_FILE" <<EOL
+# [Unit]
+# Description=Set Display Resolution
 
-[Service]
-ExecStart=/usr/bin/xrandr -s $RESOLUTION
-User=$SUDO_USER
-Environment=DISPLAY=:0
+# [Service]
+# ExecStart=/usr/bin/xrandr -s $RESOLUTION
+# User=$SUDO_USER
+# Environment=DISPLAY=:0
 
-[Install]
-WantedBy=default.target
-EOL
-chmod 644 "$SERVICE_FILE"
-systemctl daemon-reload
-systemctl enable set-resolution.service
+# [Install]
+# WantedBy=default.target
+# EOL
+# chmod 644 "$SERVICE_FILE"
+# systemctl daemon-reload
+# systemctl enable set-resolution.service
 
 ##### WISH GOOD LUCK #####
 echo;echo;echo;
