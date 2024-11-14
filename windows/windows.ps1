@@ -427,19 +427,23 @@ Set-ItemProperty -Path $registryPath -Name $registryValueName -Value $desiredBeh
 
 ##### REMOVING MEDIA FILES #####
 log "Finding media files..."
-$mediaFiles = Get-ChildItem -Path "C:\Users\*" -Recurse -Include ".mp3", ".mp4", ".avi", ".mkv", ".flac", ".wav", ".mov", ".wmv"
-$imageFiles = Get-ChildItem -Path "C:\Users\*" -Recurse -Include ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".webp", ".heif", ".ico", ".svg", ".raw", ".dng", ".eps"
-Write-Host "Media (Video/Audio):"
-$mediaFiles
-Write-Host "Images:"
-$imageFiles
-$confirmDeletion = Read-Host "Do you want to delete all media files (videos, and audio) from C:\Users\*? (Y/n): "
+$mediaFiles = Get-ChildItem -Path "C:\Users\*\*" -Recurse -Include "*.mp3", "*.mp4", "*.avi", "*.mkv", "*.flac", "*.wav", "*.mov", "*.wmv"
+$imageFiles = Get-ChildItem -Path "C:\Users\*\*" -Recurse -Include "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.tiff", "*.webp", "*.heif", "*.ico", "*.svg", "*.raw", "*.dng", "*.eps"
+log "Media (Video/Audio):" $mediaFiles
+log "Images:" $imageFiles
+$confirmDeletion = Read-Host "Do you want to delete all media files (video and audio) from C:\Users\*\*? (Y/n): "
 if ($confirmDeletion.ToLower() -eq 'n') {
-    $mediaFiles | Remove-Item -Force
+    log "Media (video and audio) file deletion canceled."
+} else {
+    log "Deleting media (video and audio) files..."
+    $mediaFiles | Remove-Item -Force -ErrorAction Continue
 }
-$confirmDeletion = Read-Host "Do you want to delete all images from C:\Users\*? (Y/n): "
+$confirmDeletion = Read-Host "Do you want to delete all images from C:\Users\*\*? (Y/n): "
 if ($confirmDeletion.ToLower() -eq 'n') {
-    $imageFiles | Remove-Item -Force
+    log "Image file deletion canceled."
+} else {
+    log "Deleting image files..."
+    $imageFiles | Remove-Item -Force -ErrorAction Continue
 }
 
 ##### AUDIT POLICIES #####

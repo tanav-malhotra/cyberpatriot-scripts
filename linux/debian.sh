@@ -160,12 +160,12 @@ if [[ $confirmation =~ ^[Nn].* ]]; then
     log "error: Please complete these first and only then rerun the script."
     exit 1
 fi
-ring_bell
-read -p "Have you created the required admins.txt, users.txt, addusers.txt, & addgroups.txt files in the current directory? (Y/n): " $confirmation
-if [[ $confirmation =~ ^[Nn].* ]]; then
-    log "error: Please create these files first by using the information from the README file located on your desktop."
-    exit 1
-fi
+# ring_bell
+# read -p "Have you created the required admins.txt, users.txt, addusers.txt, & addgroups.txt files in the current directory? (Y/n): " $confirmation
+# if [[ $confirmation =~ ^[Nn].* ]]; then
+#     log "error: Please create these files first by using the information from the README file located on your desktop."
+#     exit 1
+# fi
 
 ##### UPDATE #####
 log "Updating system..."
@@ -215,6 +215,8 @@ for game in "${games[@]}"; do
     log "Removing $game..."
     apt-get purge -y "$game"
 done
+dpkg --configure -a
+apt --fix-broken install
 apt autoremove -y --purge
 
 ##### CHECK FOR UPDATES DAILY #####
@@ -432,22 +434,71 @@ done
 log "Setting home directory permissions..."
 for i in $(mawk -F: '$3 > 999 && $3 < 65534 {print $1}' /etc/passwd); do [ -d /home/${i} ] && chmod -R 750 /home/${i}; done
 find /home -type d -name '.ssh' -exec chmod 700 {} \;
-log "Changing permissions of commonly exploited files..."
+log "Changing permissions (and owners) of commonly exploited files..."
+# chown root:root /etc/securetty
+# chown root:root /etc/shadow
+# chmod 0600 /etc/securetty
+# chmod 600 /etc/shadow
+# chmod 0440 /etc/sudoers
+# chmod 644 /etc/crontab
+# chmod 640 /etc/ftpusers
+# chmod 440 /etc/inetd.conf
+# chmod 440 /etc/xinetd.conf
+# chmod 400 /etc/inetd.d
+# chmod 644 /etc/hosts.allow
+# chown root:root /
+# chmod 755 /
+# chown root:root /bin
+# chmod 755 /bin
+# chown root:root /boot
+# chmod 755 /boot
+# chown root:root /etc
+# chmod 755 /etc
+# chown root:root /lib
+# chmod 755 /lib
+# chown root:root /lib64
+# chmod 755 /lib64
+# chown root:root /opt
+# chmod 755 /opt
+# chown root:root /sbin
+# chmod 755 /sbin
+# chown root:root /usr
+# chmod 755 /usr
+# chown root:root /var
+# chmod 755 /var
+# chown root:root /etc/passwd
+# chmod 644 /etc/passwd
+# chown root:shadow /etc/shadow
+# chmod 600 /etc/shadow
+# chown root:root /etc/group
+# chmod 644 /etc/group
+# chown root:shadow /etc/gshadow
+# chmod 600 /etc/gshadow
+# chown root:root /etc/hosts
+# chmod 644 /etc/hosts
+# chown root:root /etc/ssh/ssh_host_*_key
+# chmod 600 /etc/ssh/ssh_host_*_key
+# chown root:root /etc/ssh/ssh_host_*_key.pub
+# chmod 644 /etc/ssh/ssh_host_*_key.pub
+# chown root:root /root
+# chmod 700 /root
+# chown root:root /tmp
+# chmod 1777 /tmp
+#
+#
+# Files related to authentication and configuration
 chown root:root /etc/securetty
+chown root:shadow /etc/shadow
 chmod 0600 /etc/securetty
+chmod 600 /etc/shadow
+chmod 0440 /etc/sudoers
 chmod 644 /etc/crontab
 chmod 640 /etc/ftpusers
 chmod 440 /etc/inetd.conf
 chmod 440 /etc/xinetd.conf
 chmod 400 /etc/inetd.d
 chmod 644 /etc/hosts.allow
-chmod 640 /etc/sudoers
-chmod 640 /etc/passwd
-chmod 600 /etc/shadow
-chown root:root /etc/shadow
-# Setting critical file and directory permissions
-log "Setting critical file and directory permissions and ownership..."
-# Set ownership and permissions for critical directories
+# Root and important system directories
 chown root:root /
 chmod 755 /
 chown root:root /bin
@@ -468,7 +519,7 @@ chown root:root /usr
 chmod 755 /usr
 chown root:root /var
 chmod 755 /var
-# Set ownership and permissions for critical files
+# Password and shadow files
 chown root:root /etc/passwd
 chmod 644 /etc/passwd
 chown root:shadow /etc/shadow
@@ -477,15 +528,16 @@ chown root:root /etc/group
 chmod 644 /etc/group
 chown root:shadow /etc/gshadow
 chmod 600 /etc/gshadow
-chown root:root /etc/hosts
-chmod 644 /etc/hosts
+# SSH keys and directories
 chown root:root /etc/ssh/ssh_host_*_key
 chmod 600 /etc/ssh/ssh_host_*_key
 chown root:root /etc/ssh/ssh_host_*_key.pub
 chmod 644 /etc/ssh/ssh_host_*_key.pub
-# Set ownership and permissions for the root user's home directory
+# Root user and sensitive directories
 chown root:root /root
 chmod 700 /root
+chown root:root /tmp
+chmod 1777 /tmp
 
 ##### CRON SETTINGS #####
 log "Changing cron settings..."
@@ -743,19 +795,14 @@ log "Empty Passwords (saved to \`./no_passwd.txt\`)..."
 mawk -F: '$3 == 0 && $1 != "root"' /etc/passwd > ./non-root_uid0.txt
 log "Non-root UID 0 users (saved to \`./non-root_uid0.txt\`)..."
 # Reading files for authorized users and admins
-log "Reading users.txt, admins.txt, addusers.txt, and addgroups.txt..."
+# log "Reading users.txt, admins.txt, addusers.txt, and addgroups.txt..."
 #TODO: user management
 # Changing Passwords
 NEW_PASSWORD="CyberPatr!0t"
 log "Changing Passwords of all users, admins, and root to \`$NEW_PASSWORD\`..."
-cut -d: -f1 /etc/passwd | while read user; do
-    if [[ "$user" != "root" && "$user" != "nobody" && "$user" != "daemon" && "$user" != "systemd-timesync" \
-    && "$user" != "bin" && "$user" != "sys" && "$user" != "games" && "$user" != "mail" \
-    && "$user" != "ftp" && "$user" != "httpd" && "$user" != "apache" && "$user" != "sshd" \
-    && "$user" != "postfix" && "$user" != "nfsnobody" && "$user" != "named" \
-    && "$user" != "mysql" && "$user" != "postgres" && "$user" != "backup" \
-    && "$user" != "www-data" && "$user" != "systemd-journal" && "$user" != "messagebus" \
-    && "$user" != "tss" && "$user" != "rpc" ]]; then
+cut -d: -f1,3 /etc/passwd | while IFS=: read user uid; do
+    # UID (User ID) >= 1000 for human users
+    if [[ "$uid" -ge 1000 ]]; then
         if id -nG "$user" | grep -qwE 'sudo|wheel|sudoers|admin'; then
             ROLE="admin"
         else
