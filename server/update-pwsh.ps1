@@ -32,6 +32,7 @@ if ($installedPS7) {
 }
 
 ##### UPDATE TO PWSH 7 #####
+# TODO:
 $ps7Url = "https://aka.ms/install-powershell.ps1" # stable release
 Write-Host "Downloading PowerShell 7 installation script..."
 Invoke-WebRequest -Uri $ps7Url -OutFile "$env:TEMP\install-powershell.ps1"
