@@ -51,6 +51,26 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit
 }
 
+##### RENAMING ADMIN ACCOUNT #####
+log "Renaming 'Administrator' account to 'CyberPatriot' (and updating group memberships)..."
+try {
+    $adminName = "Administrator"
+    $newAdminName = "CyberPatriot"
+    # $adminAccount = Get-LocalUser -Name $adminName
+    # $newAdminAccount = Get-LocalUser -Name $newAdminName
+
+    Rename-LocalUser -Name $adminName -NewName $newAdminName
+
+    # $adminGroup = Get-LocalGroup -Name "Administrators"
+    # $adminGroup.Members.Remove($adminAccount)
+    # $adminGroup.Members.Add($newAdminAccount)
+
+    net user $adminName /active:no
+} catch {
+    log_info "error: Failed to rename 'Administrator' account: $_"
+    Write-Error "Failed to rename 'Administrator' account: $_"
+}
+
 ##### PASSWORD SETTINGS #####
 log "Setting password settings and lockout policy..."
 $newPassword = "CyberPatr!0t"
@@ -72,7 +92,7 @@ try {
     log "Enabling 'Limit local account use of blank passwords to console logon only'..."
     Set-ItemProperty -Path $registryPath -Name $registryName -Value 1
 } catch {
-    log_info "Failed to enable the setting: $_"
+    log_info "error: Failed to enable the setting: $_"
     Write-Error "Failed to enable the setting: $_"
 }
 net accounts /maxpwage:30
@@ -170,49 +190,49 @@ log "Disabling guest login..."
 net user guest /active:no
 
 ##### SOFTWARE MANAGEMENT #####
-log "Managing software..."
-# removing software
-log "Removing prohibited software..."
-$appsToRemove = @(
-    "*xbox*",
-    "*zune*",
-    "*3dbuilder*",
-    "*bingnews*",
-    "*solitaire*",
-    "*skypeapp*",
-    "*getstarted*",
-    "*oneconnect*",
-    "*people*",
-    "*communicationsapps*",
-    "*feedbackhub*",
-    "*officehub*",
-    "*onenote*",
-    "*onedrive*",
-    "*mixedreality*",
-    "*wallet*",
-    "*yourphone*",
-    "*candycrush*",
-    "*twitter*",
-    "*netflix*",
-    "*wireshark*",
-    "*bittorrent*",
-    "*netcat*",
-    "*teamviewer*",
-    "*team-viewer*",
-    "*webcompanion*",
-    "*groove*",
-    "*Paint3D*",
-    "*tftp*", # remove if tftp is needed as a critical service
-    "*telnet*"
-)
-foreach ($app in $appsToRemove) {
-    log "Removing $app..."
-    Get-AppxPackage -AllUsers | Where-Object { $_.Name -like $app } | Remove-AppxPackage -ErrorAction SilentlyContinue # windows store apps
-    Get-CimInstance -ClassName Win32_Product | Where-Object { $_.Name -like $app } | ForEach-Object { $_.Uninstall() } # for traditional apps installed from internet
-}
-# installing software
-log "Installing software..."
-# TODO: see if any software needs to be installed
+# log "Managing software..."
+# # removing software
+# log "Removing prohibited software..."
+# $appsToRemove = @(
+#     "*xbox*",
+#     "*zune*",
+#     "*3dbuilder*",
+#     "*bingnews*",
+#     "*solitaire*",
+#     "*skypeapp*",
+#     "*getstarted*",
+#     "*oneconnect*",
+#     "*people*",
+#     "*communicationsapps*",
+#     "*feedbackhub*",
+#     "*officehub*",
+#     "*onenote*",
+#     "*onedrive*",
+#     "*mixedreality*",
+#     "*wallet*",
+#     "*yourphone*",
+#     "*candycrush*",
+#     "*twitter*",
+#     "*netflix*",
+#     "*wireshark*",
+#     "*bittorrent*",
+#     "*netcat*",
+#     "*teamviewer*",
+#     "*team-viewer*",
+#     "*webcompanion*",
+#     "*groove*",
+#     "*Paint3D*",
+#     "*tftp*", # remove if tftp is needed as a critical service
+#     "*telnet*"
+# )
+# foreach ($app in $appsToRemove) {
+#     log "Removing $app..."
+#     Get-AppxPackage -AllUsers | Where-Object { $_.Name -like $app } | Remove-AppxPackage -ErrorAction SilentlyContinue # windows store apps
+#     Get-CimInstance -ClassName Win32_Product | Where-Object { $_.Name -like $app } | ForEach-Object { $_.Uninstall() } # for traditional apps installed from internet
+# }
+# # installing software
+# log "Installing software..."
+# # TODO: see if any software needs to be installed
 
 ##### AUTOMATIC UPDATES #####
 log "Setting up automatic updates..."
@@ -265,16 +285,16 @@ log "Securing RDP settings..."
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "UserAuthentication" -Value 1 # Network Level Authentication (NLA)
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "SecurityLayer" -Value 1 # require NLA for connection
 $userInput = Read-Host "Do you want to disable RDP? (Y/n): "
-if ($userInput.ToLower() -eq 'y') {
-    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 1
-    Stop-Service -Name "TermService" -Force
-    Set-Service -Name "TermService" -StartupType Disabled
-    log "RDP has been stopped and disabled."
-} else {
+if ($userInput.ToLower() -eq 'n') {
+    log "Starting and enabling RDP..."
     Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
     Start-Service -Name "TermService"
     Set-Service -Name "TermService" -StartupType Automatic
-    log "RDP service started and enabled."
+} else {
+    log "Stopping and disabling RDP..."
+    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 1
+    Stop-Service -Name "TermService" -Force
+    Set-Service -Name "TermService" -StartupType Disabled
 }
 
 ##### DISABLING TELNET #####
@@ -346,33 +366,9 @@ reg ADD HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Script
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ModuleLogging" /v EnableModuleLogging /t REG_DWORD /d 1 /f
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" /v EnableScriptBlockLogging /t REG_DWORD /d 1 /f
 
-##### RENAMING ADMIN ACCOUNT #####
-log "Renaming 'Administrator' account to 'CyberPatriot' (and updating group memberships)..."
-try {
-    $adminName = "Administrator"
-    $newAdminName = "CyberPatriot"
-    # $adminAccount = Get-LocalUser -Name $adminName
-
-    # Rename-LocalUser -Name $adminName -NewName $newAdminName
-    # $adminGroup = Get-LocalGroup -Name "Administrators"
-    # $adminGroup.Members.Remove($adminAccount)
-    # $adminGroup.Members.Add($newAdminName)
-
-    $adminAccount = Get-LocalUser -Name $adminName
-    Rename-LocalUser -Name $adminName -NewName $newAdminName
-    $newAdminAccount = Get-LocalUser -Name $newAdminName
-    $adminGroup = Get-LocalGroup -Name "Administrators"
-    $adminGroup.Members.Remove($adminAccount)
-    $adminGroup.Members.Add($newAdminAccount)
-} catch {
-    log_info "error: Failed to rename 'Administrator' account."
-    Write-Error "Failed to rename 'Administrator' account."
-}
-
 ##### CREATE GLOBAL OBJECTS CONFIGURATION #####
 log "Preventing users from creating global objects..."
 #TODO
-
 secedit /export /cfg C:\temp\secpol.cfg
 (Get-Content -Path C:\temp\secpol.cfg) -replace "SeCreateGlobalPrivilege =.*", "SeCreateGlobalPrivilege = *S-1-5-32-544" |
     Set-Content -Path C:\temp\secpol.cfg
@@ -477,8 +473,8 @@ try {
     auditpol /set /category:"System" /success:enable 
     auditpol /set /category:"System" /failure:enable
 } catch {
-    log_info "error: Failed to set audit policies."
-    Write-Error "Failed to set audit policies."
+    log_info "error: Failed to set audit policies: $_"
+    Write-Error "Failed to set audit policies: $_"
 }
 # global audit policies
 $OSWMI = Get-WmiObject Win32_OperatingSystem -Property Caption,Version
