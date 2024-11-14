@@ -273,14 +273,15 @@ Add-MpPreference -AttackSurfaceReductionRules_Ids 75668c1f-73b5-4cf0-bb93-3ecf5c
 Add-MpPreference -AttackSurfaceReductionRules_Ids d3e037e1-3eb8-44c8-a917-57927947596d -AttackSurfaceReductionRules_Actions Enabled
 
 ##### DISABLE WINDOWS REMOTE MANAGEMENT #####
-log "Disabling Windows Remote Managerment..."
+# log "Disabling Windows Remote Managerment..."
 # Set-Item wsman:\localhost\client\trustedhosts * -Force
 # Set-PSSessionConfiguration -Name "Microsoft.PowerShell" -SecurityDescriptorSddl "O:NSG:BAD:P(A;;GA;;;BA)(A;;GA;;;WD)(A;;GA;;;IU)S:P(AU;FA;GA;;;WD)(AU;SA;GXGW;;;WD)"
-Stop-Service -Name winrm -Force
-Set-Service -Name winrm -StartupType Disabled
-winrm delete winrm/config/Listener?Address=*+Transport=HTTP
-winrm delete winrm/config/Listener?Address=*+Transport=HTTPS
-Disable-PSRemoting -Force
+#
+# Stop-Service -Name winrm -Force
+# Set-Service -Name winrm -StartupType Disabled
+# winrm delete winrm/config/Listener?Address=*+Transport=HTTP
+# winrm delete winrm/config/Listener?Address=*+Transport=HTTPS
+# Disable-PSRemoting -Force
 
 ##### DISABLE RDP #####
 log "Securing RDP settings..."
@@ -436,8 +437,10 @@ Set-ItemProperty -Path $registryPath -Name $registryValueName -Value $desiredBeh
 log "Finding media files..."
 $mediaFiles = Get-ChildItem -Path "C:\Users\*\*" -Recurse -Include "*.mp3", "*.mp4", "*.avi", "*.mkv", "*.flac", "*.wav", "*.mov", "*.wmv"
 $imageFiles = Get-ChildItem -Path "C:\Users\*\*" -Recurse -Include "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.tiff", "*.webp", "*.heif", "*.ico", "*.svg", "*.raw", "*.dng", "*.eps"
-log "Media (Video/Audio):" $mediaFiles
-log "Images:" $imageFiles
+log "Media (Video/Audio):"
+log $mediaFiles
+log "Images:"
+log $imageFiles
 $confirmDeletion = Read-Host "Do you want to delete all media files (video and audio) from C:\Users\*\*? (Y/n): "
 if ($confirmDeletion.ToLower() -eq 'n') {
     log "Media (video and audio) file deletion canceled."
