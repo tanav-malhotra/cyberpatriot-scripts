@@ -178,16 +178,15 @@ apt autoremove -y --purge
 LANG_TO_KEEP="en_US.UTF-8"
 LOCALE_TO_KEEP="en"
 log "Setting language to $LANG_TO_KEEP and locale to $LOCALE_TO_KEEP..."
-update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP LC_MESSAGES="POSIX" $LANG_TO_KEEP
+update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP LC_MESSAGES="POSIX"
 locale-gen --purge $LANG_TO_KEEP # languages you WANT to keep
 # log "Removing every other language and locale (other than $LOCALE_TO_KEEP and $LANG_TO_KEEP)..."
 # for locale in $(locale -a); do
 #     if [[ "$locale" != "$LANG_TO_KEEP" && "$locale" != "$LOCALE_TO_KEEP" && "$locale" != "POSIX" && "$locale" != "C" && "$locale" != "C.utf8" ]]; then
-#         localectl set-locale $locale --purge
+#         localectl set-locale $locale --purge # this didn't work --delete not found (didn't test --purge)
 #         log "Removed locale: $locale"
 #     fi
 # done
-dpkg-reconfigure locales
 
 ##### SOFTWARE MANAGEMENT #####
 apt list --installed > ./software_that_was_installed.txt
@@ -853,7 +852,7 @@ final_sec=$(echo "$duration % 60" | bc)
 
 ##### ENSURING LANG IS SET TO ENGLISH (US) #####
 log "Ensuring language is set to English (US)..."
-update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP
+update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP LC_MESSAGES="POSIX"
 
 ##### FINAL NOTES FOR USER #####
 log "Finished in $final_min minute(s) and $final_sec second(s)..."
