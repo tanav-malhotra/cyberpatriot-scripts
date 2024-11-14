@@ -59,7 +59,9 @@ try {
     # $adminAccount = Get-LocalUser -Name $adminName
     # $newAdminAccount = Get-LocalUser -Name $newAdminName
 
-    Rename-LocalUser -Name $adminName -NewName $newAdminName
+    wmic useraccount where "name='$adminName'" rename $newAdminName
+    net localgroup Administrators /delete $adminName
+    net localgroup Administrators /add $newAdminName
 
     # $adminGroup = Get-LocalGroup -Name "Administrators"
     # $adminGroup.Members.Remove($adminAccount)
