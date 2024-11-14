@@ -26,13 +26,10 @@ AIDE_BIN="/usr/bin/aide"
 AIDE_CONF_DIR="/etc/aide"
 
 ##### CHECK FOR SUDO #####
-echo "Checking for \`sudo\` access (which may request your password)..."
+echo "Checking for \`sudo\` access..."
 if [[ $EUID -ne 0 ]]; then
     echo "\`sudo\` access is required. Please run \`sudo !!\`"
     exit 1
-else
-    echo "\`sudo\` access confirmed. Proceeding..."
-    sleep 1
 fi
 
 ##### FUNCTIONS #####

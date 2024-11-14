@@ -18,13 +18,10 @@
 # ====================================================================================
 
 ##### CHECK FOR SUDO #####
-log "Checking for \`sudo\` access (which may request your password)..."
+echo "Checking for \`sudo\` access..."
 if [[ $EUID -ne 0 ]]; then
-    log "\`\` access is required. Please run \`sudo !!\`"
+    echo "\`sudo\` access is required. Please run \`sudo !!\`"
     exit 1
-else
-    log "\`\` access confirmed. Proceeding..."
-    sleep 1
 fi
 
 apt update -y && apt install -y ufw libpam-google-authenticator
