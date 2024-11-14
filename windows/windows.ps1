@@ -30,6 +30,7 @@ function log {
     param (
         [string]$Message
     )
+    # Write-Host ($args -join ' ')
     Write-Host $Message
     Write-Host $Message | Out-File -Append -FilePath $LOGFILE
 }
