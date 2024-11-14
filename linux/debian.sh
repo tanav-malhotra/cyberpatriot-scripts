@@ -180,6 +180,7 @@ LOCALE_TO_KEEP="en"
 log "Setting language to $LANG_TO_KEEP and locale to $LOCALE_TO_KEEP..."
 update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP LC_MESSAGES="POSIX"
 locale-gen --purge $LANG_TO_KEEP # languages you WANT to keep
+dpkg-reconfigure locales
 
 ##### SOFTWARE MANAGEMENT #####
 apt list --installed > ./software_that_was_installed.txt
