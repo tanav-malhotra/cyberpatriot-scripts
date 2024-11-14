@@ -31,13 +31,13 @@ function log {
         [string]$Message
     )
     Write-Host $Message
-    $Message | Out-File -Append -FilePath $LOGFILE
+    Write-Host $Message | Out-File -Append -FilePath $LOGFILE
 }
 function log_info {
     param (
         [string]$Message
     )
-    $Message | Out-File -Append -FilePath $LOGFILE
+    Write-Host $Message | Out-File -Append -FilePath $LOGFILE
 }
 
 ##### ARGS #####
