@@ -18,7 +18,7 @@
 
 ##### VARIABLES #####
 $current_dir = (Get-Location).Path
-$LOGFILE = "$current_dir\windows_ps1_script.log"
+$LOGFILE = "$current_dir\windows_script.log"
 
 ##### REMOVE EXISTING LOG FILE #####
 if (Test-Path $LOGFILE) {
