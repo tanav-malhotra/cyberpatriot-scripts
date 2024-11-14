@@ -794,7 +794,7 @@ NEW_PASSWORD="CyberPatr!0t"
 log "Changing Passwords of all users, admins, and root to \`$NEW_PASSWORD\`..."
 cut -d: -f1,3 /etc/passwd | while IFS=: read user uid; do
     # UID (User ID) >= 1000 for human users
-    if [[ "$uid" -ge 1000 ]]; then
+    if [[ "$uid" -ge 1000 && "$user" != "nobody" && "$user" != "nfsnobody" ]]; then
         if id -nG "$user" | grep -qwE 'sudo|wheel|sudoers|admin'; then
             ROLE="admin"
         else
