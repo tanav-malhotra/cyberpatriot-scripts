@@ -369,10 +369,6 @@ reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging"
 ##### CREATE GLOBAL OBJECTS CONFIGURATION #####
 log "Preventing users from creating global objects..."
 #TODO
-secedit /export /cfg C:\temp\secpol.cfg
-(Get-Content -Path C:\temp\secpol.cfg) -replace "SeCreateGlobalPrivilege =.*", "SeCreateGlobalPrivilege = *S-1-5-32-544" |
-    Set-Content -Path C:\temp\secpol.cfg
-secedit /configure /db secedit.sdb /cfg C:\temp\secpol.cfg /overwrite
 
 ##### AUDIT CREDENTIAL VALIDATION #####
 log "Enabling Audit Credential Validation..."
