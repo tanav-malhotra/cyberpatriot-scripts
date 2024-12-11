@@ -18,7 +18,6 @@
 # ====================================================================================
 
 ##### CHECK FOR SUDO #####
-echo "Checking for \`sudo\` access..."
 if [[ $EUID -ne 0 ]]; then
     echo "\`sudo\` access is required. Please run \`sudo !!\`"
     exit 1
@@ -28,6 +27,7 @@ echo "Finding & saving media files to \`./media_files.txt\`..."
 find /home/ -type f \( -name "*.mp3" -o -name "*.mp4" -o -name "*.wav" -o -name "*.avi" -o -name "*.mkv" -o -name "*.flac" -o -name "*.mov" \) -print > ./media_files.txt
 echo "Media Files:"
 cat ./media_files.txt
+log "Press 'Enter' to continue..."
 read
 
 ##### WISH GOOD LUCK #####

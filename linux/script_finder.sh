@@ -18,7 +18,6 @@
 # ====================================================================================
 
 ##### CHECK FOR SUDO #####
-echo "Checking for \`sudo\` access..."
 if [[ $EUID -ne 0 ]]; then
     echo "\`sudo\` access is required. Please run \`sudo !!\`"
     exit 1
@@ -28,6 +27,7 @@ echo "Finding & saving scripts files to \`./scripts.txt\`..."
 find /home/ -type f \( -name "*.sh" -o -name "*.SH" \) -print > ./scripts.txt
 echo "Scripts:"
 cat ./scripts.txt
+log "Press 'Enter' to continue..."
 read
 
 ##### WISH GOOD LUCK #####

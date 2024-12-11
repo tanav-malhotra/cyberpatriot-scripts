@@ -18,7 +18,6 @@
 # ====================================================================================
 
 ##### CHECK FOR SUDO #####
-echo "Checking for \`sudo\` access..."
 if [[ $EUID -ne 0 ]]; then
     echo "\`sudo\` access is required. Please run \`sudo !!\`"
     exit 1

@@ -768,6 +768,7 @@ if [ $? -eq 0 ]; then
     log "Sudoers files validated successfully. No syntax errors found."
 else
     log "error: Syntax errors detected in sudoers files, namely \`/etc/sudoers\`! It is CRITICAL to fix these errors to prevent losing \`sudo\` access."
+    log "Press 'Enter' to continue..."
     read
     visudo
 fi
@@ -787,22 +788,60 @@ mawk -F: '$2 == ""' /etc/passwd > ./no_passwd.txt
 log "Empty Passwords (saved to \`./no_passwd.txt\`)..."
 mawk -F: '$3 == 0 && $1 != "root"' /etc/passwd > ./non-root_uid0.txt
 log "Non-root UID 0 users (saved to \`./non-root_uid0.txt\`)..."
-# Reading files for authorized users and admins
-# log "Reading users.txt, admins.txt, addusers.txt, and addgroups.txt..."
-#TODO: user management
-# Changing Passwords
+# Changing Passwords and user management
 NEW_PASSWORD="CyberPatr!0t"
-log "Changing Passwords of all users, admins, and root to \`$NEW_PASSWORD\`..."
+existing_users=$(cut -d: -f1 /etc/passwd | grep -Ev "^(root|nobody|nfsnobody)$")
+mapfile -t USERS < ./users.txt
+mapfile -t ADMINS < ./admins.txt
+ALL_USERS=$(printf "%s\n" "${USERS[@]}" "${ADMINS[@]}")
+log "Changing Passwords of all users and admins to \`$NEW_PASSWORD\` (and making sure they belong on system and have the right permissions)..."
+# Add any missing users from users.txt
+for u in "${USERS[@]}"; do
+    if ! grep -qw "$u" <<<"$existing_users"; then
+        useradd "$u"
+        log "User $u added to the system as user."
+    fi
+done
+# Add any missing admins from admins.txt
+for a in "${ADMINS[@]}"; do
+    if ! grep -qw "$a" <<<"$existing_users"; then
+        useradd "$a"
+        log "User $a added to the system as admin."
+    fi
+done
 cut -d: -f1,3 /etc/passwd | while IFS=: read user uid; do
     # UID (User ID) >= 1000 for human users
-    if [[ "$uid" -ge 1000 && "$user" != "nobody" && "$user" != "nfsnobody" ]]; then
-        if id -nG "$user" | grep -qwE 'sudo|wheel|sudoers|admin'; then
-            ROLE="admin"
+    if [[ "$uid" -ge 1000 && "$user" != "nobody" && "$user" != "nfsnobody" && "$user" != "root" ]]; then
+        if id -nG "$user" | grep -qwE 'sudo|wheel|admin'; then
+            current_role="Admin"
         else
+            current_role="User"
+        fi
+        # Determine the intended role based on the files
+        if grep -qw "$user" <<<"${ADMINS[*]}"; then
+            ROLE="admin"
+        elif grep -qw "$user" <<<"${USERS[*]}"; then
             ROLE="user"
+        else
+            userdel -r "$user"
+            log "$current_role $user and their data have been removed from the system."
+            continue
         fi
         echo "$user:$NEW_PASSWORD" | chpasswd
         log "Password for $ROLE $user changed."
+
+        # Make sure they belong on the system
+        if [[ "$ROLE" == "user" ]]; then
+            # Ensure user is not in admin groups
+            gpasswd -d "$user" sudo &>/dev/null
+            gpasswd -d "$user" admin &>/dev/null # older ubuntu versions
+            gpasswd -d "$user" wheel &>/dev/null
+        elif [[ "$ROLE" == "admin" ]]; then
+            # Ensure user is in admin groups
+            gpasswd -a "$user" sudo &>/dev/null
+            gpasswd -a "$user" admin &>/dev/null # older ubuntu versions
+            gpasswd -a "$user" wheel &>/dev/null
+        fi
     fi
 done
 echo "root:$NEW_PASSWORD" | chpasswd
