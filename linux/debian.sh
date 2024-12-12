@@ -791,8 +791,14 @@ log "Non-root UID 0 users (saved to \`./non-root_uid0.txt\`)..."
 # Changing Passwords and user management
 NEW_PASSWORD="CyberPatr!0t"
 existing_users=$(cut -d: -f1 /etc/passwd | grep -Ev "^(root|nobody|nfsnobody)$")
-mapfile -t USERS < ./users.txt
-mapfile -t ADMINS < ./admins.txt
+declare -A admin_map
+declare -A user_map
+for admin in "${ADMINS[@]}"; do
+    admin_map["$admin"]=1
+done
+for user in "${USERS[@]}"; do
+    user_map["$user"]=1
+done
 ALL_USERS=$(printf "%s\n" "${USERS[@]}" "${ADMINS[@]}")
 log "Changing Passwords of all users and admins to \`$NEW_PASSWORD\` (and making sure they belong on system and have the right permissions)..."
 # Add any missing users from users.txt
@@ -818,9 +824,9 @@ cut -d: -f1,3 /etc/passwd | while IFS=: read user uid; do
             current_role="User"
         fi
         # Determine the intended role based on the files
-        if grep -qw "$user" <<<"${ADMINS[*]}"; then
+        if [[ -n "${admin_map[$user]}" ]]; then
             ROLE="admin"
-        elif grep -qw "$user" <<<"${USERS[*]}"; then
+        elif [[ -n "${user_map[$user]}" ]]; then
             ROLE="user"
         else
             userdel -r "$user"
