@@ -803,14 +803,14 @@ ALL_USERS=$(printf "%s\n" "${USERS[@]}" "${ADMINS[@]}")
 log "Changing Passwords of all users and admins to \`$NEW_PASSWORD\` (and making sure they belong on system and have the right permissions)..."
 # Add any missing users from users.txt
 for u in "${USERS[@]}"; do
-    if ! grep -qw "$u" <<<"$existing_users"; then
+    if ! grep -qw "$u" <<<"$existing_users"; then # TODO: try method used in line 827 & 829
         useradd "$u"
         log "User $u added to the system as user."
     fi
 done
 # Add any missing admins from admins.txt
 for a in "${ADMINS[@]}"; do
-    if ! grep -qw "$a" <<<"$existing_users"; then
+    if ! grep -qw "$a" <<<"$existing_users"; then # TODO: try method used in line 827 & 829
         useradd "$a"
         log "User $a added to the system as admin."
     fi
