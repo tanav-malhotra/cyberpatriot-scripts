@@ -160,12 +160,12 @@ if [[ $confirmation =~ ^[Nn].* ]]; then
     log "error: Please complete these first and only then rerun the script."
     exit 1
 fi
-# ring_bell
-# read -p "Have you created the required admins.txt, users.txt, addusers.txt, & addgroups.txt files in the current directory? (Y/n): " $confirmation
-# if [[ $confirmation =~ ^[Nn].* ]]; then
-#     log "error: Please create these files first by using the information from the README file located on your desktop."
-#     exit 1
-# fi
+ring_bell
+read -p "Have you created the required users.txt & admins.txt files in the current directory? (Y/n): " $confirmation
+if [[ $confirmation =~ ^[Nn].* ]]; then
+    log "error: Please create these files first by using the information from the README file located on your desktop."
+    exit 1
+fi
 
 ##### UPDATE #####
 log "Updating system..."
@@ -179,13 +179,14 @@ LANG_TO_KEEP="en_US.UTF-8"
 LOCALE_TO_KEEP="en"
 log "Setting language to $LANG_TO_KEEP and locale to $LOCALE_TO_KEEP..."
 update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP LC_MESSAGES="POSIX"
+ring_bell
 locale-gen --purge $LANG_TO_KEEP # languages you WANT to keep
 dpkg-reconfigure locales
 
 ##### SOFTWARE MANAGEMENT #####
 apt list --installed > ./software_that_was_installed.txt
 log "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage" "net-tools")
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage" "net-tools" "lynis")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     apt-get install -y "$app"
