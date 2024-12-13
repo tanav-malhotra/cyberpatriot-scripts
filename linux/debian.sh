@@ -818,21 +818,28 @@ done
 cut -d: -f1,3 /etc/passwd | while IFS=: read user uid; do
     # UID (User ID) >= 1000 for human users
     if [[ "$uid" -ge 1000 && "$user" != "nobody" && "$user" != "nfsnobody" && "$user" != "root" ]]; then
+        # if id -nG "$user" | grep -qwE 'sudo|wheel|admin'; then
+        #     current_role="Admin"
+        # else
+        #     current_role="User"
+        # fi
+        # # Determine the intended role based on the files
+        # if [[ -n "${admin_map[$user]}" ]]; then
+        #     ROLE="admin"
+        # elif [[ -n "${user_map[$user]}" ]]; then
+        #     ROLE="user"
+        # else
+        #     userdel -r "$user"
+        #     log "$current_role $user and their data have been removed from the system."
+        #     continue
+        # fi
+
         if id -nG "$user" | grep -qwE 'sudo|wheel|admin'; then
-            current_role="Admin"
-        else
-            current_role="User"
-        fi
-        # Determine the intended role based on the files
-        if [[ -n "${admin_map[$user]}" ]]; then
             ROLE="admin"
-        elif [[ -n "${user_map[$user]}" ]]; then
-            ROLE="user"
         else
-            userdel -r "$user"
-            log "$current_role $user and their data have been removed from the system."
-            continue
+            ROLE="user"
         fi
+
         echo "$user:$NEW_PASSWORD" | chpasswd
         log "Password for $ROLE $user changed."
 
