@@ -870,13 +870,13 @@ sed -i 's/PASS_MAX_DAYS.*$/PASS_MAX_DAYS 30/;s/PASS_MIN_DAYS.*$/PASS_MIN_DAYS 10
 log "Changing PAM settings (setting max password attempts, minimum password langths, etc.)..."
 cp /etc/pam.d/common-auth /etc/pam.d/common-auth.bak
 sed -i 's/\w*nullok\w*//g' /etc/pam.d/common-auth
-#sed -i 's/\(pam_tally2\.so.*\)$/\1 deny=5 audit silent unlock_time=1800/' /etc/pam.d/common-auth # lockout policy
-#echo 'auth required pam_tally2.so deny=5 onerr=fail unlock_time=1800' >> /etc/pam.d/common-auth
+#sed -i 's/\(pam_tally2\.so.*\)$/\1 deny=5 audit silent unlock_time=1/' /etc/pam.d/common-auth # lockout policy
+#echo 'auth required pam_tally2.so deny=5 onerr=fail unlock_time=1' >> /etc/pam.d/common-auth
 #echo 'auth required pam_unix.so' >> /etc/pam.d/common-auth
-echo "auth required pam_faillock.so preauth deny=5 unlock_time=1800" >> /etc/pam.d/common-auth
-echo "auth required pam_faillock.so authfail deny=5 unlock_time=1800" >> /etc/pam.d/common-auth
+echo "auth required pam_faillock.so preauth deny=5 unlock_time=1" >> /etc/pam.d/common-auth
+echo "auth required pam_faillock.so authfail deny=5 unlock_time=1" >> /etc/pam.d/common-auth
 # sed -i 's/deny=[0-9]\+/deny=5/' /etc/pam.d/common-auth
-# sed -i 's/unlock_time=[0-9]\+/unlock_time=1800/' /etc/pam.d/common-auth
+# sed -i 's/unlock_time=[0-9]\+/unlock_time=1/' /etc/pam.d/common-auth
 cp /etc/pam.d/common-password /etc/pam.d/common-password.bak
 sed -i 's/\(pam_unix\.so.*\)$/\1 remember=5 minlen=12/' /etc/pam.d/common-password
 sed -i 's/\(pam_cracklib\.so.*\)$/\1 maxclassrepeat=5 maxsequence=5 minclass=4 dcredit=-1 ocredit=-1 lcredit=-1 ucredit=-1 minlen=12 difok=8 retry=5/' /etc/pam.d/common-password # try difok=5
