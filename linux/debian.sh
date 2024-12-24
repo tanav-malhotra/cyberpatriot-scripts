@@ -176,7 +176,6 @@ apt full-upgrade -y
 apt autoremove -y --purge
 
 ##### LANGUAGE #####
-#TODO: fix this
 LANG_TO_KEEP="en_US.UTF-8"
 LOCALE_TO_KEEP="en"
 log "Setting language to $LANG_TO_KEEP and locale to $LOCALE_TO_KEEP..."
@@ -775,7 +774,7 @@ else
     read
     visudo
 fi
-log "Turning off guest login..."
+log "Turning off guest login and auto login..."
 groupdel autologin
 sed -i 's/allow-guest=true/allow-guest=false/' /etc/lightdm/lightdm.conf
 echo "allow-guest=false" >> /etc/lightdm/users.conf
