@@ -170,7 +170,9 @@ fi
 ##### UPDATE #####
 log "Updating system..."
 apt purge -y snapd
-apt update -y && apt full-upgrade -y
+apt update
+apt upgrade -y
+apt full-upgrade -y
 apt autoremove -y --purge
 
 ##### LANGUAGE #####
