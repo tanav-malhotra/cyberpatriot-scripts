@@ -778,9 +778,10 @@ log "Turning off guest login and auto login..."
 groupdel autologin
 sed -i 's/allow-guest=true/allow-guest=false/' /etc/lightdm/lightdm.conf
 echo "allow-guest=false" >> /etc/lightdm/users.conf
-cp /etc/lightdm/lightdm.conf /etc/lightdm/lightdm.conf_with_autologin.bak
+cp /etc/lightdm/lightdm.conf /etc/lightdm/lightdm.conf.with_autologin.bak
 sed -i '/^autologin-user/s/^/#/' /etc/lightdm/lightdm.conf
 sed -i 's/AutomaticLoginEnable=True/AutomaticLoginEnable=False/' /etc/gdm/custom.conf
+sed -i '/^\[security\]/,/^\[.*\]/s/^AllowGuest=true/AllowGuest=false/' /etc/gdm/custom.conf
 sed -i 's/auth sufficient pam_succeed_if.so user ingroup nopasswdlogin//' /etc/pam.d/gdm-password
 mawk -F: '$1 == "sudo"' /etc/group > ./admins.txt
 log "Admins (saved to \`./admins.txt\`)..."
