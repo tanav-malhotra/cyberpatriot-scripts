@@ -1,0 +1,72 @@
+# Logs
+logs/
+*.log
+
+# Dependency directories
+node_modules/
+.bower_components/
+
+# Build and output directories
+/dist/
+/build/
+/out/
+*.class
+*.jar
+*.war
+*.ear
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE and editor settings
+.idea/
+.vscode/
+.vs/
+*.swp
+*.swo
+*.bak
+
+# Environment files
+.env
+.env.*
+
+# Temporary files
+*.tmp
+*.temp
+~*
+
+# OS files
+.DS_Store
+._*
+Desktop.ini
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Java
+*.class
+
+# Executables/Binaries
+*.exe
+*.dll
+*.out
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Personal
+*.key
+*.pem
+*.crt
+
+# Custom:
+#add here
