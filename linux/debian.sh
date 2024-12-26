@@ -167,6 +167,16 @@ if [[ $confirmation =~ ^[Nn].* ]]; then
     exit 1
 fi
 
+##### UPDATE APT REPOSITORIES #####
+log "Updating APT repositories..."
+cp /etc/apt/sources.list /etc/apt/sources.list.bak
+cat > /etc/apt/sources.list << EOF
+deb https://mirrors.kernel.org/ubuntu/ $distro_codename main restricted universe multiverse
+deb https://mirrors.kernel.org/ubuntu/ $distro_codename-updates main restricted universe multiverse
+deb https://mirrors.kernel.org/ubuntu/ $distro_codename-backports main restricted universe multiverse
+deb https://security.ubuntu.com/ubuntu/ $distro_codename-security main restricted universe multiverse
+EOF
+
 ##### UPDATE #####
 log "Updating system..."
 apt purge -y snapd
