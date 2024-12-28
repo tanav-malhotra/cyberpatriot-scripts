@@ -31,6 +31,14 @@ fi
 line_sep() {
     echo "----------------------------------"
 }
+# check for recently modified files
+check_recent_files() {
+    echo "Checking for recently modified files..." | tee -a $LOGFILE
+    echo "\`find / -type f -ctime -7\`..." | tee -a $LOGFILE
+    log "Press 'Enter' to continue..."; read
+    find / -type f -ctime -7 | tee -a $LOGFILE
+    line_sep | tee -a $LOGFILE
+}
 # unusual or suspicious processes
 check_processes() {
     echo "Checking for suspicious processes (\`ps aux\`)..." | tee -a $LOGFILE
@@ -74,14 +82,6 @@ check_cron_jobs() {
     echo "\`ls /etc/cron.weekly\`..." | tee -a $LOGFILE
     log "Press 'Enter' to continue..."; read
     ls /etc/cron.weekly | tee -a $LOGFILE
-    line_sep | tee -a $LOGFILE
-}
-# check for recently modified files
-check_recent_files() {
-    echo "Checking for recently modified files..." | tee -a $LOGFILE
-    echo "\`find / -type f -ctime -7\`..." | tee -a $LOGFILE
-    log "Press 'Enter' to continue..."; read
-    find / -type f -ctime -7 | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
 # check SSH configuration and logs
@@ -244,13 +244,13 @@ echo "Updating apt..." | tee -a $LOGFILE
 apt update
 echo "Searching for backdoors..." | tee -a $LOGFILE
 line_sep | tee -a $LOGFILE
+check_recent_files
+log "Press 'Enter' to continue..."; read
 check_processes
 log "Press 'Enter' to continue..."; read
 check_ports
 log "Press 'Enter' to continue..."; read
 check_cron_jobs
-log "Press 'Enter' to continue..."; read
-check_recent_files
 log "Press 'Enter' to continue..."; read
 check_ssh
 log "Press 'Enter' to continue..."; read
