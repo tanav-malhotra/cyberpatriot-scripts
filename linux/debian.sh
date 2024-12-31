@@ -33,6 +33,7 @@ elif [[ "$distro_id" == "linuxmint" ]]; then
 elif [[ "$distro_id" == "ubuntu" ]]; then
     distro_name="Ubuntu"
 fi
+NETWORK=$(ip route | grep -oP '(?<=src )[\d.]+(?=/)' | head -1)/$(ip route | grep -oP '(?<=dev ).*(?= proto)' | awk '{ print $1 }' | head -1) # Get the network and subnet dynamically
 distro_codename=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 debug=0
 help=0
@@ -209,14 +210,16 @@ else
 fi
 # Configure apt to always verify package signatures
 echo 'APT::Get::AllowUnauthenticated "false";' > /etc/apt/apt.conf.d/99verify-peer
-# Get verified packages
+# Get list of verified packages
 dpkg --verify > /var/log/package-verification.log 2>&1
 debsums -c >> /var/log/package-verification.log 2>&1
-cp /var/log/package-verification.log ./package-verification.log
+cp /var/log/package-verification.log ./package_verification.log
+# Add additional repositories (PPAs)
+add-apt-repository ppa:oisf/suricata-stable -y
 
 ##### UPDATE #####
 log "Updating system..."
-apt purge -y snapd
+apt purge -y snapd # TODO: ask user whether to remove snap or not
 apt update
 apt upgrade -y
 apt full-upgrade -y
@@ -225,13 +228,13 @@ apt autoremove -y --purge
 ##### SOFTWARE MANAGEMENT #####
 apt list --installed > ./software_that_was_installed.log
 log "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage" "net-tools" "lynis" "debian-archive-keyring" "ubuntu-keyring" "haveged" "acct" "needrestart" "ntp" "debsums" "apt-show-versions" "dnscrypt-proxy" "resolvconf" "debsigs" "libpam-shield" "libpam-tmpdir" "libpam-usb" "clamav" "clamav-daemon" "apparmor-profiles" "apparmor-utils" "apparmor-profiles-extra" "sysdig" "firejail")
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage" "net-tools" "lynis" "debian-archive-keyring" "ubuntu-keyring" "haveged" "acct" "needrestart" "ntp" "debsums" "apt-show-versions" "dnscrypt-proxy" "resolvconf" "debsigs" "libpam-shield" "libpam-tmpdir" "libpam-usb" "clamav" "clamav-daemon" "apparmor-profiles" "apparmor-utils" "apparmor-profiles-extra" "sysdig" "firejail" "tcpd" "knockd" "suricata" "quota" "quotatool" "attr" "libcap2-bin" "ntopng" "cmake" "make" "gcc" "g++" "flex" "bison" "libpcap-dev" "libssl-dev" "python3" "python3-dev" "swig" "zlib1g-dev")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     apt-get install -y "$app"
 done
 log "Removing prohibited software and hacking tools (and making sure \`snapd\` was removed)..."
-apps=("wireshark" "telnet" "vsftpd" "proftpd" "snmpd" "mysql-server" "mysql-client" "postgresql" "xrdp" "tightvncserver" "samba" "nmap" "php" "apache2*" "*nginx*" "lighttpd" "tcpdump" "netcat-traditional" "nikto" "ophcrack" "ettercap*" "deluge" "dovecot-core" "*netcat*" "john" "vuze" "frostwire" "aircrack-ng" "metasploit-framework" "nessus" "snort" "kismet" "yersinia" "burp-suite" "burpsuite" "hydra" "oclhashcat" "hashcat" "maltego" "zaproxy" "cain" "*angryip*" "ipscan" "medusa" "xinetd" "openbsd-inetd" "inetutils-inetd" "avahi-daemon" "tcpd" "snapd" "telnet" "postfix")
+apps=("wireshark" "telnet" "vsftpd" "proftpd" "snmpd" "mysql-server" "mysql-client" "postgresql" "xrdp" "tightvncserver" "samba" "nmap" "php" "apache2*" "*nginx*" "lighttpd" "tcpdump" "netcat-traditional" "nikto" "ophcrack" "ettercap*" "deluge" "dovecot-core" "*netcat*" "john" "vuze" "frostwire" "aircrack-ng" "metasploit-framework" "nessus" "snort" "kismet" "yersinia" "burp-suite" "burpsuite" "hydra" "oclhashcat" "hashcat" "maltego" "zaproxy" "cain" "*angryip*" "ipscan" "medusa" "xinetd" "openbsd-inetd" "inetutils-inetd" "avahi-daemon" "snapd" "telnet" "postfix")
 for app in "${apps[@]}"; do
     log "Removing $app..."
     apt-get purge -y "$app"
@@ -319,7 +322,6 @@ cp "$sshd_config" "${sshd_config}.bak"
 set_sshd_setting() {
     local setting="$1"
     local value="$2"
-    
     # Check if the setting exists and update or add accordingly
     if grep -q "^$setting" "$sshd_config"; then
         sed -i "s/^$setting.*/$setting $value/" "$sshd_config"
@@ -384,6 +386,7 @@ else
     ufw allow "$current_port"/tcp
     ufw allow ssh
 fi
+# Check ssh config
 if sshd -t; then
     log "SSH configuration is correct. Restarting SSH service..."
     if [[ -x "$(command -v systemctl)" ]]; then
@@ -398,8 +401,11 @@ if sshd -t; then
         log "error: Unable to restart sshd service."
     fi
 else
-    log "error: SSH configuration has errors. Please fix them before restarting."
+    log "error: SSH configuration has errors. Please fix them before restarting the ssh service."
 fi
+# Network Security Enhancements
+echo "sshd: $NETWORK" >> /etc/hosts.allow  # Modify for your network
+# SSH keys
 log "Creating new SSH keys..."
 # Define variables
 KEY_NAME="id_ed25519"
@@ -682,7 +688,7 @@ chmod +x /etc/rc.local
 cp /etc/cron.deny /etc/cron.deny.bak
 echo "ALL" >> /etc/cron.deny
 
-##### SYSTEM & APPLICATION SECURITY SETTINGS (Kernel Hardening, IP settings, application sandboxing, advanced process monitoring, etc.) #####
+##### SYSTEM/APPLICATION/NETWORK SECURITY SETTINGS (Kernel Hardening, IP settings, application sandboxing, advanced process monitoring, DNS configs, network namespaces, etc.) #####
 log "Enabling syn cookie protection..."
 sysctl -n net.ipv4.tcp_syncookies
 log "Disabling IP Forwarding..."
@@ -888,6 +894,70 @@ echo "nameserver 127.0.0.1" > /etc/resolv.conf
 chattr +i /etc/resolv.conf  # Prevent modification
 # Harden dynamic loader configuration
 echo "# Block loading of shared libraries from current directory" > /etc/ld.so.preload # clears the file
+# Configure advanced process monitoring with sysdig
+/usr/bin/sysdig -w /var/log/sysdig/$(date +%Y%m%d_%H%M%S).scap -M 600 "not port 22"
+mkdir -p /var/log/sysdig
+chmod 750 /var/log/sysdig
+# Install and configure firejail for application sandboxing
+firecfg --fix-sound
+firecfg --fix-desktop
+# Create default firejail profile
+cat > /etc/firejail/default.local << EOF
+ignore noexec \${HOME}
+ignore noexec /tmp
+whitelist \${HOME}/.config
+EOF
+# Network Security Enhancements
+echo "ALL: ALL" >> /etc/hosts.deny
+# Install and configure port knocking
+cat > /etc/knockd.conf << EOF
+[options]
+    UseSyslog
+
+[openSSH]
+    sequence    = 7000,8000,9000
+    seq_timeout = 5
+    command     = /sbin/iptables -A INPUT -s %IP% -p tcp --dport 22 -j ACCEPT
+    tcpflags    = syn
+    cmd_timeout = 10
+    stop_command = /sbin/iptables -D INPUT -s %IP% -p tcp --dport 22 -j ACCEPT
+
+[closeSSH]
+    sequence    = 9000,8000,7000
+    seq_timeout = 5
+    command     = /sbin/iptables -D INPUT -s %IP% -p tcp --dport 22 -j ACCEPT
+EOF
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl enable knockd
+    systemctl start knockd
+elif [[ -x "$(command -v service)" ]]; then
+    update-rc.d knockd defaults
+    service knockd start
+else
+    log "error: Unable to start knockd service."
+fi
+# Setup network namespaces
+ip netns add isolated
+ip link add veth0 type veth peer name veth1
+ip link set veth1 netns isolated
+ip netns exec isolated ip link set veth1 up
+ip netns exec isolated ip addr add 192.168.100.2/24 dev veth1
+# Setup package verification hooks (ntopng - Traffic Analysis Tool)
+cat > /etc/ntopng/ntopng.conf << EOF
+-i=eth0
+-w=3000
+--community
+--redis-mode=1
+EOF
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl enable ntopng
+    systemctl start ntopng
+elif [[ -x "$(command -v service)" ]]; then
+    update-rc.d ntopng defaults
+    service ntopng start
+else
+    log "error: Unable to start ntopng service."
+fi
 
 ##### Anti-Malware #####
 freshclam
@@ -990,6 +1060,50 @@ else
     log "error: Unable to start auditbeat service."
 fi
 
+##### FILESYSTEM SECURITY #####
+# Setup disk quotas
+sed -i 's/defaults/defaults,usrquota,grpquota/' /etc/fstab
+mount -o remount /
+quotacheck -ugm /
+quotaon -v /
+# Configure default quotas
+edquota -u root
+edquota -g root
+# Remove unnecessary SUID/SGID binaries capabilities
+for file in /usr/bin/* /bin/*; do
+    if [ -u "$file" ]; then
+        setcap cap_setuid-ep "$file"
+        chmod u-s "$file"
+    fi
+done
+# Configure extended attributes
+for dir in /etc /bin /sbin /usr/bin /usr/sbin; do
+    setfattr -n user.important -v "system-file" "$dir"
+done
+# Setup immutable bit on critical files
+chattr +i /etc/passwd
+chattr +i /etc/shadow
+chattr +i /etc/group
+chattr +i /etc/gshadow
+chattr +i /etc/ssh/sshd_config
+# Configure logrotate with secure settings
+cat > /etc/logrotate.conf << EOF
+weekly
+rotate 12
+create
+dateext
+compress
+compresscmd /usr/bin/xz
+compressext .xz
+notifempty
+nomail
+noolddir
+errors root
+sharedscripts
+EOF
+find / -xdev -type f -exec md5sum {} \; > /var/log/fs-integrity.log
+cp /var/log/fs-integrity.log ./fs_integrity.log
+
 ##### APPARMOR #####
 log "Setting up AppArmor..."
 aa-enforce /etc/apparmor.d/*
@@ -1003,6 +1117,54 @@ elif [[ -x "$(command -v service)" ]]; then
     service apparmor restart
 else
     log "error: Unable to restart apparmor service."
+fi
+
+##### SURICATA #####
+cat > /etc/suricata/suricata.yaml << EOF
+%YAML 1.1
+---
+vars:
+  address-groups:
+    HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
+    EXTERNAL_NET: "!$HOME_NET"
+
+outputs:
+  - fast:
+      enabled: yes
+      filename: fast.log
+      append: yes
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: eve.json
+      types:
+        - alert
+        - http
+        - dns
+        - tls
+        - files
+        - ssh
+
+app-layer:
+  protocols:
+    tls:
+      enabled: yes
+    ssh:
+      enabled: yes
+    dns:
+      tcp:
+        enabled: yes
+      udp:
+        enabled: yes
+EOF
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl enable suricata
+    systemctl start suricata
+elif [[ -x "$(command -v service)" ]]; then
+    update-rc.d suricata defaults
+    service suricata start
+else
+    log "error: Unable to start suricata service."
 fi
 
 ##### FINDING & SAVING INFO #####
