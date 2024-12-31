@@ -209,6 +209,10 @@ else
 fi
 # Configure apt to always verify package signatures
 echo 'APT::Get::AllowUnauthenticated "false";' > /etc/apt/apt.conf.d/99verify-peer
+# Get verified packages
+dpkg --verify > /var/log/package-verification.log 2>&1
+debsums -c >> /var/log/package-verification.log 2>&1
+cp /var/log/package-verification.log ./package-verification.log
 
 ##### UPDATE #####
 log "Updating system..."
@@ -221,7 +225,7 @@ apt autoremove -y --purge
 ##### SOFTWARE MANAGEMENT #####
 apt list --installed > ./software_that_was_installed.log
 log "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage" "net-tools" "lynis" "debian-archive-keyring" "ubuntu-keyring" "haveged" "acct" "needrestart" "ntp" "debsums" "apt-show-versions" "dnscrypt-proxy" "resolvconf")
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage" "net-tools" "lynis" "debian-archive-keyring" "ubuntu-keyring" "haveged" "acct" "needrestart" "ntp" "debsums" "apt-show-versions" "dnscrypt-proxy" "resolvconf" "debsigs" "libpam-shield" "libpam-tmpdir" "libpam-usb" "clamav" "clamav-daemon" "apparmor-profiles" "apparmor-utils" "apparmor-profiles-extra" "sysdig" "firejail")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     apt-get install -y "$app"
@@ -249,7 +253,7 @@ apt --fix-broken install
 apt autoremove -y --purge
 apt-key adv --refresh-keys
 
-##### CHECK FOR UPDATES DAILY #####
+##### APT SETTINGS #####
 log "Checking for updates daily..."
 touch /etc/apt/apt.conf.d/10periodic
 touch /etc/apt/apt.conf.d/10removal
@@ -292,6 +296,9 @@ Unattended-Upgrade::DevRelease "false";
 Unattended-Upgrade::Remove-Unused-Dependencies "true";
 Unattended-Upgrade::Automatic-Reboot "false";
 EOF
+# Create package manifest
+dpkg --get-selections > /root/package-manifest.txt
+chmod 600 /root/package-manifest.txt
 
 ##### FIREWALL #####
 log "Setting up firewall..."
@@ -476,7 +483,7 @@ elif [[ -x "$(command -v service)" ]]; then
     service autofs stop
     update-rc.d autofs remove
 else
-    log "error: Unable to restart autofs service."
+    log "error: Unable to stop autofs service."
 fi
 if [[ -x "$(command -v systemctl)" ]]; then
     systemctl enable USBGaurdd
@@ -658,6 +665,8 @@ chown root:root /root
 chmod 700 /root
 chown root:root /tmp
 chmod 1777 /tmp
+chown root:root /etc/ld.so.preload
+chmod 644 /etc/ld.so.preload
 
 ##### CRON SETTINGS #####
 log "Changing cron settings..."
@@ -673,7 +682,7 @@ chmod +x /etc/rc.local
 cp /etc/cron.deny /etc/cron.deny.bak
 echo "ALL" >> /etc/cron.deny
 
-##### SYSTEM SETTINGS (Kernel Hardening, IP settings, etc.) #####
+##### SYSTEM & APPLICATION SECURITY SETTINGS (Kernel Hardening, IP settings, application sandboxing, advanced process monitoring, etc.) #####
 log "Enabling syn cookie protection..."
 sysctl -n net.ipv4.tcp_syncookies
 log "Disabling IP Forwarding..."
@@ -699,6 +708,14 @@ kernel.exec-shield = 1
 kernel.sysrq = 0
 kernel.randomize_va_space = 2
 kernel.pid_max = 65536
+kernel.kptr_restrict=2
+kernel.perf_event_paranoid=3
+kernel.unprivileged_bpf_disabled=1
+kernel.yama.ptrace_scope = 3
+kernel.kexec_load_disabled = 1
+kernel.unprivileged_userns_clone = 0
+kernel.seccomp.actions_avail = kill_process,kill_thread,trap,errno,trace,log
+vm.mmap_min_addr=65536
 net.core.rmem_max = 8388608
 net.core.wmem_max = 8388608
 net.core.netdev_max_backlog = 5000
@@ -785,7 +802,7 @@ elif [[ -x "$(command -v service)" ]]; then
     update-rc.d dnscrypt-proxy defaults # DNS security
     service dnscrypt-proxy start
 else
-    log "error: Unable to restart haveged, acct, and dnscrypt-proxy services."
+    log "error: Unable to start haveged, acct, and dnscrypt-proxy services."
 fi
 # Monitor running services
 echo "needrestart -r l" >> /etc/bash.bashrc
@@ -822,6 +839,34 @@ echo "export HISTSIZE=10000" >> /etc/bash.bashrc
 mkdir -p /var/crash
 chmod 700 /var/crash
 echo 'kernel.core_pattern = |/usr/share/apport/apport %p %s %c %d %P %E' > /etc/sysctl.d/10-core-dump.conf
+# Configure systemd protection mechanisms
+mkdir -p /etc/systemd/system.conf.d/
+cat > /etc/systemd/system.conf.d/protection.conf << EOF
+[Manager]
+DynamicUser=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+NoNewPrivileges=yes
+EOF
+# Configure systemd sandboxing for all services
+mkdir -p /etc/systemd/system.conf.d/
+cat > /etc/systemd/system.conf.d/sandbox.conf << EOF
+[Service]
+CapabilityBoundingSet=~CAP_SYS_ADMIN CAP_SYS_PTRACE
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+MemoryDenyWriteExecute=yes
+LockPersonality=yes
+EOF
 # Configure DNS over HTTPS
 cat > /etc/dnscrypt-proxy/dnscrypt-proxy.toml << EOF
 server_names = ['cloudflare', 'google']
@@ -841,6 +886,20 @@ EOF
 # Update resolv.conf to use local DNSCrypt proxy
 echo "nameserver 127.0.0.1" > /etc/resolv.conf
 chattr +i /etc/resolv.conf  # Prevent modification
+# Harden dynamic loader configuration
+echo "# Block loading of shared libraries from current directory" > /etc/ld.so.preload # clears the file
+
+##### Anti-Malware #####
+freshclam
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl enable clamav-freshclam
+    systemctl start clamav-freshclam
+elif [[ -x "$(command -v service)" ]]; then
+    update-rc.d clamav-freshclam defaults
+    service clamav-freshclam start
+else
+    log "error: Unable to start clamav-freshclam service."
+fi
 
 ##### AUDITING #####
 log "Setting up auditing..."
@@ -887,6 +946,48 @@ elif [[ -x "$(command -v service)" ]]; then
     service rsyslog restart
 else
     log "error: Unable to restart rsyslog service."
+fi
+# Install and configure auditbeat for advanced system auditing
+curl -L -O https://artifacts.elastic.co/downloads/beats/auditbeat/auditbeat-8.12.0-amd64.deb
+dpkg -i auditbeat-8.12.0-amd64.deb
+rm auditbeat-8.12.0-amd64.deb
+cat > /etc/auditbeat/auditbeat.yml << EOF
+auditbeat.modules:
+- module: file_integrity
+  paths:
+  - /bin
+  - /usr/bin
+  - /sbin
+  - /usr/sbin
+  - /etc
+  - /root
+  - /home
+  recursive: true
+
+- module: system
+  datasets:
+    - package
+    - host
+    - login
+    - process
+    - socket
+    - user
+
+output.file:
+  enabled: true
+  path: /var/log/auditbeat
+  filename: auditbeat
+  rotate_every_kb: 10000
+  number_of_files: 7
+EOF
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl enable auditbeat
+    systemctl start auditbeat
+elif [[ -x "$(command -v service)" ]]; then
+    update-rc.d auditbeat defaults
+    service auditbeat start
+else
+    log "error: Unable to start auditbeat service."
 fi
 
 ##### APPARMOR #####
@@ -1093,7 +1194,7 @@ done
 echo "root:$NEW_PASSWORD" | chpasswd
 log "Password for admin root changed."
 # Secure GRUB
-HASH=$(echo -e "$NEW_PASSWORD\n$NEW_PASSWORD" | grub-mkpasswd-pbkdf2 | grep -o grub.*)
+HASH=$(echo -e "$NEW_PASSWORD\n$NEW_PASSWORD" | grub-mkpasswd-pbkdf2 | grep -o grub.*) # generate a password hash
 cat > /etc/grub.d/40_custom << EOF
 #!/bin/sh
 exec tail -n +3 $0
@@ -1107,6 +1208,7 @@ set check_signatures=enforce
 export check_signatures
 export superusers
 EOF
+sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="kaslr /' /etc/default/grub # Enable KASLR by updating GRUB
 update-grub
 log "GRUB password set for admin root and GRUB signature checks enabled."
 
@@ -1139,6 +1241,15 @@ cp /etc/login.defs /etc/login_with_max_pw_days.defs.bak
 sed -i '/^ENCRYPT_METHOD/c\ENCRYPT_METHOD SHA512' /etc/login.defs
 echo "SHA_CRYPT_MIN_ROUNDS 12000" >> /etc/login.defs
 echo "SHA_CRYPT_MAX_ROUNDS 15000" >> /etc/login.defs
+# Configure PAM for memory protection
+cat >> /etc/security/limits.conf << EOF
+* soft data 512000
+* hard data 512000
+* soft rss  512000
+* hard rss  512000
+* soft as   1024000
+* hard as   1024000
+EOF
 
 ##### LANGUAGE #####
 LANG_TO_KEEP="en_US.UTF-8"
@@ -1173,8 +1284,8 @@ log "Please check all the .log files in the current directory (`pwd`) for any in
 service --status-all
 log "Make sure updates are installed daily."
 ring_bell
-read -p "Run \`software-properties-gtk &\`? (Y/n): " check_auto_update
-if [[ $check_auto_update =~ ^[Nn].* ]]; then
+read -p "Run \`software-properties-gtk &\`? (y/N): " check_auto_update
+if [[ $check_auto_update =~ ^[Yy].* ]]; then
     software-properties-gtk &
 fi
 log

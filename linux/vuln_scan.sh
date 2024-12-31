@@ -168,8 +168,15 @@ check_logs() {
     cat /var/log/daemon.log | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
+# lynis to check potential vulnerabilities
+lynis_scan() {
+    #TODO
+    line_sep | tee -a $LOGFILE
+}
 
 ##### RUN FUNCTIONS #####
+echo "Note: This script will not perform any in-depth search for potential malware. Please use the \`malware_scan.sh\` script instead."
+sleep 0.5
 echo "Updating apt..." | tee -a $LOGFILE
 apt update
 echo "Searching for vulnerabilities..." | tee -a $LOGFILE
@@ -195,6 +202,8 @@ log "Press 'Enter' to continue..."; read
 check_services
 log "Press 'Enter' to continue..."; read
 check_logs
+log "Press 'Enter' to continue..."; read
+lynis_scan
 log "Press 'Enter' to continue..."; read
 echo "Finished searching for vulnerabilities..."
 echo "Log saved to: $LOGFILE"
