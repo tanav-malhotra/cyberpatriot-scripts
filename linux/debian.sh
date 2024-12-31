@@ -13,19 +13,26 @@
 # of merchantability and fitness for a particular purpose. See the GPL-3.0
 # for full details.
 #
-# You can also view the license by running the `debian.sh` script
+# You can also view the license by running this script
 # with the '--license' option.
 # ====================================================================================
 
 ##### IMPORTANT VARS #####
 unalias -a
-version="v1.5.2"
+version="v1.7.9"
 start_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
 start_secs=$(date +%s.%N)
 LOGFILE="./linux_script.log"
-output_file="./linux_script_output.txt"
+output_file="./linux_script_output.log"
 starting_dir=$(pwd)
 distro_id=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
+if [[ "$distro_id" == "debian" ]]; then
+    distro_name="Debian"
+elif [[ "$distro_id" == "linuxmint" ]]; then
+    distro_name="Linux Mint"
+elif [[ "$distro_id" == "ubuntu" ]]; then
+    distro_name="Ubuntu"
+fi
 distro_codename=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 debug=0
 help=0
@@ -34,7 +41,7 @@ version_arg=0
 
 ##### FUNCTIONS #####
 banner() {
-    cat << 'EOF'
+    cat << EOF
  _____  _    _   _    ___     __
 |_   _|/ \  | \ | |  / \ \   / /
   | | / _ \ |  \| | / _ \ \ / / 
@@ -170,12 +177,38 @@ fi
 ##### UPDATE APT REPOSITORIES #####
 log "Updating APT repositories..."
 cp /etc/apt/sources.list /etc/apt/sources.list.bak
-cat > /etc/apt/sources.list << EOF
+if [[ $distro_id == "linuxmint" ]]; then
+    cat > /etc/apt/sources.list << EOF
+deb http://packages.linuxmint.com $distro_codename main upstream import backport
+deb-src http://packages.linuxmint.com $distro_codename main upstream import backport
+EOF
+elif [[ $distro_id == "ubuntu" ]]; then
+    cat > /etc/apt/sources.list << EOF
 deb https://mirrors.kernel.org/ubuntu/ $distro_codename main restricted universe multiverse
 deb https://mirrors.kernel.org/ubuntu/ $distro_codename-updates main restricted universe multiverse
-deb https://mirrors.kernel.org/ubuntu/ $distro_codename-backports main restricted universe multiverse
 deb https://security.ubuntu.com/ubuntu/ $distro_codename-security main restricted universe multiverse
+
+deb-src http://archive.ubuntu.com/ubuntu $distro_codename main restricted universe multiverse
+deb-src http://archive.ubuntu.com/ubuntu $distro_codename-updates main restricted universe multiverse
+deb-src http://archive.ubuntu.com/ubuntu $distro_codename-backports main restricted universe multiverse
+
+deb http://security.ubuntu.com/ubuntu/ $distro_codename-security main restricted universe multiverse
+deb-src http://security.ubuntu.com/ubuntu/ $distro_codename-security main restricted universe multiverse
 EOF
+elif [[ $distro_id == "debian" ]]; then
+    cat > /etc/apt/sources.list << EOF
+deb     http://deb.debian.org/debian/ $distro_codename main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian/ $distro_codename main contrib non-free non-free-firmware
+deb     http://security.debian.org/debian-security $distro_codename-security main contrib non-free non-free-firmware
+deb-src http://security.debian.org/debian-security $distro_codename-security main contrib non-free non-free-firmware
+deb     http://deb.debian.org/debian/ $distro_codename-updates main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian/ $distro_codename-updates main contrib non-free non-free-firmware
+EOF
+else
+    log "error: Unsupported distro: $distro_id $distro_codename"
+fi
+# Configure apt to always verify package signatures
+echo 'APT::Get::AllowUnauthenticated "false";' > /etc/apt/apt.conf.d/99verify-peer
 
 ##### UPDATE #####
 log "Updating system..."
@@ -185,19 +218,10 @@ apt upgrade -y
 apt full-upgrade -y
 apt autoremove -y --purge
 
-##### LANGUAGE #####
-LANG_TO_KEEP="en_US.UTF-8"
-LOCALE_TO_KEEP="en"
-log "Setting language to $LANG_TO_KEEP and locale to $LOCALE_TO_KEEP..."
-update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP LC_MESSAGES="POSIX"
-ring_bell
-locale-gen --purge $LANG_TO_KEEP # languages you WANT to keep
-dpkg-reconfigure locales
-
 ##### SOFTWARE MANAGEMENT #####
-apt list --installed > ./software_that_was_installed.txt
+apt list --installed > ./software_that_was_installed.log
 log "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage" "net-tools" "lynis")
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage" "net-tools" "lynis" "debian-archive-keyring" "ubuntu-keyring" "haveged" "acct" "needrestart" "ntp" "debsums" "apt-show-versions" "dnscrypt-proxy" "resolvconf")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     apt-get install -y "$app"
@@ -223,6 +247,7 @@ done
 dpkg --configure -a
 apt --fix-broken install
 apt autoremove -y --purge
+apt-key adv --refresh-keys
 
 ##### CHECK FOR UPDATES DAILY #####
 log "Checking for updates daily..."
@@ -237,34 +262,46 @@ cp /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/apt.conf.d/50unattended-up
 dpkg-reconfigure unattended-upgrades
 echo "APT::Periodic::AutocleanInterval "7";" >> /etc/apt/apt.conf.d/10periodic
 echo "APT::Get::Remove-Unused "true";" >> /etc/apt/apt.conf.d/10removal
-cat <<EOL > "/etc/apt/apt.conf.d/20auto-upgrades"
+cat > /etc/apt/apt.conf.d/20auto-upgrades << EOF
 APT::Periodic::Update-Package-Lists "1";
 APT::Periodic::Download-Upgradeable-Packages "1";
 APT::Periodic::AutocleanInterval "7";
 APT::Periodic::Unattended-Upgrade "1";
-EOL
-cat <<EOL > "/etc/apt/apt.conf.d/50unattended-upgrades"
-Unattended-Upgrade::Allowed-Origins {
-	"${distro_id} stable";
-	"${distro_id} ${distro_codename}-security";
-	"${distro_id} ${distro_codename}-updates";
-};
-EOL
-# Unattended-Upgrade::Package-Blacklist {
-# 	"libproxy1v5";		# because school blocks the word "proxy"
+EOF
+cat >> /etc/apt/apt.conf.d/50unattended-upgrades << EOF
+# Unattended-Upgrade::Allowed-Origins {
+# 	"${distro_id} stable";
+# 	"${distro_id} ${distro_codename}-security";
+# 	"${distro_id} ${distro_codename}-updates";
 # };
-# EOL
+Unattended-Upgrade::Package-Blacklist {
+};
+Unattended-Upgrade::DevRelease "false";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+Unattended-Upgrade::Automatic-Reboot "false";
+EOF
+cat > /etc/apt/apt.conf.d/52unattended-upgrades-local << EOF
+# Unattended-Upgrade::Allowed-Origins {
+# 	"${distro_id} stable";
+# 	"${distro_id} ${distro_codename}-security";
+# 	"${distro_id} ${distro_codename}-updates";
+# };
+Unattended-Upgrade::Package-Blacklist {
+};
+Unattended-Upgrade::DevRelease "false";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+Unattended-Upgrade::Automatic-Reboot "false";
+EOF
 
 ##### FIREWALL #####
 log "Setting up firewall..."
-ufw enable
 ufw default deny incoming
 ufw default allow outgoing
-ufw allow ssh
 ufw allow 80/tcp
 ufw allow 443/tcp
 ufw logging on
 ufw logging high
+ufw enable
 
 ##### SSH #####
 log "Configuring SSH..."
@@ -298,7 +335,7 @@ set_sshd_setting "HostbasedAuthentication" "no"
 set_sshd_setting "Protocol" "2"
 set_sshd_setting "LogLevel" "VERBOSE"
 set_sshd_setting "X11Forwarding" "no"
-set_sshd_setting "MaxAuthTries" "4"
+set_sshd_setting "MaxAuthTries" "3"
 set_sshd_setting "PermitEmptyPasswords" "no"
 set_sshd_setting "ClientAliveInterval" "300"
 set_sshd_setting "ClientAliveCountMax" "0"
@@ -333,10 +370,12 @@ if [[ $change_port =~ ^[Yy].* ]]; then
     ufw delete allow "$current_port"/tcp
     log "Blocked old SSH port."
     ufw allow "$new_port"/tcp
+    ufw allow ssh
     log "UFW allowed port $new_port."
 else
     log "Keeping the default SSH port (22)."
     ufw allow "$current_port"/tcp
+    ufw allow ssh
 fi
 if sshd -t; then
     log "SSH configuration is correct. Restarting SSH service..."
@@ -377,8 +416,44 @@ cat "$KEY_DIR/$KEY_NAME.pub" >> "$AUTHORIZED_KEYS"
 chmod 600 "$AUTHORIZED_KEYS"
 log "Public key added to $AUTHORIZED_KEYS."
 
+##### DOCKER SECURITY #####
+# Container Security (if Docker is installed)
+if command -v docker &> /dev/null; then
+    # Create default seccomp profile
+    mkdir -p /etc/docker/seccomp
+    curl -o /etc/docker/seccomp/default.json \
+    https://raw.githubusercontent.com/moby/moby/master/profiles/seccomp/default.json
+
+    # Configure Docker daemon with security options
+    cat > /etc/docker/daemon.json << EOF
+{
+    "userns-remap": "default",
+    "no-new-privileges": true,
+    "seccomp-profile": "/etc/docker/seccomp/default.json",
+    "selinux-enabled": true,
+    "userland-proxy": false,
+    "live-restore": true,
+    "default-ulimits": {
+        "nofile": {
+            "Name": "nofile",
+            "Hard": 64000,
+            "Soft": 64000
+        }
+    }
+}
+EOF
+    if [[ -x "$(command -v systemctl)" ]]; then
+        systemctl restart docker
+    elif [[ -x "$(command -v service)" ]]; then
+        service docker restart
+    else
+        log "error: Unable to restart docker service."
+    fi
+fi
+
 ##### IP BANNING (FAIL2BAN) #####
 log "Ban IPs with too many incorrect login attempts..."
+cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 if [[ -x "$(command -v systemctl)" ]]; then
     systemctl enable fail2ban
     systemctl start fail2ban
@@ -391,7 +466,7 @@ else
     log "error: Unable to restart fail2ban service."
 fi
 
-##### INTERFACE SETTINGS (e.g. USB) #####
+##### INTERFACE SETTINGS (e.g. USB, FireWire, Thunderbolt, Bluetooth) #####
 log "Setting USB settings..."
 if [[ -x "$(command -v systemctl)" ]]; then
     systemctl stop autofs
@@ -414,12 +489,52 @@ elif [[ -x "$(command -v service)" ]]; then
 else
     log "error: Unable to restart USBGaurdd service."
 fi
-#log "Disabling USB..."
-#echo 'install usb-storage /bin/true' >> /etc/modprobe.d/disable-usb-storage.conf
-#log "Disabling FireWire..."
-#echo "blacklist firewire-core" >> /etc/modprobe.d/firewire.conf
-#log "Disabling Thunderbolt..."
-#echo "blacklist thunderbolt" >> /etc/modprobe.d/thunderbolt.conf
+log "Disabling USB, FireWire, & Thunderbolt..."
+echo "install usb-storage /bin/true" >> /etc/modprobe.d/disable-usb-storage.conf
+echo "blacklist firewire-core" >> /etc/modprobe.d/firewire.conf
+echo "blacklist thunderbolt" >> /etc/modprobe.d/thunderbolt.conf
+echo "blacklist bluetooth" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist usb-storage" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist uas" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist xhci_hcd" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist ehci_hcd" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist uhci_hcd" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist ohci_hcd" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist thunderbolt" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist firewire-core" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist firewire-ohci" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist ieee1394" >> /etc/modprobe.d/blacklist.conf
+echo "blacklist ohci1394" >> /etc/modprobe.d/blacklist.conf
+# Remove unused network protocols
+log "Disabling unused network protocols..."
+echo "install dccp /bin/true" >> /etc/modprobe.d/disable-protocols.conf
+echo "install sctp /bin/true" >> /etc/modprobe.d/disable-protocols.conf
+echo "install rds /bin/true" >> /etc/modprobe.d/disable-protocols.conf
+echo "install tipc /bin/true" >> /etc/modprobe.d/disable-protocols.conf
+update-initramfs -u
+cat > /etc/udev/rules.d/99-disable-interfaces.rules << EOF
+ACTION=="add", SUBSYSTEM=="usb", ENV{MODALIAS}!="", RUN="/bin/false"
+ACTION=="add", SUBSYSTEM=="thunderbolt", ENV{MODALIAS}!="", RUN="/bin/false"
+ACTION=="add", SUBSYSTEM=="firewire", ENV{MODALIAS}!="", RUN="/bin/false"
+EOF
+udevadm control --reload-rules
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl disable avahi-daemon
+    systemctl stop avahi-daemon
+    systemctl disable cups
+    systemctl stop cups
+    systemctl disable bluetooth
+    systemctl stop bluetooth
+elif [[ -x "$(command -v service)" ]]; then
+    service avail-daemon disable
+    service avahi-daemon stop
+    service cups disable
+    service cups stop
+    service bluetooth disable
+    service bluetooth stop
+else
+    log "error: Unable to disable bluetooth, cups, & avahi-daemon services."
+fi
 
 ##### REMOVING BASH ALIASES #####
 log "Removing all bash aliases..."
@@ -547,11 +662,18 @@ chmod 1777 /tmp
 ##### CRON SETTINGS #####
 log "Changing cron settings..."
 cp /etc/rc.local /etc/rc.local.bak
+# Prevent kernel module loading after boot
+cat > /etc/rc.local << EOF
+#!/bin/bash
+# Disable dynamic module loading
+echo 1 > /proc/sys/kernel/modules_disabled
+exit 0
+EOF
+chmod +x /etc/rc.local
 cp /etc/cron.deny /etc/cron.deny.bak
-echo "exit 0" > /etc/rc.local
 echo "ALL" >> /etc/cron.deny
 
-##### KERNEL HARDENING AND IP SETTINGS #####
+##### SYSTEM SETTINGS (Kernel Hardening, IP settings, etc.) #####
 log "Enabling syn cookie protection..."
 sysctl -n net.ipv4.tcp_syncookies
 log "Disabling IP Forwarding..."
@@ -566,7 +688,7 @@ iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -A INPUT -m state --state NEW -j DROP
 log "Kernel Hardening..."
 cp /etc/sysctl.conf /etc/sysctl.conf.bak
-cat <<EOL > "/etc/sysctl.conf"
+cat > /etc/sysctl.conf << EOF
 fs.file-max = 65535
 fs.protected_fifos = 2
 fs.protected_regular = 2
@@ -611,7 +733,9 @@ net.ipv6.conf.all.disable_ipv6 = 1
 net.ipv6.conf.default.disable_ipv6 = 1
 net.ipv6.conf.lo.disable_ipv6 = 1
 # Incase IPv6 is necessary
+net.ipv6.conf.all.accept_redirects = 0
 net.ipv6.conf.all.rp_filter = 1
+net.ipv6.conf.default.accept_redirects = 0
 net.ipv6.conf.default.router_solicitations = 0
 net.ipv6.conf.default.accept_ra_rtr_pref = 0
 net.ipv6.conf.default.accept_ra_pinfo = 0
@@ -620,24 +744,119 @@ net.ipv6.conf.default.autoconf = 0
 net.ipv6.conf.default.dad_transmits = 0
 net.ipv6.conf.default.max_addresses = 1
 net.ipv6.conf.default.rp_filter = 1
-EOL
+EOF
 sysctl -p
+# Configure system-wide umask
+log "Configuring system-wide umask..."
+echo "umask 027" >> /etc/profile
+# Disable core dumps
+log "Disabling core dumps..."
+echo "* soft core 0" >> /etc/security/limits.conf
+echo "* hard core 0" >> /etc/security/limits.conf
+echo "fs.suid_dumpable = 0" >> /etc/sysctl.conf
+mkdir -p /etc/systemd/coredump.conf.d/
+cat > /etc/systemd/coredump.conf.d/custom.conf << EOF
+[Coredump]
+Storage=none
+ProcessSizeMax=0
+EOF
+# Secure shared memory
+log "Securing shared memory..."
+echo "tmpfs     /run/shm     tmpfs     defaults,noexec,nosuid     0     0" >> /etc/fstab
+# System-wide security limits
+cat >> /etc/security/limits.conf << EOF
+* hard core 0
+* soft nproc 100
+* hard nproc 150
+EOF
+# Add entropy gathering, process accounting (for tracking unusual behavior), and DNS security
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl enable haveged # entropy gathering
+    systemctl start haveged
+    systemctl enable acct # process accounting for debian
+    systemctl start acct
+    systemctl enable dnscrypt-proxy # DNS security
+    systemctl start dnscrypt-proxy
+elif [[ -x "$(command -v service)" ]]; then
+    update-rc.d haveged defaults # entropy gathering
+    service haveged start
+    update-rc.d acct defaults # process accounting for debian
+    service acct start
+    update-rc.d dnscrypt-proxy defaults # DNS security
+    service dnscrypt-proxy start
+else
+    log "error: Unable to restart haveged, acct, and dnscrypt-proxy services."
+fi
+# Monitor running services
+echo "needrestart -r l" >> /etc/bash.bashrc
+# Protect against time-based attacks
+sed -i "s/RUNASUSER=ntp/RUNASUSER=_ntp/" /etc/init.d/ntp
+# Detect unauthorized SUID/SGID binaries
+find / -type f \( -perm -4000 -o -perm -2000 \) -exec ls -la {} \; > ./suid_sgid_binaries.log
+# Harden dynamic loader configuration
+echo "# Block loading of shared libraries from current directory" > /etc/ld.so.preload
+# Secure tmp directories with noexec
+echo "tmpfs /tmp tmpfs defaults,noexec,nosuid,nodev 0 0" >> /etc/fstab
+echo "tmpfs /var/tmp tmpfs defaults,noexec,nosuid,nodev 0 0" >> /etc/fstab
+# Restrict special filesystem mounting
+cat >> /etc/modprobe.d/disable-filesystems.conf << EOF
+install cramfs /bin/true
+install freevxfs /bin/true
+install jffs2 /bin/true
+install hfs /bin/true
+install hfsplus /bin/true
+install squashfs /bin/true
+install udf /bin/true
+EOF
+# Configure system to log all executed commands
+echo 'export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"' >> /etc/bash.bashrc
+echo "readonly PROMPT_COMMAND" >> /etc/bash.bashrc
+echo "readonly HISTFILE" >> /etc/bash.bashrc
+echo "readonly HISTFILESIZE" >> /etc/bash.bashrc
+echo "readonly HISTSIZE" >> /etc/bash.bashrc
+echo "readonly HISTTIMEFORMAT" >> /etc/bash.bashrc
+echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/bash.bashrc
+echo "export HISTFILESIZE=10000" >> /etc/bash.bashrc
+echo "export HISTSIZE=10000" >> /etc/bash.bashrc
+# Configure systemd to create crash dumps for analysis
+mkdir -p /var/crash
+chmod 700 /var/crash
+echo 'kernel.core_pattern = |/usr/share/apport/apport %p %s %c %d %P %E' > /etc/sysctl.d/10-core-dump.conf
+# Configure DNS over HTTPS
+cat > /etc/dnscrypt-proxy/dnscrypt-proxy.toml << EOF
+server_names = ['cloudflare', 'google']
+listen_addresses = ['127.0.0.1:53']
+max_clients = 250
+ipv4_servers = true
+ipv6_servers = false
+dnscrypt_servers = true
+doh_servers = true
+require_dnssec = true
+require_nolog = true
+require_nofilter = true
+force_tcp = false
+timeout = 2500
+keepalive = 30
+EOF
+# Update resolv.conf to use local DNSCrypt proxy
+echo "nameserver 127.0.0.1" > /etc/resolv.conf
+chattr +i /etc/resolv.conf  # Prevent modification
 
 ##### AUDITING #####
 log "Setting up auditing..."
-cat <<EOL > "/etc/audit/audit.rules"
+cat > /etc/audit/audit.rules << EOF
 -D
 -w / -p rwax -k filesystem_change
 -a always,exit -S all
 -e 2
-EOL
-cat <<EOL > "/etc/audit/auditd.conf"
+EOF
+cat > /etc/audit/auditd.conf << EOF
 max_log_file = 10485760
 space_left_action = email
 action_mail_acct = root
 admin_space_left_action = halt
 max_log_file_action = keep_logs
-EOL
+EOF
 auditctl -e 1
 if [[ -x "$(command -v systemctl)" ]]; then
     systemctl enable auditd
@@ -657,6 +876,7 @@ df --local -P | awk {'if (NR!=1)print $6'} | xargs -I '{}' find '{}' -xdev -type
 df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -2000 # Audit SGID executables
 # Setting up rsyslog
 log "Setting up rsyslog..."
+sed -i 's/RSYSLOG_TraditionalFileFormat/RSYSLOG_FileFormat/' /etc/rsyslog.conf
 if [[ -x "$(command -v systemctl)" ]]; then
     systemctl enable rsyslog
     systemctl start rsyslog
@@ -685,15 +905,15 @@ else
 fi
 
 ##### FINDING & SAVING INFO #####
-log "Finding and saving open ports to \`./open_ports.txt\`..."
-ss -ln > ./open_ports.txt
-log "Finding and saving running services to \`./services.txt\`..."
-service --status-all > ./services.txt
-log "Finding & saving unused software to \`./unused_software.txt\`..."
-deborphan --guess-all > ./unused_software.txt
+log "Finding and saving open ports to \`./open_ports.log\`..."
+ss -ln > ./open_ports.log
+log "Finding and saving running services to \`./services.log\`..."
+service --status-all > ./services.log
+log "Finding & saving unused software to \`./unused_software.log\`..."
+deborphan --guess-all > ./unused_software.log
 # log "Removing unused software..."
 # log "The following files will be removed:"
-# cat ./unused_software.txt
+# cat ./unused_software.log
 # # Prompt the user for confirmation
 # ring_bell
 # read -p "Do you want to proceed with the deletion? (Y/n): " choice
@@ -703,27 +923,27 @@ deborphan --guess-all > ./unused_software.txt
 #     # Proceed with removal
 #     while IFS= read -r file; do
 #         rm -rf "$file"
-#     done < ./unused_software.txt
+#     done < ./unused_software.log
 
 #     log "Unused software has been removed."
 # fi
-log "Finding & saving installed software to \`./software_installed.txt\`..."
-apt list --installed > ./software_installed.txt
-log "Finding & saving enabled services to \`./enabled_services.txt\`..."
-service --status-all > ./enabled_services.txt
-log "Finding & saving media files to \`./media_files.txt\`..."
-find /home/ -type f \( -name "*.mp3" -o -name "*.mp4" -o -name "*.wav" -o -name "*.avi" -o -name "*.mkv" -o -name "*.flac" -o -name "*.mov" \) -print > ./media_files.txt
-log "Finding & saving possible hacking tools as packages to \`./packages.txt\`..."
-find /home/ -type f \( -name "*.tar.gz" -o -name "*.tgz" -o -name "*.zip" -o -name "*.deb" \) -print > ./packages.txt
-log "Finding & saving World Writable files to \`./world_writable.txt\`..."
-find /dir -xdev -type d \( -perm -0002 -a ! -perm -1000 \) -print > ./world_writable.txt
-log "Finding & saving No-User files to \`./no_user.txt\`..."
-find /dir -xdev \( -nouser -o -nogroup \) -print > ./no_user.txt
+log "Finding & saving installed software to \`./software_installed.log\`..."
+apt list --installed > ./software_installed.log
+log "Finding & saving enabled services to \`./enabled_services.log\`..."
+service --status-all > ./enabled_services.log
+log "Finding & saving media files to \`./media_files.log\`..."
+find /home/ -type f \( -name "*.mp3" -o -name "*.mp4" -o -name "*.wav" -o -name "*.avi" -o -name "*.mkv" -o -name "*.flac" -o -name "*.mov" \) -print > ./media_files.log
+log "Finding & saving possible hacking tools as packages to \`./packages.log\`..."
+find /home/ -type f \( -name "*.tar.gz" -o -name "*.tgz" -o -name "*.zip" -o -name "*.deb" \) -print > ./packages.log
+log "Finding & saving World Writable files to \`./world_writable.log\`..."
+find /dir -xdev -type d \( -perm -0002 -a ! -perm -1000 \) -print > ./world_writable.log
+log "Finding & saving No-User files to \`./no_user.log\`..."
+find /dir -xdev \( -nouser -o -nogroup \) -print > ./no_user.log
 
 ##### REMOVING MEDIA FILES #####
 log "Removing media files..."
 log "The following files will be removed:"
-cat ./media_files.txt
+cat ./media_files.log
 ring_bell
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
 if [[ $choice =~ ^[Nn].* ]]; then
@@ -731,13 +951,13 @@ if [[ $choice =~ ^[Nn].* ]]; then
 else
     while IFS= read -r file; do
         rm -rf "$file"
-    done < ./media_files.txt
+    done < ./media_files.log
 
     log "Files have been removed."
 fi
 log "Removing packages..."
 log "The following files will be removed:"
-cat ./packages.txt
+cat ./packages.log
 ring_bell
 read -p "Do you want to proceed with the deletion? (Y/n): " choice
 if [[ $choice =~ ^[Nn].* ]]; then
@@ -745,11 +965,11 @@ if [[ $choice =~ ^[Nn].* ]]; then
 else
     while IFS= read -r file; do
         rm -rf "$file"
-    done < ./packages.txt
+    done < ./packages.log
     log "Files have been removed."
 fi
 
-##### USER MANAGEMENT #####
+##### USER/PASSWORD MANAGEMENT #####
 log "User Management..."
 # Lock Root
 log "Locking root account..."
@@ -793,14 +1013,14 @@ sed -i '/^autologin-user/s/^/#/' /etc/lightdm/lightdm.conf
 sed -i 's/AutomaticLoginEnable=True/AutomaticLoginEnable=False/' /etc/gdm/custom.conf
 sed -i '/^\[security\]/,/^\[.*\]/s/^AllowGuest=true/AllowGuest=false/' /etc/gdm/custom.conf
 sed -i 's/auth sufficient pam_succeed_if.so user ingroup nopasswdlogin//' /etc/pam.d/gdm-password
-mawk -F: '$1 == "sudo"' /etc/group > ./admins.txt
-log "Admins (saved to \`./admins.txt\`)..."
-mawk -F: '$3 > 999 && $3 < 65534 {print $1}' /etc/passwd > ./users.txt
-log "Users (saved to \`./users.txt\`)..."
-mawk -F: '$2 == ""' /etc/passwd > ./no_passwd.txt
-log "Empty Passwords (saved to \`./no_passwd.txt\`)..."
-mawk -F: '$3 == 0 && $1 != "root"' /etc/passwd > ./non-root_uid0.txt
-log "Non-root UID 0 users (saved to \`./non-root_uid0.txt\`)..."
+mawk -F: '$1 == "sudo"' /etc/group > ./admins.log
+log "Admins (saved to \`./admins.log\`)..."
+mawk -F: '$3 > 999 && $3 < 65534 {print $1}' /etc/passwd > ./users.log
+log "Users (saved to \`./users.log\`)..."
+mawk -F: '$2 == ""' /etc/passwd > ./no_passwd.log
+log "Empty Passwords (saved to \`./no_passwd.log\`)..."
+mawk -F: '$3 == 0 && $1 != "root"' /etc/passwd > ./non-root_uid0.log
+log "Non-root UID 0 users (saved to \`./non-root_uid0.log\`)..."
 # Changing Passwords and user management
 NEW_PASSWORD="CyberPatr!0t"
 existing_users=$(cut -d: -f1 /etc/passwd | grep -Ev "^(root|nobody|nfsnobody)$")
@@ -872,6 +1092,23 @@ cut -d: -f1,3 /etc/passwd | while IFS=: read user uid; do
 done
 echo "root:$NEW_PASSWORD" | chpasswd
 log "Password for admin root changed."
+# Secure GRUB
+HASH=$(echo -e "$NEW_PASSWORD\n$NEW_PASSWORD" | grub-mkpasswd-pbkdf2 | grep -o grub.*)
+cat > /etc/grub.d/40_custom << EOF
+#!/bin/sh
+exec tail -n +3 $0
+# This file provides an easy way to add custom menu entries.  Simply type the
+# menu entries you want to add after this comment.  Be careful not to change
+# the 'exec tail' line above.
+
+set superusers="root"
+password_pbkdf2 root $HASH
+set check_signatures=enforce
+export check_signatures
+export superusers
+EOF
+update-grub
+log "GRUB password set for admin root and GRUB signature checks enabled."
 
 ##### CHANGING POLICIES #####
 # Setting max password days
@@ -903,6 +1140,22 @@ sed -i '/^ENCRYPT_METHOD/c\ENCRYPT_METHOD SHA512' /etc/login.defs
 echo "SHA_CRYPT_MIN_ROUNDS 12000" >> /etc/login.defs
 echo "SHA_CRYPT_MAX_ROUNDS 15000" >> /etc/login.defs
 
+##### LANGUAGE #####
+LANG_TO_KEEP="en_US.UTF-8"
+log "Setting language to $LANG_TO_KEEP..."
+cat > /etc/locale.gen << EOF
+$LANG_TO_KEEP UTF-8
+C.UTF-8 UTF-8
+C
+EOF
+locale-gen
+update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LANG_TO_KEEP
+
+##### CLEANING UP #####
+log "Cleaning up..."
+apt autoremove --purge -y
+apt clean
+
 ##### CALCULATING TIME #####
 end_time=$(date +"%Y-%m-%d, %I:%M:%S %p")
 end_secs=$(date +%s.%N)
@@ -910,17 +1163,13 @@ duration=$(echo "$end_secs - $start_secs" | bc)
 final_min=$(echo "$duration / 60" | bc)
 final_sec=$(echo "$duration % 60" | bc)
 
-##### ENSURING LANG IS SET TO ENGLISH (US) #####
-log "Ensuring language is set to English (US)..."
-update-locale LANG=$LANG_TO_KEEP LANGUAGE=$LOCALE_TO_KEEP LC_MESSAGES="POSIX"
-
 ##### FINAL NOTES FOR USER #####
 log "Finished in $final_min minute(s) and $final_sec second(s)..."
 log
 log "Final Notes:"
 log "Please manually check the world-writable files and the no-user files."
 log "Please make sure only the required services are enabled."
-log "Please check all the .txt files in the current directory (`pwd`) for any information saved by this script."
+log "Please check all the .log files in the current directory (`pwd`) for any information saved by this script."
 service --status-all
 log "Make sure updates are installed daily."
 ring_bell
