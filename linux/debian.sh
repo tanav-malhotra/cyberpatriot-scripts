@@ -1327,10 +1327,169 @@ rm -f ./modified_system_binaries.log
 for file in /bin/* /sbin/* /usr/bin/* /usr/sbin/*; do
     sha256_hash=$(sha256sum "$file" | awk '{print $1}')
     md5_hash=$(md5sum "$file" | awk '{print $1}')
-    if ! grep -q "$md5_hash" /var/lib/binary-hashes.db; then
-        echo "$file: $md5_hash" >> ./modified_system_binaries.log
-    fi
+    # TODO: Add hash verification
+    # if ! grep -q "$sha256_hash" /var/lib/binary-hashes.db; then
+    #     echo "$file: $sha256_hash" >> ./modified_system_binaries.log
+    # fi
 done
+if [[ -x "$(command -v systemctl)" ]]; then
+    # Automated Incident Response Script
+    cat > /usr/local/bin/incident-response.sh << EOF
+#!/bin/bash
+# ====================================================================================
+# Author: Tanav Malhotra
+# License: GNU General Public License v3.0
+# Copyright (c) 2024 Tanav Malhotra
+#
+# This script is licensed under the GNU General Public License v3.0.
+# You may obtain a copy of the license at:
+#   https://www.gnu.org/licenses/gpl-3.0.html
+#
+# The script is provided "as-is", without any warranty of any kind,
+# express or implied, including but not limited to the implied warranties
+# of merchantability and fitness for a particular purpose. See the GPL-3.0
+# for full details.
+# ====================================================================================
+
+# Function to collect system state
+collect_system_state() {
+    mkdir -p /var/log/incidents/\$(date +%Y%m%d_%H%M%S)
+    cd /var/log/incidents/\$(date +%Y%m%d_%H%M%S)
+    
+    # Collect process information
+    ps auxf > processes.txt
+    lsof > open_files.txt
+    
+    # Collect network information
+    netstat -antup > network_connections.txt
+    ss -tualpn > socket_statistics.txt
+    
+    # Collect system logs
+    cp /var/log/syslog ./
+    cp /var/log/auth.log ./
+    
+    # Memory dump
+    grep -v "^0" /proc/[0-9]*/maps > memory_maps.txt
+    
+    # System information
+    uname -a > system_info.txt
+    df -h > disk_usage.txt
+    free -m > memory_usage.txt
+    
+    # Package information
+    dpkg -l > installed_packages.txt
+}
+
+# Function to respond to suspicious processes
+handle_suspicious_process() {
+    pid=\$1
+    # Collect process information
+    ps -fp \$pid > "/var/log/incidents/process_\${pid}.txt"
+    
+    # Get open files and connections
+    lsof -p \$pid >> "/var/log/incidents/process_\${pid}.txt"
+    
+    # Optionally terminate process
+    kill -9 \$pid
+}
+
+# Function to block suspicious IP
+block_ip() {
+    ip=\$1
+    nft add rule inet filter input ip saddr \$ip drop
+    echo "Blocked IP: \$ip at \$(date)" >> /var/log/incidents/blocked_ips.log
+}
+
+# Main monitoring loop
+while true; do
+    # Check for high CPU usage processes
+    ps aux | awk '{if(\$3 > 90.0) print \$2}' | while read pid; do
+        handle_suspicious_process \$pid
+    done
+    
+    # Check for suspicious network connections
+    netstat -ant | grep -E "^tcp.*ESTABLISHED" | awk '{print \$5}' | cut -d: -f1 | sort | uniq -c | sort -rn | while read count ip; do
+        if [ \$count -gt 100 ]; then
+            block_ip \$ip
+        fi
+    done
+    
+    sleep 60
+done
+EOF
+    chmod +x /usr/local/bin/incident-response.sh
+    # Create service for incident response
+    cat > /etc/systemd/system/incident-response.service << EOF
+[Unit]
+Description=Automated Incident Response Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/incident-response.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    systemctl enable incident-response
+    systemctl start incident-response
+fi
+# Network Segmentation with VLANs
+# Make VLANs persistent
+cat > /etc/network/interfaces.d/vlans << EOF
+auto eth0.10
+iface eth0.10 inet static
+    address 192.168.10.1
+    netmask 255.255.255.0
+    vlan-raw-device eth0
+
+auto eth0.20
+iface eth0.20 inet static
+    address 192.168.20.1
+    netmask 255.255.255.0
+    vlan-raw-device eth0
+
+auto eth0.30
+iface eth0.30 inet static
+    address 192.168.30.1
+    netmask 255.255.255.0
+    vlan-raw-device eth0
+EOF
+# Load VLAN module
+modprobe 8021q
+# Create VLANs
+vconfig add eth0 10  # Admin VLAN
+vconfig add eth0 20  # User VLAN
+vconfig add eth0 30  # Guest VLAN
+# Configure VLAN interfaces
+ip addr add 192.168.10.1/24 dev eth0.10
+ip addr add 192.168.20.1/24 dev eth0.20
+ip addr add 192.168.30.1/24 dev eth0.30
+# Set up bridges for each VLAN
+brctl addbr br10
+brctl addbr br20
+brctl addbr br30
+brctl addif br10 eth0.10
+brctl addif br20 eth0.20
+brctl addif br30 eth0.30
+# Configure routing between VLANs
+ip route add 192.168.20.0/24 via 192.168.10.1
+ip route add 192.168.30.0/24 via 192.168.10.1
+# Set up VLAN-specific firewall rules
+nft add table inet vlan_filter
+nft add chain inet vlan_filter input { type filter hook input priority 0 \; }
+nft add chain inet vlan_filter forward { type filter hook forward priority 0 \; }
+# Allow established connections
+nft add rule inet vlan_filter input ct state established,related accept
+# VLAN-specific rules
+nft add rule inet vlan_filter forward iifname "eth0.30" oifname "eth0.10" drop  # Prevent guest -> admin
+nft add rule inet vlan_filter forward iifname "eth0.30" oifname "eth0.20" drop  # Prevent guest -> user
+# Run VLAN setup
+mkdir -p /etc/dpkg/dpkg.cfg.d/
+echo "Show-Changed-Conffiles" > /etc/dpkg/dpkg.cfg.d/show-changed
+echo "force-confold" > /etc/dpkg/dpkg.cfg.d/force-confold
 
 ##### Anti-Malware #####
 freshclam
