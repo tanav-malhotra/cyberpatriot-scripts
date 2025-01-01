@@ -26,13 +26,6 @@ LOGFILE="./linux_script.log"
 output_file="./linux_script_output.log"
 starting_dir=$(pwd)
 distro_id=$(grep '^ID=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
-if [[ "$distro_id" == "debian" ]]; then
-    distro_name="Debian"
-elif [[ "$distro_id" == "linuxmint" ]]; then
-    distro_name="Linux Mint"
-elif [[ "$distro_id" == "ubuntu" ]]; then
-    distro_name="Ubuntu"
-fi
 NETWORK=$(ip route | grep -oP '(?<=src )[\d.]+(?=/)' | head -1)/$(ip route | grep -oP '(?<=dev ).*(?= proto)' | awk '{ print $1 }' | head -1) # Get the network and subnet dynamically
 distro_codename=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
 debug=0
@@ -1331,14 +1324,14 @@ done
 # Check for modified system binaries
 log "Checking for modified system binaries..."
 rm -f ./modified_system_binaries.log
-for file in /bin/* /sbin/* /usr/bin/* /usr/sbin/*; do
-    sha256_hash=$(sha256sum "$file" | awk '{print $1}')
-    md5_hash=$(md5sum "$file" | awk '{print $1}')
-    # TODO: Add hash verification
+# for file in /bin/* /sbin/* /usr/bin/* /usr/sbin/*; do
+    # sha256_hash=$(sha256sum "$file" | awk '{print $1}')
+    # md5_hash=$(md5sum "$file" | awk '{print $1}')
+    #TODO: Add hash verification
     # if ! grep -q "$sha256_hash" /var/lib/binary-hashes.db; then
     #     echo "$file: $sha256_hash" >> ./modified_system_binaries.log
     # fi
-done
+# done
 if [[ -x "$(command -v systemctl)" ]]; then
     # Automated Incident Response Script
     cat > /usr/local/bin/incident-response.sh << EOF
