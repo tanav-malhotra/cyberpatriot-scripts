@@ -1486,8 +1486,8 @@ ip route add 192.168.20.0/24 via 192.168.10.1
 ip route add 192.168.30.0/24 via 192.168.10.1
 # Set up VLAN-specific firewall rules
 nft add table inet vlan_filter
-nft add chain inet vlan_filter input { type filter hook input priority 0 \; }
-nft add chain inet vlan_filter forward { type filter hook forward priority 0 \; }
+nft add chain inet vlan_filter input '{ type filter hook input priority 0 ; }'
+nft add chain inet vlan_filter forward '{ type filter hook forward priority 0 ; }'
 # Allow established connections
 nft add rule inet vlan_filter input ct state established,related accept
 # VLAN-specific rules
@@ -1537,11 +1537,11 @@ elif [[ -x "$(command -v service)" ]]; then
 else
     log "error: Unable to restart auditd service."
 fi
-df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -0002 # Auditing world writable files
-df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nouser # Auditing unowned files/directories
-df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -nogroup # Auditing ungrouped files/directories
-df --local -P | awk {'if (NR!=1)print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -4000 # Audit SUID executable
-df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -2000 # Audit SGID executables
+df --local -P | awk '{if (NR!=1) print $6}' | xargs -I '{}' find '{}' -xdev -type f -perm -0002 # Auditing world writable files
+df --local -P | awk '{if (NR!=1) print $6}' | xargs -I '{}' find '{}' -xdev -nouser # Auditing unowned files/directories
+df --local -P | awk '{if (NR!=1) print $6}' | xargs -I '{}' find '{}' -xdev -nogroup # Auditing ungrouped files/directories
+df --local -P | awk '{if (NR!=1)print $6}' | xargs -I '{}' find '{}' -xdev -type f -perm -4000 # Audit SUID executable
+df --local -P | awk '{if (NR!=1) print $6}' | xargs -I '{}' find '{}' -xdev -type f -perm -2000 # Audit SGID executables
 # Setting up rsyslog
 log "Setting up rsyslog..."
 sed -i 's/RSYSLOG_TraditionalFileFormat/RSYSLOG_FileFormat/' /etc/rsyslog.conf
