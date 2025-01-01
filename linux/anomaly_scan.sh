@@ -55,11 +55,7 @@ grep "Failed password" /var/log/auth.log | grep -c "ssh2" | while read attempts;
     fi
 done
 # Check for modified system binaries
-echo "Checking for modified system binaries..." | tee -a $LOGFILE
-for file in /bin/* /sbin/* /usr/bin/* /usr/sbin/*; do
-    md5sum $file | grep -v -f /var/lib/binary-hashes.db >> $LOGFILE
-    md5sum $file | grep -v -f /var/lib/binary-hashes.db > ./modified_system_binaries.log
-done
+#TODO: use implementation from `debian.sh`
 
 ##### WISH GOOD LUCK #####
 echo;echo;echo;

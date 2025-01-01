@@ -1678,8 +1678,6 @@ else
     log "error: Unable to restart apparmor service."
 fi
 
-##### SURICATA IDS (Intrusion Detection System) #####
-
 ##### FINDING & SAVING INFO #####
 log "Finding and saving open ports to \`./open_ports.log\`..."
 ss -ln > ./open_ports.log
@@ -1692,7 +1690,7 @@ deborphan --guess-all > ./unused_software.log
 # cat ./unused_software.log
 # # Prompt the user for confirmation
 # ring_bell
-# read -p "Do you want to proceed with the deletion? (Y/n): " choice
+# read -r -p "Do you want to proceed with the deletion? (Y/n): " choice
 # if [[ $choice =~ ^[Nn].* ]]; then
 #     log "No software was removed."
 # else

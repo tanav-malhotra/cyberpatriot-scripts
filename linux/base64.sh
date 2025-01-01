@@ -19,11 +19,12 @@
 
 ##### DECODE BASE64 STRING #####
 if [ -z "$1" ]; then
-    read -p "Enter Base64 encoded string: " encoded_string
+    read -r -p "Enter Base64 encoded string: " encoded_string
 else
     encoded_string="$1"
 decoded_string=$(echo "$encoded_string" | base64 --decode)
 echo "Decoded string: $decoded_string"
+log "Press 'Enter' to continue..."
 read
 
 ##### WISH GOOD LUCK #####
