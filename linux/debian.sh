@@ -121,6 +121,7 @@ elif [[ $license -eq 1 ]]; then
     curl https://www.gnu.org/licenses/gpl-3.0.txt | less
     exit 0
 elif [[ $debug -eq 1 ]]; then
+    set -x
     touch "$LOGFILE"
     touch $output_file
     # Redirect both stdout and stderr to tee
