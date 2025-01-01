@@ -180,32 +180,32 @@ fi
 log "Updating APT repositories..."
 cp /etc/apt/sources.list /etc/apt/sources.list.bak
 if [[ $distro_id == "linuxmint" ]]; then
-    cat > /etc/apt/sources.list << EOF
-deb http://packages.linuxmint.com $distro_codename main upstream import backport
-deb-src http://packages.linuxmint.com $distro_codename main upstream import backport
-EOF
-elif [[ $distro_id == "ubuntu" ]]; then
-    cat > /etc/apt/sources.list << EOF
-deb https://mirrors.kernel.org/ubuntu/ $distro_codename main restricted universe multiverse
-deb https://mirrors.kernel.org/ubuntu/ $distro_codename-updates main restricted universe multiverse
-deb https://security.ubuntu.com/ubuntu/ $distro_codename-security main restricted universe multiverse
+    {
+        echo "deb http://packages.linuxmint.com $distro_codename main upstream import backport"
+        echo "deb-src http://packages.linuxmint.com $distro_codename main upstream import backport"
+    } > /etc/apt/sources.list
+elif [[ $distro_id == "ubuntu" ]]; then # EOF was causing errors saying "unexpected token `elif`"
+    {
+        echo "deb https://mirrors.kernel.org/ubuntu/ $distro_codename main restricted universe multiverse"
+        echo "deb https://mirrors.kernel.org/ubuntu/ $distro_codename-updates main restricted universe multiverse"
+        echo "deb https://security.ubuntu.com/ubuntu/ $distro_codename-security main restricted universe multiverse"
 
-deb-src http://archive.ubuntu.com/ubuntu $distro_codename main restricted universe multiverse
-deb-src http://archive.ubuntu.com/ubuntu $distro_codename-updates main restricted universe multiverse
-deb-src http://archive.ubuntu.com/ubuntu $distro_codename-backports main restricted universe multiverse
+        echo "deb-src http://archive.ubuntu.com/ubuntu $distro_codename main restricted universe multiverse"
+        echo "deb-src http://archive.ubuntu.com/ubuntu $distro_codename-updates main restricted universe multiverse"
+        echo "deb-src http://archive.ubuntu.com/ubuntu $distro_codename-backports main restricted universe multiverse"
 
-deb http://security.ubuntu.com/ubuntu/ $distro_codename-security main restricted universe multiverse
-deb-src http://security.ubuntu.com/ubuntu/ $distro_codename-security main restricted universe multiverse
-EOF
+        echo "deb http://security.ubuntu.com/ubuntu/ $distro_codename-security main restricted universe multiverse"
+        echo "deb-src http://security.ubuntu.com/ubuntu/ $distro_codename-security main restricted universe multiverse"
+    } > /etc/apt/sources.list
 elif [[ $distro_id == "debian" ]]; then
-    cat > /etc/apt/sources.list << EOF
-deb     http://deb.debian.org/debian/ $distro_codename main contrib non-free non-free-firmware
-deb-src http://deb.debian.org/debian/ $distro_codename main contrib non-free non-free-firmware
-deb     http://security.debian.org/debian-security $distro_codename-security main contrib non-free non-free-firmware
-deb-src http://security.debian.org/debian-security $distro_codename-security main contrib non-free non-free-firmware
-deb     http://deb.debian.org/debian/ $distro_codename-updates main contrib non-free non-free-firmware
-deb-src http://deb.debian.org/debian/ $distro_codename-updates main contrib non-free non-free-firmware
-EOF
+    {
+        echo "deb     http://deb.debian.org/debian/ $distro_codename main contrib non-free non-free-firmware"
+        echo "deb-src http://deb.debian.org/debian/ $distro_codename main contrib non-free non-free-firmware"
+        echo "deb     http://security.debian.org/debian-security $distro_codename-security main contrib non-free non-free-firmware"
+        echo "deb-src http://security.debian.org/debian-security $distro_codename-security main contrib non-free non-free-firmware"
+        echo "deb     http://deb.debian.org/debian/ $distro_codename-updates main contrib non-free non-free-firmware"
+        echo "deb-src http://deb.debian.org/debian/ $distro_codename-updates main contrib non-free non-free-firmware"
+    } > /etc/apt/sources.list
 else
     log "error: Unsupported distro: $distro_id $distro_codename"
 fi
