@@ -1,5 +1,5 @@
 #!/bin/bash
-# ====================================================================================
+# ####################################################################################
 # Author: Tanav Malhotra
 # License: GNU General Public License v3.0
 # Copyright (c) 2024 Tanav Malhotra
@@ -15,7 +15,7 @@
 #
 # You can also view the license by running the `debian.sh` script
 # with the '--license' option.
-# ====================================================================================
+# ####################################################################################
 
 ##### VARIABLES #####
 LOGFILE="./anomaly_scan.log"

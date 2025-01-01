@@ -1,4 +1,4 @@
-# ====================================================================================
+# ####################################################################################
 # Authors: Tanav Malhotra, Bryan Lochan 
 # License: GNU General Public License v3.0
 # Copyright (c) 2024 Tanav Malhotra, Bryan Lochan 
@@ -14,7 +14,7 @@
 #
 # You can also view the license by running the `windows.ps1` script
 # with the '-License' option.
-# ====================================================================================
+# ####################################################################################
 
 ##### CHECK FOR ADMIN #####
 Write-Host "Checking for admininstrative access..."

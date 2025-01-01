@@ -1,5 +1,5 @@
 #!/bin/bash
-# ====================================================================================
+# ####################################################################################
 # Author: Tanav Malhotra
 # License: GNU General Public License v3.0
 # Copyright (c) 2024 Tanav Malhotra
@@ -15,7 +15,7 @@
 #
 # You can also view the license by running this script
 # with the '--license' option.
-# ====================================================================================
+# ####################################################################################
 
 ##### IMPORTANT VARS #####
 unalias -a
@@ -1336,7 +1336,7 @@ if [[ -x "$(command -v systemctl)" ]]; then
     # Automated Incident Response Script
     cat > /usr/local/bin/incident-response.sh << EOF
 #!/bin/bash
-# ====================================================================================
+# ####################################################################################
 # Author: Tanav Malhotra
 # License: GNU General Public License v3.0
 # Copyright (c) 2024 Tanav Malhotra
@@ -1349,7 +1349,7 @@ if [[ -x "$(command -v systemctl)" ]]; then
 # express or implied, including but not limited to the implied warranties
 # of merchantability and fitness for a particular purpose. See the GPL-3.0
 # for full details.
-# ====================================================================================
+# ####################################################################################
 
 # Function to collect system state
 collect_system_state() {
