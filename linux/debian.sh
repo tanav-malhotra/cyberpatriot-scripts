@@ -228,7 +228,7 @@ apt autoremove -y --purge
 ##### SOFTWARE MANAGEMENT #####
 apt list --installed > ./software_that_was_installed.log
 log "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage" "net-tools" "lynis" "debian-archive-keyring" "ubuntu-keyring" "haveged" "acct" "needrestart" "ntp" "debsums" "apt-show-versions" "dnscrypt-proxy" "resolvconf" "debsigs" "libpam-shield" "libpam-tmpdir" "libpam-usb" "clamav" "clamav-daemon" "apparmor-profiles" "apparmor-utils" "apparmor-profiles-extra" "sysdig" "firejail" "tcpd" "knockd" "suricata" "quota" "quotatool" "attr" "libcap2-bin" "ntopng" "cmake" "make" "gcc" "g++" "flex" "bison" "libpcap-dev" "libssl-dev" "python3" "python3-dev" "swig" "zlib1g-dev")
+apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage" "net-tools" "lynis" "debian-archive-keyring" "ubuntu-keyring" "haveged" "acct" "needrestart" "ntp" "debsums" "apt-show-versions" "dnscrypt-proxy" "resolvconf" "debsigs" "libpam-shield" "libpam-tmpdir" "libpam-usb" "clamav" "clamav-daemon" "apparmor-profiles" "apparmor-utils" "apparmor-profiles-extra" "sysdig" "firejail" "tcpd" "knockd" "suricata" "quota" "quotatool" "attr" "libcap2-bin" "ntopng" "cmake" "make" "gcc" "g++" "flex" "bison" "libpcap-dev" "libssl-dev" "python3" "python3-dev" "swig" "zlib1g-dev" "nftables" "iptables-persistent" "libapache2-mod-security2" "osquery" "vlan" "bridge-utils")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     apt-get install -y "$app"
@@ -958,6 +958,113 @@ elif [[ -x "$(command -v service)" ]]; then
 else
     log "error: Unable to start ntopng service."
 fi
+# Configure Suricata IDS (Intrusion Detection System)
+cat > /etc/suricata/suricata.yaml << EOF
+%YAML 1.1
+---
+vars:
+  address-groups:
+    HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
+    EXTERNAL_NET: "!$HOME_NET"
+
+outputs:
+  - fast:
+      enabled: yes
+      filename: fast.log
+      append: yes
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: eve.json
+      types:
+        - alert
+        - http
+        - dns
+        - tls
+        - files
+        - ssh
+
+app-layer:
+  protocols:
+    tls:
+      enabled: yes
+    ssh:
+      enabled: yes
+    dns:
+      tcp:
+        enabled: yes
+      udp:
+        enabled: yes
+EOF
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl enable suricata
+    systemctl start suricata
+elif [[ -x "$(command -v service)" ]]; then
+    update-rc.d suricata defaults
+    service suricata start
+else
+    log "error: Unable to start suricata service."
+fi
+# Download and install custom rules
+wget https://rules.emergingthreats.net/open/suricata-5.0/emerging.rules.tar.gz
+tar xzf emerging.rules.tar.gz -C /etc/suricata/rules/
+rm emerging.rules.tar.gz
+# Configure custom IDS rules
+cat >> /etc/suricata/suricata.yaml << EOF
+rule-files:
+  - emerging-exploit.rules
+  - emerging-malware.rules
+  - emerging-scan.rules
+  - emerging-dos.rules
+  - emerging-attack_response.rules
+  - emerging-web_specific_apps.rules
+EOF
+# Install and configure Zeek (formerly Bro) IDS (Intrusion Detection System)
+git clone --recursive https://github.com/zeek/zeek
+cd zeek
+./configure && make && make install
+cd .. && rm -rf zeek
+# Configure Zeek
+cat > /usr/local/zeek/share/zeek/site/local.zeek << EOF
+@load base/protocols/conn
+@load base/protocols/dns
+@load base/protocols/ftp
+@load base/protocols/http
+@load base/protocols/ssl
+@load base/protocols/ssh
+@load base/frameworks/intel
+@load policy/frameworks/intel/seen
+@load policy/frameworks/intel/do_notice
+
+redef Intel::read_files += {
+    "/usr/local/zeek/share/zeek/intel/intel.dat"
+};
+EOF
+# Create Zeek service
+cat > /etc/systemd/system/zeek.service << EOF
+[Unit]
+Description=Zeek Network Security Monitor
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/local/zeek/bin/zeekctl start
+ExecStop=/usr/local/zeek/bin/zeekctl stop
+RestartSec=10s
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl enable zeek
+    systemctl start zeek
+elif [[ -x "$(command -v service)" ]]; then
+    update-rc.d zeek defaults
+    service zeek start
+else
+    log "error: Unable to start zeek service."
+fi
 
 ##### Anti-Malware #####
 freshclam
@@ -1103,6 +1210,26 @@ sharedscripts
 EOF
 find / -xdev -type f -exec md5sum {} \; > /var/log/fs-integrity.log
 cp /var/log/fs-integrity.log ./fs_integrity.log
+# Enhanced Filesystem Permissions
+# Set default ACLs for sensitive directories
+setfacl -R -d -m u::rwx,g::rx,o::- /etc/
+setfacl -R -d -m u::rwx,g::rx,o::- /var/log/
+setfacl -R -d -m u::rwx,g::rx,o::- /usr/local/bin/
+# Set specific ACLs for security-related files
+for file in /etc/shadow /etc/gshadow /etc/sudoers; do
+    setfacl -m u::r--,g::---,o::--- "\$file"
+done
+# Set extended attributes for audit files
+for file in /var/log/audit/*; do
+    chattr +a "\$file"
+done
+# Set special permissions for security tools
+find /usr/local/bin -type f -exec chmod 750 {} \;
+find /usr/local/sbin -type f -exec chmod 700 {} \;
+# Remove world-readable permissions from sensitive directories
+chmod -R o-rwx /etc/ssl/private/
+chmod -R o-rwx /etc/ssh/
+chmod -R o-rwx /var/log/
 
 ##### APPARMOR #####
 log "Setting up AppArmor..."
@@ -1119,53 +1246,7 @@ else
     log "error: Unable to restart apparmor service."
 fi
 
-##### SURICATA #####
-cat > /etc/suricata/suricata.yaml << EOF
-%YAML 1.1
----
-vars:
-  address-groups:
-    HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
-    EXTERNAL_NET: "!$HOME_NET"
-
-outputs:
-  - fast:
-      enabled: yes
-      filename: fast.log
-      append: yes
-  - eve-log:
-      enabled: yes
-      filetype: regular
-      filename: eve.json
-      types:
-        - alert
-        - http
-        - dns
-        - tls
-        - files
-        - ssh
-
-app-layer:
-  protocols:
-    tls:
-      enabled: yes
-    ssh:
-      enabled: yes
-    dns:
-      tcp:
-        enabled: yes
-      udp:
-        enabled: yes
-EOF
-if [[ -x "$(command -v systemctl)" ]]; then
-    systemctl enable suricata
-    systemctl start suricata
-elif [[ -x "$(command -v service)" ]]; then
-    update-rc.d suricata defaults
-    service suricata start
-else
-    log "error: Unable to start suricata service."
-fi
+##### SURICATA IDS (Intrusion Detection System) #####
 
 ##### FINDING & SAVING INFO #####
 log "Finding and saving open ports to \`./open_ports.log\`..."
