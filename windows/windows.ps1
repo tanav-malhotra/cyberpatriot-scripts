@@ -1,4 +1,4 @@
-# ####################################################################################
+######################################################################################
 # Authors: Tanav Malhotra (GitHub: https://github.com/tanav-malhotra), Bryan Lochan 
 # License: GNU General Public License v3.0
 # Copyright (c) 2024 Tanav Malhotra, Bryan Lochan 
@@ -14,7 +14,7 @@
 #
 # You can also view the license by running this script
 # with the '-License' option.
-# ####################################################################################
+######################################################################################
 
 ##### VARIABLES #####
 $current_dir = (Get-Location).Path

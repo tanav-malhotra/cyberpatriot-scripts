@@ -1,5 +1,5 @@
 #!/bin/bash
-# ####################################################################################
+######################################################################################
 # Author: Tanav Malhotra (GitHub: https://github.com/tanav-malhotra)
 # Email: tanavm2009@gmail.com
 # License: GNU General Public License v3.0
@@ -16,7 +16,7 @@
 #
 # You can also view the license by running the `debian.sh` script
 # with the '--license' option.
-# ####################################################################################
+######################################################################################
 
 ##### VARS #####
 LOGFILE="./vuln_scan_script.log"
