@@ -157,20 +157,20 @@ sleep 1
 
 ##### MAKE SURE USER IS READY TO RUN SCRIPT #####
 ring_bell
-read -p "Do you want to make all of the bash scripts in this directory executable? (Y/n): " $confirmation
+read -p "Do you want to make all of the bash scripts in this directory executable? (Y/n): " confirmation
 if [[ $confirmation =~ ^[Nn].* ]]; then
     log "Make sure you manually run \`sudo chmod +x\` on any script you want to run."
 else
     chmod +x *.sh
 fi
 ring_bell
-read -p "Have all of the Forensics Questions been answered? (Y/n): " $confirmation
+read -p "Have all of the Forensics Questions been answered? (Y/n): " confirmation
 if [[ $confirmation =~ ^[Nn].* ]]; then
     log "error: Please complete these first and only then rerun the script."
     exit 1
 fi
 ring_bell
-read -p "Have you created the required users.txt & admins.txt files in the current directory? (Y/n): " $confirmation
+read -p "Have you created the required users.txt & admins.txt files in the current directory? (Y/n): " confirmation
 if [[ $confirmation =~ ^[Nn].* ]]; then
     log "error: Please create these files first by using the information from the README file located on your desktop."
     exit 1
