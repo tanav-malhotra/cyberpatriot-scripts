@@ -57,13 +57,13 @@ EOF
     echo
 }
 log() {
-    echo $@ >> "$LOGFILE"
-    echo $@
+    echo "$@" >> "$LOGFILE"
+    echo "$@"
 }
 log_info() { # does not print out to terminal
-    echo $@ >> "$LOGFILE"
+    echo "$@" >> "$LOGFILE"
     if [[ $debug -eq 1 ]]; then
-        echo $@ >> "$output_file"
+        echo "$@" >> "$output_file"
     fi
 }
 ring_bell() {
@@ -157,20 +157,20 @@ sleep 1
 
 ##### MAKE SURE USER IS READY TO RUN SCRIPT #####
 ring_bell
-read -p "Do you want to make all of the bash scripts in this directory executable? (Y/n): " confirmation
+read -r -p "Do you want to make all of the bash scripts in this directory executable? (Y/n): " confirmation
 if [[ $confirmation =~ ^[Nn].* ]]; then
     log "Make sure you manually run \`sudo chmod +x\` on any script you want to run."
 else
-    chmod +x *.sh
+    chmod +x ./*.sh
 fi
 ring_bell
-read -p "Have all of the Forensics Questions been answered? (Y/n): " confirmation
+read -r -p "Have all of the Forensics Questions been answered? (Y/n): " confirmation
 if [[ $confirmation =~ ^[Nn].* ]]; then
     log "error: Please complete these first and only then rerun the script."
     exit 1
 fi
 ring_bell
-read -p "Have you created the required users.txt & admins.txt files in the current directory? (Y/n): " confirmation
+read -r -p "Have you created the required users.txt & admins.txt files in the current directory? (Y/n): " confirmation
 if [[ $confirmation =~ ^[Nn].* ]]; then
     log "error: Please create these files first by using the information from the README file located on your desktop."
     exit 1
@@ -268,8 +268,8 @@ cp /etc/apt/apt.conf.d/10removal /etc/apt/apt.conf.d/10removal.bak
 cp /etc/apt/apt.conf.d/20auto-upgrades /etc/apt/apt.conf.d/20auto-upgrades.bak
 cp /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/apt.conf.d/50unattended-upgrades.bak
 dpkg-reconfigure unattended-upgrades
-echo "APT::Periodic::AutocleanInterval "7";" >> /etc/apt/apt.conf.d/10periodic
-echo "APT::Get::Remove-Unused "true";" >> /etc/apt/apt.conf.d/10removal
+echo 'APT::Periodic::AutocleanInterval "7";' >> /etc/apt/apt.conf.d/10periodic
+echo 'APT::Get::Remove-Unused "true";' >> /etc/apt/apt.conf.d/10removal
 cat > /etc/apt/apt.conf.d/20auto-upgrades << EOF
 APT::Periodic::Update-Package-Lists "1";
 APT::Periodic::Download-Upgradeable-Packages "1";
@@ -359,11 +359,11 @@ if command -v sshd &> /dev/null; then
     fi
     # Ask if the user wants to change the SSH port
     ring_bell
-    read -p "Do you want to change the SSH port? (y/N): " change_port
+    read -r -p "Do you want to change the SSH port? (y/N): " change_port
     if [[ $change_port =~ ^[Yy].* ]]; then
         while true; do
             ring_bell
-            read -p "Enter the new SSH port (1-65535): " new_port
+            read -r -p "Enter the new SSH port (1-65535): " new_port
             
             # Validate the input
             if [[ "$new_port" =~ ^[0-9]+$ ]] && [ "$new_port" -ge 1 ] && [ "$new_port" -le 65535 ]; then
@@ -419,9 +419,7 @@ if command -v sshd &> /dev/null; then
         mkdir -p "$KEY_DIR"
         chmod 700 "$KEY_DIR"
     fi
-    ssh-keygen -t ed25519 -f "$KEY_DIR/$KEY_NAME" -N ""
-    # Check if the key was created successfully
-    if [ $? -eq 0 ]; then
+    if ssh-keygen -t ed25519 -f "$KEY_DIR/$KEY_NAME" -N ""; then
         log "Ed25519 SSH key generated successfully."
     else
         log "error: Failed to generate SSH key."
@@ -480,6 +478,7 @@ if command -v apache2 &> /dev/null; then
     tar xvf v3.3.2.tar.gz
     mv coreruleset-3.3.2 owasp-crs
     cp owasp-crs/crs-setup.conf.example owasp-crs/crs-setup.conf
+    cd "$starting_dir"
     
     # Configure Apache security settings
     cat > /etc/apache2/conf-available/security.conf << EOF
@@ -604,24 +603,28 @@ log "Disabling USB, FireWire, & Thunderbolt..."
 echo "install usb-storage /bin/true" >> /etc/modprobe.d/disable-usb-storage.conf
 echo "blacklist firewire-core" >> /etc/modprobe.d/firewire.conf
 echo "blacklist thunderbolt" >> /etc/modprobe.d/thunderbolt.conf
-echo "blacklist bluetooth" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist usb-storage" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist uas" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist xhci_hcd" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist ehci_hcd" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist uhci_hcd" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist ohci_hcd" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist thunderbolt" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist firewire-core" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist firewire-ohci" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist ieee1394" >> /etc/modprobe.d/blacklist.conf
-echo "blacklist ohci1394" >> /etc/modprobe.d/blacklist.conf
+{
+    echo "blacklist bluetooth"
+    echo "blacklist usb-storage"
+    echo "blacklist uas"
+    echo "blacklist xhci_hcd"
+    echo "blacklist ehci_hcd"
+    echo "blacklist uhci_hcd"
+    echo "blacklist ohci_hcd"
+    echo "blacklist thunderbolt"
+    echo "blacklist firewire-core"
+    echo "blacklist firewire-ohci"
+    echo "blacklist ieee1394"
+    echo "blacklist ohci1394"
+} >> /etc/modprobe.d/blacklist.conf
 # Remove unused network protocols
 log "Disabling unused network protocols..."
-echo "install dccp /bin/true" >> /etc/modprobe.d/disable-protocols.conf
-echo "install sctp /bin/true" >> /etc/modprobe.d/disable-protocols.conf
-echo "install rds /bin/true" >> /etc/modprobe.d/disable-protocols.conf
-echo "install tipc /bin/true" >> /etc/modprobe.d/disable-protocols.conf
+{
+    echo "install dccp /bin/true"
+    echo "install sctp /bin/true"
+    echo "install rds /bin/true"
+    echo "install tipc /bin/true"
+} >> /etc/modprobe.d/disable-protocols.conf
 update-initramfs -u
 cat > /etc/udev/rules.d/99-disable-interfaces.rules << EOF
 ACTION=="add", SUBSYSTEM=="usb", ENV{MODALIAS}!="", RUN="/bin/false"
@@ -663,7 +666,7 @@ done
 
 ##### FILE/DIR PERMS/OWNERSHIP #####
 log "Setting home directory permissions..."
-for i in $(mawk -F: '$3 > 999 && $3 < 65534 {print $1}' /etc/passwd); do [ -d /home/${i} ] && chmod -R 750 /home/${i}; done
+for i in $(mawk -F: '$3 > 999 && $3 < 65534 {print $1}' /etc/passwd); do [ -d "/home/${i}" ] && chmod -R 750 "/home/${i}"; done
 find /home -type d -name '.ssh' -exec chmod 700 {} \;
 log "Changing permissions (and owners) of commonly exploited files..."
 # chown root:root /etc/securetty
@@ -930,15 +933,17 @@ install squashfs /bin/true
 install udf /bin/true
 EOF
 # Configure system to log all executed commands
-echo 'export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"' >> /etc/bash.bashrc
-echo "readonly PROMPT_COMMAND" >> /etc/bash.bashrc
-echo "readonly HISTFILE" >> /etc/bash.bashrc
-echo "readonly HISTFILESIZE" >> /etc/bash.bashrc
-echo "readonly HISTSIZE" >> /etc/bash.bashrc
-echo "readonly HISTTIMEFORMAT" >> /etc/bash.bashrc
-echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/bash.bashrc
-echo "export HISTFILESIZE=10000" >> /etc/bash.bashrc
-echo "export HISTSIZE=10000" >> /etc/bash.bashrc
+{
+    echo "export PROMPT_COMMAND=\"history -a; $PROMPT_COMMAND\""
+    echo "readonly PROMPT_COMMAND"
+    echo "readonly HISTFILE"
+    echo "readonly HISTFILESIZE"
+    echo "readonly HISTSIZE"
+    echo "readonly HISTTIMEFORMAT"
+    echo "export HISTTIMEFORMAT=\"%F %T \""
+    echo "export HISTFILESIZE=10000"
+    echo "export HISTSIZE=10000"
+} >> /etc/bash.bashrc
 # Configure systemd to create crash dumps for analysis
 mkdir -p /var/crash
 chmod 700 /var/crash
@@ -993,7 +998,7 @@ chattr +i /etc/resolv.conf  # Prevent modification
 # Harden dynamic loader configuration
 echo "# Block loading of shared libraries from current directory" > /etc/ld.so.preload # clears the file
 # Configure advanced process monitoring with sysdig
-/usr/bin/sysdig -w /var/log/sysdig/$(date +%Y%m%d_%H%M%S).scap -M 600 "not port 22"
+/usr/bin/sysdig -w "/var/log/sysdig/$(date +%Y%m%d_%H%M%S).scap" -M 600 "not port 22"
 mkdir -p /var/log/sysdig
 chmod 750 /var/log/sysdig
 # Install and configure firejail for application sandboxing
@@ -1122,6 +1127,7 @@ git clone --recursive https://github.com/zeek/zeek
 cd zeek
 ./configure && make && make install
 cd .. && rm -rf zeek
+cd "$starting_dir"
 # Configure Zeek
 cat > /usr/local/zeek/share/zeek/site/local.zeek << EOF
 @load base/protocols/conn
@@ -1303,8 +1309,8 @@ if (( $(echo "$load > 10" | bc -l) )); then
 fi
 # Check for unusual network connections
 log "Checking for unusual network connections..."
-netstat -ant | grep ESTABLISHED | wc -l | while read connections; do
-    if [ $connections -gt 100 ]; then
+netstat -ant | grep -c ESTABLISHED | while read -r connections; do
+    if [ "$connections" -gt 100 ]; then
         log "Unusual number of connections: $connections"
         log "Unusual number of connections: $connections" > ./unusual_network_connections.log
     fi
@@ -1316,8 +1322,8 @@ log "Large Files Found in /tmp: $large_files_in_tmp"
 log "Large Files Found in /tmp: $large_files_in_tmp" > ./large_files_in_tmp.log
 # Monitor failed SSH attempts
 log "Monitoring failed SSH attempts..."
-grep "Failed password" /var/log/auth.log | grep -c "ssh2" | while read attempts; do
-    if [ $attempts -gt 10 ]; then
+grep "Failed password" /var/log/auth.log | grep -c "ssh2" | while read -r attempts; do
+    if [ "$attempts" -gt 10 ]; then
         log "High number of failed SSH attempts: $attempts"
         log "High number of failed SSH attempts: $attempts" > ./high_failed_ssh_attempts.log
     fi
@@ -1715,7 +1721,7 @@ log "Removing media files..."
 log "The following files will be removed:"
 cat ./media_files.log
 ring_bell
-read -p "Do you want to proceed with the deletion? (Y/n): " choice
+read -r -p "Do you want to proceed with the deletion? (Y/n): " choice
 if [[ $choice =~ ^[Nn].* ]]; then
     log "No files were removed."
 else
@@ -1729,7 +1735,7 @@ log "Removing packages..."
 log "The following files will be removed:"
 cat ./packages.log
 ring_bell
-read -p "Do you want to proceed with the deletion? (Y/n): " choice
+read -r -p "Do you want to proceed with the deletion? (Y/n): " choice
 if [[ $choice =~ ^[Nn].* ]]; then
     log "No files were removed."
 else
@@ -1765,8 +1771,7 @@ sed -i 's/!authenticate//g' /etc/sudoers
 sed -i 's/nopasswd//g' /etc/sudoers.d
 sed -i 's/!authenticate//g' /etc/sudoers.d
 log "Running \`visudo -c\`..."
-visudo -c
-if [ $? -eq 0 ]; then
+if visudo -c; then
     log "Sudoers files validated successfully. No syntax errors found."
 else
     log "error: Syntax errors detected in sudoers files, namely \`/etc/sudoers\`! It is CRITICAL to fix these errors to prevent losing \`sudo\` access."
@@ -1818,7 +1823,7 @@ for a in "${ADMINS[@]}"; do
         log "User $a added to the system as admin."
     fi
 done
-cut -d: -f1,3 /etc/passwd | while IFS=: read user uid; do
+cut -d: -f1,3 /etc/passwd | while IFS=: read -r user uid; do
     # UID (User ID) >= 1000 for human users
     if [[ "$uid" -ge 1000 && "$user" != "nobody" && "$user" != "nfsnobody" && "$user" != "root" ]]; then
         # if id -nG "$user" | grep -qwE 'sudo|wheel|admin'; then
@@ -1863,7 +1868,7 @@ done
 echo "root:$NEW_PASSWORD" | chpasswd
 log "Password for admin root changed."
 # Secure GRUB
-HASH=$(echo -e "$NEW_PASSWORD\n$NEW_PASSWORD" | grub-mkpasswd-pbkdf2 | grep -o grub.*) # generate a password hash
+HASH=$(echo -e "$NEW_PASSWORD\n$NEW_PASSWORD" | grub-mkpasswd-pbkdf2 | grep -o "grub.*") # generate a password hash
 cat > /etc/grub.d/40_custom << EOF
 #!/bin/sh
 exec tail -n +3 $0
@@ -1949,11 +1954,11 @@ log
 log "Final Notes:"
 log "Please manually check the world-writable files and the no-user files."
 log "Please make sure only the required services are enabled."
-log "Please check all the .log files in the current directory (`pwd`) for any information saved by this script."
+log "Please check all the .log files in the current directory ($(pwd)) for any information saved by this script."
 service --status-all
 log "Make sure updates are installed daily."
 ring_bell
-read -p "Run \`software-properties-gtk &\`? (y/N): " check_auto_update
+read -r -p "Run \`software-properties-gtk &\`? (y/N): " check_auto_update
 if [[ $check_auto_update =~ ^[Yy].* ]]; then
     software-properties-gtk &
 fi
@@ -1980,11 +1985,11 @@ log "Copyright (c) 2024 Tanav Malhotra"
 log "GNU General Public License v3.0"
 log "==================================="
 log
-log_info "End time: " $end_time # log end time
+log_info "End time: $end_time" # log end time
 
 ##### REBOOT #####
 ring_bell
-read -p "Reboot the system? (y/N): " reboot_choice
+read -r -p "Reboot the system? (y/N): " reboot_choice
 if [[ $reboot_choice =~ ^[Yy].* ]]; then
     log "Rebooting..."
     reboot
