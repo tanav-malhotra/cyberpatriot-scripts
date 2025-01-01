@@ -168,6 +168,18 @@ check_logs() {
     cat /var/log/daemon.log | tee -a $LOGFILE
     line_sep | tee -a $LOGFILE
 }
+# check network traffic
+traffic_analysis() {
+    # Monitor suspicious connections
+    nethogs -t | grep -v "localhost" | tee -a $LOGFILE | tee -a ./traffic_monitor.log
+    # Monitor packet statistics
+    iftop -t -s 10 | tee -a $LOGFILE | tee -a ./bandwidth_usage.log
+    # Check for unusual ports
+    netstat -tulpn | grep LISTEN | tee -a $LOGFILE | tee -a ./open_ports.log
+    # Monitor DNS queries
+    tcpdump -i any port 53 | tee -a $LOGFILE | tee -a ./dns_queries.log
+    line_sep | tee -a $LOGFILE
+}
 # lynis to check potential vulnerabilities
 lynis_scan() {
     #TODO
@@ -202,6 +214,8 @@ log "Press 'Enter' to continue..."; read
 check_services
 log "Press 'Enter' to continue..."; read
 check_logs
+log "Press 'Enter' to continue..."; read
+traffic_analysis
 log "Press 'Enter' to continue..."; read
 lynis_scan
 log "Press 'Enter' to continue..."; read

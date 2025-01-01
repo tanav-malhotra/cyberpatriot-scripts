@@ -228,13 +228,13 @@ apt autoremove -y --purge
 ##### SOFTWARE MANAGEMENT #####
 apt list --installed > ./software_that_was_installed.log
 log "Installing software..."
-apps=("openssh-server" "fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "x2goserver" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage" "net-tools" "lynis" "debian-archive-keyring" "ubuntu-keyring" "haveged" "acct" "needrestart" "ntp" "debsums" "apt-show-versions" "dnscrypt-proxy" "resolvconf" "debsigs" "libpam-shield" "libpam-tmpdir" "libpam-usb" "clamav" "clamav-daemon" "apparmor-profiles" "apparmor-utils" "apparmor-profiles-extra" "sysdig" "firejail" "tcpd" "knockd" "suricata" "quota" "quotatool" "attr" "libcap2-bin" "ntopng" "cmake" "make" "gcc" "g++" "flex" "bison" "libpcap-dev" "libssl-dev" "python3" "python3-dev" "swig" "zlib1g-dev" "nftables" "iptables-persistent" "libapache2-mod-security2" "osquery" "vlan" "bridge-utils")
+apps=("fail2ban" "bum" "mawk" "chkrootkit" "rkhunter" "auditd" "vim" "neovim" "iptables" "ufw" "lightdm" "deborphan" "libpam-cracklib" "debsums" "software-properties-gtk" "apt-listbugs" "apt-listchanges" "libpam-tmpdin" "libpam-usb" "libpam-pwquality" "apparmor" "rsyslog" "rsyslog" "USBGaurdd" "usb-storage" "net-tools" "lynis" "debian-archive-keyring" "ubuntu-keyring" "haveged" "acct" "needrestart" "ntp" "debsums" "apt-show-versions" "dnscrypt-proxy" "resolvconf" "debsigs" "libpam-shield" "libpam-tmpdir" "libpam-usb" "clamav" "clamav-daemon" "apparmor-profiles" "apparmor-utils" "apparmor-profiles-extra" "sysdig" "firejail" "tcpd" "knockd" "suricata" "quota" "quotatool" "attr" "libcap2-bin" "ntopng" "cmake" "make" "gcc" "g++" "flex" "bison" "libpcap-dev" "libssl-dev" "python3" "python3-dev" "swig" "zlib1g-dev" "nftables" "iptables-persistent" "libapache2-mod-security2" "osquery" "vlan" "bridge-utils")
 for app in "${apps[@]}"; do
     log "Installing $app..."
     apt-get install -y "$app"
 done
 log "Removing prohibited software and hacking tools (and making sure \`snapd\` was removed)..."
-apps=("wireshark" "telnet" "vsftpd" "proftpd" "snmpd" "mysql-server" "mysql-client" "postgresql" "xrdp" "tightvncserver" "samba" "nmap" "php" "apache2*" "*nginx*" "lighttpd" "tcpdump" "netcat-traditional" "nikto" "ophcrack" "ettercap*" "deluge" "dovecot-core" "*netcat*" "john" "vuze" "frostwire" "aircrack-ng" "metasploit-framework" "nessus" "snort" "kismet" "yersinia" "burp-suite" "burpsuite" "hydra" "oclhashcat" "hashcat" "maltego" "zaproxy" "cain" "*angryip*" "ipscan" "medusa" "xinetd" "openbsd-inetd" "inetutils-inetd" "avahi-daemon" "snapd" "telnet" "postfix")
+apps=("openssh-server" "wireshark" "telnet" "vsftpd" "proftpd" "snmpd" "mysql-server" "mysql-client" "postgresql" "xrdp" "tightvncserver" "samba" "nmap" "php" "apache2*" "*nginx*" "lighttpd" "tcpdump" "netcat-traditional" "nikto" "ophcrack" "ettercap*" "deluge" "dovecot-core" "*netcat*" "john" "vuze" "frostwire" "aircrack-ng" "metasploit-framework" "nessus" "snort" "kismet" "yersinia" "burp-suite" "burpsuite" "hydra" "oclhashcat" "hashcat" "maltego" "zaproxy" "cain" "*angryip*" "ipscan" "medusa" "xinetd" "openbsd-inetd" "inetutils-inetd" "avahi-daemon" "snapd" "telnet" "postfix")
 for app in "${apps[@]}"; do
     log "Removing $app..."
     apt-get purge -y "$app"
@@ -313,123 +313,125 @@ ufw logging on
 ufw logging high
 ufw enable
 
-##### SSH #####
-log "Configuring SSH..."
-sshd_config="/etc/ssh/sshd_config"
-log "Creating SSH config backup located at ${sshd_config}.bak"
-cp "$sshd_config" "${sshd_config}.bak"
-# Function to ensure a line is set in the configuration
-set_sshd_setting() {
-    local setting="$1"
-    local value="$2"
-    # Check if the setting exists and update or add accordingly
-    if grep -q "^$setting" "$sshd_config"; then
-        sed -i "s/^$setting.*/$setting $value/" "$sshd_config"
-        log "Updated $setting to $value."
-    else
-        log "$setting $value" >> "$sshd_config"
-        log "Added $setting with value $value."
-    fi
-}
-if [[ ! -f $sshd_config ]]; then
-    log "Creating a basic sshd_config file (with secure settings)..."
-    touch $sshd_config
-fi
-set_sshd_setting "PermitRootLogin" "no"
-set_sshd_setting "Port" "22"
-set_sshd_setting "PasswordAuthentication" "no"
-set_sshd_setting "ChallengeResponseAuthentication" "no"
-set_sshd_setting "UsePAM" "yes"
-set_sshd_setting "HostbasedAuthentication" "no"
-set_sshd_setting "Protocol" "2"
-set_sshd_setting "LogLevel" "VERBOSE"
-set_sshd_setting "X11Forwarding" "no"
-set_sshd_setting "MaxAuthTries" "3"
-set_sshd_setting "PermitEmptyPasswords" "no"
-set_sshd_setting "ClientAliveInterval" "300"
-set_sshd_setting "ClientAliveCountMax" "0"
-set_sshd_setting "IgnoreRhosts" "yes"
-# Extract the current port from the configuration
-current_port=$(grep -Eo '^Port [0-9]+' "$sshd_config" | awk '{print $2}')
-if [[ -z "$current_port" ]]; then
-    current_port=22  # Default to 22 if no port is found
-fi
-# Ask if the user wants to change the SSH port
-ring_bell
-read -p "Do you want to change the SSH port? (y/N): " change_port
-if [[ $change_port =~ ^[Yy].* ]]; then
-    while true; do
-        ring_bell
-        read -p "Enter the new SSH port (1-65535): " new_port
-        
-        # Validate the input
-        if [[ "$new_port" =~ ^[0-9]+$ ]] && [ "$new_port" -ge 1 ] && [ "$new_port" -le 65535 ]; then
-            break
+##### APPLICATION-SPECIFIC HARDENING & SECURITY ##### 
+### SSH ###
+if command -v sshd &> /dev/null; then
+    log "Configuring SSH..."
+    sshd_config="/etc/ssh/sshd_config"
+    log "Creating SSH config backup located at ${sshd_config}.bak"
+    cp "$sshd_config" "${sshd_config}.bak"
+    # Function to ensure a line is set in the configuration
+    set_sshd_setting() {
+        local setting="$1"
+        local value="$2"
+        # Check if the setting exists and update or add accordingly
+        if grep -q "^$setting" "$sshd_config"; then
+            sed -i "s/^$setting.*/$setting $value/" "$sshd_config"
+            log "Updated $setting to $value."
         else
-            log "Invalid port number. Please enter a number between 1 and 65535."
+            log "$setting $value" >> "$sshd_config"
+            log "Added $setting with value $value."
         fi
-    done
-
-    # Update the SSHD configuration with the new port
-    # sed -i "s/^Port .*/Port $new_port/" $sshd_config
-    set_sshd_setting "Port" "$new_port"
-    log "SSH port changed to $new_port."
-    
-    # Allow the new port in UFW
-    ufw delete allow "$current_port"/tcp
-    log "Blocked old SSH port."
-    ufw allow "$new_port"/tcp
-    ufw allow ssh
-    log "UFW allowed port $new_port."
-else
-    log "Keeping the default SSH port (22)."
-    ufw allow "$current_port"/tcp
-    ufw allow ssh
-fi
-# Check ssh config
-if sshd -t; then
-    log "SSH configuration is correct. Restarting SSH service..."
-    if [[ -x "$(command -v systemctl)" ]]; then
-        systemctl enable sshd
-        systemctl start sshd
-        systemctl restart sshd
-    elif [[ -x "$(command -v service)" ]]; then
-        update-rc.d sshd defaults
-        service sshd start
-        service sshd restart
-    else
-        log "error: Unable to restart sshd service."
+    }
+    if [[ ! -f $sshd_config ]]; then
+        log "Creating a basic sshd_config file (with secure settings)..."
+        touch $sshd_config
     fi
-else
-    log "error: SSH configuration has errors. Please fix them before restarting the ssh service."
-fi
-# Network Security Enhancements
-echo "sshd: $NETWORK" >> /etc/hosts.allow  # Modify for your network
-# SSH keys
-log "Creating new SSH keys..."
-# Define variables
-KEY_NAME="id_ed25519"
-KEY_DIR="/home/$USER/.ssh"
-AUTHORIZED_KEYS="$KEY_DIR/authorized_keys"
-# Check if the .ssh directory exists; if not, create it
-if [ ! -d "$KEY_DIR" ]; then
-    mkdir -p "$KEY_DIR"
-    chmod 700 "$KEY_DIR"
-fi
-ssh-keygen -t ed25519 -f "$KEY_DIR/$KEY_NAME" -N ""
-# Check if the key was created successfully
-if [ $? -eq 0 ]; then
-    log "Ed25519 SSH key generated successfully."
-else
-    log "error: Failed to generate SSH key."
-fi
-# Append the public key to authorized_keys
-cat "$KEY_DIR/$KEY_NAME.pub" >> "$AUTHORIZED_KEYS"
-# Set the correct permissions for the authorized_keys file
-chmod 600 "$AUTHORIZED_KEYS"
-log "Public key added to $AUTHORIZED_KEYS."
+    set_sshd_setting "PermitRootLogin" "no"
+    set_sshd_setting "Port" "22"
+    set_sshd_setting "PasswordAuthentication" "no"
+    set_sshd_setting "ChallengeResponseAuthentication" "no"
+    set_sshd_setting "UsePAM" "yes"
+    set_sshd_setting "HostbasedAuthentication" "no"
+    set_sshd_setting "Protocol" "2"
+    set_sshd_setting "LogLevel" "VERBOSE"
+    set_sshd_setting "X11Forwarding" "no"
+    set_sshd_setting "MaxAuthTries" "3"
+    set_sshd_setting "PermitEmptyPasswords" "no"
+    set_sshd_setting "ClientAliveInterval" "300"
+    set_sshd_setting "ClientAliveCountMax" "0"
+    set_sshd_setting "IgnoreRhosts" "yes"
+    # Extract the current port from the configuration
+    current_port=$(grep -Eo '^Port [0-9]+' "$sshd_config" | awk '{print $2}')
+    if [[ -z "$current_port" ]]; then
+        current_port=22  # Default to 22 if no port is found
+    fi
+    # Ask if the user wants to change the SSH port
+    ring_bell
+    read -p "Do you want to change the SSH port? (y/N): " change_port
+    if [[ $change_port =~ ^[Yy].* ]]; then
+        while true; do
+            ring_bell
+            read -p "Enter the new SSH port (1-65535): " new_port
+            
+            # Validate the input
+            if [[ "$new_port" =~ ^[0-9]+$ ]] && [ "$new_port" -ge 1 ] && [ "$new_port" -le 65535 ]; then
+                break
+            else
+                log "Invalid port number. Please enter a number between 1 and 65535."
+            fi
+        done
 
-##### DOCKER SECURITY #####
+        # Update the SSHD configuration with the new port
+        # sed -i "s/^Port .*/Port $new_port/" $sshd_config
+        set_sshd_setting "Port" "$new_port"
+        log "SSH port changed to $new_port."
+        
+        # Allow the new port in UFW
+        ufw delete allow "$current_port"/tcp
+        log "Blocked old SSH port."
+        ufw allow "$new_port"/tcp
+        ufw allow ssh
+        log "UFW allowed port $new_port."
+    else
+        log "Keeping the default SSH port (22)."
+        ufw allow "$current_port"/tcp
+        ufw allow ssh
+    fi
+    # Check ssh config
+    if sshd -t; then
+        log "SSH configuration is correct. Restarting SSH service..."
+        if [[ -x "$(command -v systemctl)" ]]; then
+            systemctl enable sshd
+            systemctl start sshd
+            systemctl restart sshd
+        elif [[ -x "$(command -v service)" ]]; then
+            update-rc.d sshd defaults
+            service sshd start
+            service sshd restart
+        else
+            log "error: Unable to restart sshd service."
+        fi
+    else
+        log "error: SSH configuration has errors. Please fix them before restarting the ssh service."
+    fi
+    # Network Security Enhancements
+    echo "sshd: $NETWORK" >> /etc/hosts.allow  # Modify for your network # TODO: do for other services, too
+    # SSH keys
+    log "Creating new SSH keys..."
+    # Define variables
+    KEY_NAME="id_ed25519"
+    KEY_DIR="/home/$USER/.ssh"
+    AUTHORIZED_KEYS="$KEY_DIR/authorized_keys"
+    # Check if the .ssh directory exists; if not, create it
+    if [ ! -d "$KEY_DIR" ]; then
+        mkdir -p "$KEY_DIR"
+        chmod 700 "$KEY_DIR"
+    fi
+    ssh-keygen -t ed25519 -f "$KEY_DIR/$KEY_NAME" -N ""
+    # Check if the key was created successfully
+    if [ $? -eq 0 ]; then
+        log "Ed25519 SSH key generated successfully."
+    else
+        log "error: Failed to generate SSH key."
+    fi
+    # Append the public key to authorized_keys
+    cat "$KEY_DIR/$KEY_NAME.pub" >> "$AUTHORIZED_KEYS"
+    # Set the correct permissions for the authorized_keys file
+    chmod 600 "$AUTHORIZED_KEYS"
+    log "Public key added to $AUTHORIZED_KEYS."
+fi
+### DOCKER SECURITY ###
 # Container Security (if Docker is installed)
 if command -v docker &> /dev/null; then
     # Create default seccomp profile
@@ -463,8 +465,103 @@ EOF
         log "error: Unable to restart docker service."
     fi
 fi
+### APACHE2 ###
+if command -v apache2 &> /dev/null; then
+    # Install mod_security
+    cp /etc/modsecurity/modsecurity.conf-recommended /etc/modsecurity/modsecurity.conf
+    
+    # Configure mod_security
+    sed -i 's/SecRuleEngine DetectionOnly/SecRuleEngine On/' /etc/modsecurity/modsecurity.conf
+    
+    # Download OWASP ModSecurity Core Rule Set
+    cd /etc/modsecurity/
+    wget https://github.com/coreruleset/coreruleset/archive/v3.3.2.tar.gz
+    tar xvf v3.3.2.tar.gz
+    mv coreruleset-3.3.2 owasp-crs
+    cp owasp-crs/crs-setup.conf.example owasp-crs/crs-setup.conf
+    
+    # Configure Apache security settings
+    cat > /etc/apache2/conf-available/security.conf << EOF
+ServerTokens Prod
+ServerSignature Off
+TraceEnable Off
+FileETag None
+Header set X-Content-Type-Options nosniff
+Header set X-Frame-Options SAMEORIGIN
+Header set X-XSS-Protection "1; mode=block"
+Header set Content-Security-Policy "default-src 'self';"
+EOF
 
-##### IP BANNING (FAIL2BAN) #####
+    a2enmod headers
+    a2enconf security
+    if [[ -x "$(command -v systemctl)" ]]; then
+        systemctl enable apache2
+        systemctl start apache2
+        systemctl restart apache2
+    elif [[ -x "$(command -v service)" ]]; then
+        update-rc.d apache2 defaults
+        service apache2 start
+        service apache2 restart
+    else
+        log "error: Unable to restart apache2 service."
+    fi
+fi
+### MYSQL/MariaDB ###
+if command -v mysql &> /dev/null; then
+    # Create secure MySQL configuration
+    cat > /etc/mysql/conf.d/hardening.cnf << EOF
+[mysqld]
+local-infile=0
+skip-show-database
+skip-symbolic-links
+safe-user-create=1
+secure-file-priv=/var/lib/mysql-files
+explicit_defaults_for_timestamp=1
+EOF
+
+    # Run MySQL secure installation
+    mysql_secure_installation
+
+    if [[ -x "$(command -v systemctl)" ]]; then
+        systemctl enable mysql
+        systemctl start mysql
+        systemctl restart mysql
+    elif [[ -x "$(command -v service)" ]]; then
+        update-rc.d mysql defaults
+        service mysql start
+        service mysql restart
+    else
+        log "error: Unable to restart mysql service."
+    fi
+fi
+### POSTGRESQL ###
+if command -v psql &> /dev/null; then
+    cat >> /etc/postgresql/*/main/postgresql.conf << EOF
+ssl = on
+ssl_cert_file = '/etc/ssl/certs/ssl-cert-snakeoil.pem'
+ssl_key_file = '/etc/ssl/private/ssl-cert-snakeoil.key'
+password_encryption = scram-sha-256
+log_connections = on
+log_disconnections = on
+log_duration = on
+log_hostname = on
+EOF
+
+    if [[ -x "$(command -v systemctl)" ]]; then
+        systemctl enable psql
+        systemctl start psql
+        systemctl restart psql
+    elif [[ -x "$(command -v service)" ]]; then
+        update-rc.d psql defaults
+        service psql start
+        service psql restart
+    else
+        log "error: Unable to restart psql service."
+    fi
+fi
+#TODO: add more services plus set up and install and prompt user for critical service selection before purging software
+
+##### IP BANNING (fail2ban) #####
 log "Ban IPs with too many incorrect login attempts..."
 cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 if [[ -x "$(command -v systemctl)" ]]; then
@@ -1065,6 +1162,175 @@ elif [[ -x "$(command -v service)" ]]; then
 else
     log "error: Unable to start zeek service."
 fi
+# Custom Network Filtering Rules
+# Create comprehensive nftables ruleset
+cat > /etc/nftables.conf << EOF
+#!/usr/sbin/nftables -f
+
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority -1; policy drop;
+        
+        # Accept established/related connections
+        ct state established,related accept
+        
+        # Accept loopback traffic
+        iif lo accept
+        
+        # Accept ICMP and IGMP
+        ip protocol icmp accept
+        ip5 nexthdr icmpv6 accept
+        ip protocol igmp accept
+        
+        # Accept SSH (after port knocking)
+        tcp dport ssh ct state new accept
+
+        # TODO: add other supported critical services here
+        
+        # Custom application rules
+        tcp dport { http, https } ct state new accept
+        
+        # Rate limiting for connections
+        tcp flags syn tcp dport { ssh, http, https } meter flood { ip saddr timeout 9s limit rate over 10/second } drop
+        
+        # Advanced protocol filtering
+        ip protocol { udp, tcp } ct state new jump PROTOCOLS
+    }
+
+    chain forward {
+        type filter hook forward priority -1; policy drop;
+    }
+
+    chain output {
+        type filter hook output priority -1; policy accept;
+    }
+
+    chain PROTOCOLS {
+        # Allow DNS queries
+        udp dport 52 accept
+        tcp dport 52 accept
+        
+        # Allow NTP
+        udp dport 122 accept
+        
+        # Block commonly abused ports
+        tcp dport { telnet, smtp, pop2, imap } drop
+        
+        # Block known malware ports
+        tcp dport { 444, 135, 137, 138, 139 } drop
+    }
+}
+
+# Enable connection tracking
+table raw {
+    chain prerouting {
+        type filter hook prerouting priority -301;
+        ct state invalid drop
+        tcp flags & (fin|syn|rst|ack) != syn ct state new drop
+    }
+}
+EOF
+if [[ -x "$(command -v systemctl)" ]]; then
+    systemctl enable nftables
+    systemctl start nftables
+elif [[ -x "$(command -v service)" ]]; then
+    update-rc.d nftables defaults
+    service nftables start
+else
+    log "error: Unable to start nftables service."
+fi
+# Monitor network traffic
+nethogs -t | grep -v "localhost" > ./traffic_monitor.log # Monitor suspicious connections
+iftop -t -s 10 > ./bandwidth_usage.log # Monitor packet statistics
+netstat -tulpn | grep LISTEN > ./open_ports.log # Check for unusual ports
+tcpdump -i any port 53 > ./dns_queries.log # Monitor DNS queries
+# Configure osquery
+cat > /etc/osquery/osquery.conf << EOF
+{
+  "options": {
+    "config_plugin": "filesystem",
+    "logger_plugin": "filesystem",
+    "schedule_splay_percent": 10
+  },
+  "schedule": {
+    "process_events": {
+      "query": "SELECT * FROM process_events;",
+      "interval": 60
+    },
+    "socket_events": {
+      "query": "SELECT * FROM socket_events;",
+      "interval": 60
+    },
+    "file_events": {
+      "query": "SELECT * FROM file_events;",
+      "interval": 60
+    },
+    "unusual_processes": {
+      "query": "SELECT name, path, cmdline FROM processes WHERE on_disk = 0 OR parent = 0;",
+      "interval": 3600
+    }
+  },
+  "decorators": {
+    "load": [
+      "SELECT uuid AS host_uuid FROM system_info;",
+      "SELECT user AS username FROM logged_in_users ORDER BY time DESC LIMIT 1;"
+    ]
+  },
+  "file_paths": {
+    "binaries": [
+      "/bin/%",
+      "/sbin/%",
+      "/usr/bin/%",
+      "/usr/sbin/%"
+    ],
+    "config_files": [
+      "/etc/%%"
+    ]
+  }
+}
+EOF
+# Scan for anomalies
+log "Scanning for anomalies..."
+# Check for unusual system load
+log "Checking for unusual system load..."
+load=$(cat /proc/loadavg | cut -d ' ' -f1)
+if (( $(echo "$load > 10" | bc -l) )); then
+    log "High system load detected: $load"
+    log "High system load detected: $load" > ./high_system_load.log
+fi
+# Check for unusual network connections
+log "Checking for unusual network connections..."
+netstat -ant | grep ESTABLISHED | wc -l | while read connections; do
+    if [ $connections -gt 100 ]; then
+        log "Unusual number of connections: $connections"
+        log "Unusual number of connections: $connections" > ./unusual_network_connections.log
+    fi
+done
+# Check for large files in /tmp
+log "Checking for large files in /tmp..."
+large_files_in_tmp=$(find /tmp -type f -size +100M -exec ls -lh {} \;)
+log "Large Files Found in /tmp: $large_files_in_tmp"
+log "Large Files Found in /tmp: $large_files_in_tmp" > ./large_files_in_tmp.log
+# Monitor failed SSH attempts
+log "Monitoring failed SSH attempts..."
+grep "Failed password" /var/log/auth.log | grep -c "ssh2" | while read attempts; do
+    if [ $attempts -gt 10 ]; then
+        log "High number of failed SSH attempts: $attempts"
+        log "High number of failed SSH attempts: $attempts" > ./high_failed_ssh_attempts.log
+    fi
+done
+# Check for modified system binaries
+log "Checking for modified system binaries..."
+rm -f ./modified_system_binaries.log
+for file in /bin/* /sbin/* /usr/bin/* /usr/sbin/*; do
+    sha256_hash=$(sha256sum "$file" | awk '{print $1}')
+    md5_hash=$(md5sum "$file" | awk '{print $1}')
+    if ! grep -q "$md5_hash" /var/lib/binary-hashes.db; then
+        echo "$file: $md5_hash" >> ./modified_system_binaries.log
+    fi
+done
 
 ##### Anti-Malware #####
 freshclam
