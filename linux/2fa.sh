@@ -1,6 +1,7 @@
 #!/bin/bash
 # ####################################################################################
-# Author: Tanav Malhotra
+# Author: Tanav Malhotra (GitHub: https://github.com/tanav-malhotra)
+# Email: tanavm2009@gmail.com
 # License: GNU General Public License v3.0
 # Copyright (c) 2024 Tanav Malhotra
 #

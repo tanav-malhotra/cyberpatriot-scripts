@@ -1,5 +1,5 @@
 # ####################################################################################
-# Authors: Tanav Malhotra, Bryan Lochan 
+# Authors: Tanav Malhotra (GitHub: https://github.com/tanav-malhotra), Bryan Lochan 
 # License: GNU General Public License v3.0
 # Copyright (c) 2024 Tanav Malhotra, Bryan Lochan 
 #
