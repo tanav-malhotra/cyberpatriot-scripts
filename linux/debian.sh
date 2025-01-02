@@ -1634,8 +1634,8 @@ noolddir
 errors root
 sharedscripts
 EOF
-find / -xdev -type f -exec md5sum {} \; > /var/log/fs-integrity.log
-cp /var/log/fs-integrity.log ./fs_integrity.log
+find / -xdev -type f -exec sha256sum {} \; > ./fs_integrity.log
+cp ./fs_integrity.log ./file_hashes.log #TODO: try something similar for binaries
 # Enhanced Filesystem Permissions
 # Set default ACLs for sensitive directories
 setfacl -R -d -m u::rwx,g::rx,o::- /etc/
