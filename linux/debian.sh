@@ -1965,7 +1965,7 @@ log
 # elif [[ "$DESKTOP_SESSION" == "xfce" ]]; then
 #     xfce4-settings-manager > /dev/null 2>&1 &
 # else
-#     log "Unsupported desktop environment (standalone window managers are not supported). Please open settings manually (if needed)."
+#     log "Unsupported desktop environment (standalone window managers are not supported). Please open settings manually if needed."
 # fi
 
 ##### WISH GOOD LUCK #####
