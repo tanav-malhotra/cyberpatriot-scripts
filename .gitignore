@@ -45,14 +45,6 @@ Desktop.ini
 coverage/
 *.lcov
 
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-
-# Java
-*.class
-
 # Executables/Binaries
 *.exe
 *.dll
