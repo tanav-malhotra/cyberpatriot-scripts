@@ -36,7 +36,7 @@ version_arg=0
 
 ##### FUNCTIONS #####
 banner() {
-    cat << EOF
+    cat << 'EOF'
  _____  _    _   _    ___     __
 |_   _|/ \  | \ | |  / \ \   / /
   | | / _ \ |  \| | / _ \ \ / / 
@@ -52,6 +52,9 @@ EOF
 }
 log() {
     echo "$@" >> "$LOGFILE"
+    if [[ $debug -eq 1 ]]; then
+        echo "$@" >> "$output_file"
+    fi
     echo "$@"
 }
 log_info() { # does not print out to terminal
@@ -61,10 +64,6 @@ log_info() { # does not print out to terminal
     fi
 }
 ring_bell() {
-    # for i in {1..10}; do
-    #     echo -e "\a"
-    #     sleep 0.1                                                    
-    # done &
     echo -e "\a" &
 }
 
@@ -98,6 +97,7 @@ if [ $# -gt 0 ]; then
         esac
     done
 fi
+
 if [[ $help -eq 1 ]]; then
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
@@ -157,12 +157,14 @@ if [[ $confirmation =~ ^[Nn].* ]]; then
 else
     chmod +x ./*.sh
 fi
+
 ring_bell
 read -r -p "Have all of the Forensics Questions been answered? (Y/n): " confirmation
 if [[ $confirmation =~ ^[Nn].* ]]; then
     log "error: Please complete these first and only then rerun the script."
     exit 1
 fi
+
 ring_bell
 read -r -p "Have you created the required users.txt & admins.txt files in the current directory? (Y/n): " confirmation
 if [[ $confirmation =~ ^[Nn].* ]]; then
