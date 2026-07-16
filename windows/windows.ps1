@@ -75,9 +75,27 @@ $adminList = Read-List "Admin username (blank line = done)"
 Write-Host "`n=== AUTHORIZED STANDARD USERS (from README) ===" -ForegroundColor Yellow
 $standardList = Read-List "Standard username (blank line = done)"
 
+# Every round's README is different: services/software that are "hacking tools" to
+# remove on one image are business-critical on another (e.g. one Server 2022 round
+# required Wireshark, IIS, RDP, and MailEnable to stay). Stopping a README-critical
+# service triggers a scoring PENALTY, so these exemption lists are load-bearing.
+Write-Host "`n=== README EXEMPTIONS (critical - read the README carefully) ===" -ForegroundColor Yellow
+Write-Host "Accounts the README says NOT to touch (e.g. service accounts like IME_ADMIN)." -ForegroundColor Yellow
+Write-Host "These will not be removed, disabled, demoted, or have passwords changed:" -ForegroundColor Yellow
+$doNotTouchAccounts = Read-List "Untouchable account (blank line = done)"
+
+Write-Host "`nWindows SERVICE names the README requires to keep running (e.g. W3SVC," -ForegroundColor Yellow
+Write-Host "'MailEnable SMTP Connector', ftpsvc). These will never be stopped/disabled:" -ForegroundColor Yellow
+$criticalServices = Read-List "Critical service name (blank line = done)"
+
+Write-Host "`nSoftware the README says must REMAIN INSTALLED (e.g. Wireshark, Chrome," -ForegroundColor Yellow
+Write-Host "Notepad++). These are excluded from the prohibited-program flagging:" -ForegroundColor Yellow
+$requiredSoftware = Read-List "Required software name (blank line = done)"
+
 $keepRDP        = (Read-Host "`nDoes the README require Remote Desktop (RDP)? (y/N)").ToLower() -eq 'y'
 $keepWeb        = (Read-Host "Does the README require a web server (IIS/W3SVC)? (y/N)").ToLower() -eq 'y'
 $keepFTP        = (Read-Host "Does the README require an FTP server? (y/N)").ToLower() -eq 'y'
+$keepMail       = (Read-Host "Does the README require a mail server (SMTP/MailEnable/Exchange)? (y/N)").ToLower() -eq 'y'
 $renameAdmin    = (Read-Host "Rename built-in Administrator account? (y/N)").ToLower() -eq 'y'
 $newAdminName   = "SecureAdmin"
 if ($renameAdmin) {
@@ -91,10 +109,20 @@ $doLolbin       = (Read-Host "Add outbound firewall blocks for LOLBins (certutil
 $newPassword    = Read-Host "Password to set for all local users (blank = default 'CyberPatr!0t2025')"
 if ($newPassword -eq "") { $newPassword = "CyberPatr!0t2025" }
 
-log "`nConfig: RDP=$keepRDP Web=$keepWeb FTP=$keepFTP RenameAdmin=$renameAdmin DeleteMedia=$deleteMedia DeleteImages=$deleteImages"
+log "`nConfig: RDP=$keepRDP Web=$keepWeb FTP=$keepFTP Mail=$keepMail RenameAdmin=$renameAdmin DeleteMedia=$deleteMedia DeleteImages=$deleteImages"
 log "Admins: $($adminList -join ', ')"
 log "Standard users: $($standardList -join ', ')"
+log "Untouchable accounts (README): $($doNotTouchAccounts -join ', ')"
+log "Critical services (README): $($criticalServices -join ', ')"
+log "Required software (README): $($requiredSoftware -join ', ')"
 log "Current user (protected from password change/removal): $currentUser"
+
+# Snapshot current policy state before changing anything - lets you diff later and
+# answer "what did the image look like originally" style forensics questions.
+Try-Step "gpresult baseline" {
+    gpresult /h (Join-Path (Get-Location).Path "gpresult_baseline.html") /f | Out-Null
+    log "Saved Group Policy baseline to gpresult_baseline.html"
+}
 
 # ====================================================================================
 # PHASE 1: USER ACCOUNT MANAGEMENT
@@ -104,7 +132,7 @@ log "Current user (protected from password change/removal): $currentUser"
 log "`n===== USER ACCOUNT MANAGEMENT =====" Cyan
 
 $protectedAccounts = @("Administrator","Guest","DefaultAccount","WDAGUtilityAccount",
-                       "krbtgt","ASPNET","IUSR","IWAM", $newAdminName, $currentUser)
+                       "krbtgt","ASPNET","IUSR","IWAM", $newAdminName, $currentUser) + $doNotTouchAccounts
 $authorizedUsers = $adminList + $standardList + $protectedAccounts
 
 function Test-ServiceAccount {
@@ -210,6 +238,9 @@ log "`nSetting passwords for local users (skipping $currentUser, Administrator, 
 $securePw = ConvertTo-SecureString $newPassword -AsPlainText -Force
 foreach ($u in (Get-LocalUser | Where-Object { $_.Enabled })) {
     if ($u.Name -in @($currentUser,"Administrator","Guest","DefaultAccount",$newAdminName)) { continue }
+    # README-exempted accounts often run services (mail/web); resetting their
+    # passwords can take a critical service down -> scoring penalty.
+    if ($doNotTouchAccounts -contains $u.Name) { log "Skipping README-exempted account: $($u.Name)"; continue }
     if (Test-ServiceAccount $u) { continue }
     Try-Step "password for $($u.Name)" {
         Set-LocalUser -Name $u.Name -Password $securePw -ErrorAction Stop
@@ -552,14 +583,19 @@ $servicesToDisable = @("TlntSvr","Telnet","SNMP","SNMPTRAP","SSDPSRV","upnphost"
                        "RemoteRegistry","RemoteAccess","SharedAccess","Messenger","TapiSrv",
                        "HomeGroupProvider","HomeGroupListener","RDSessMgr","ConfRoom",
                        "Spooler","seclogon","Fax","XblAuthManager","XblGameSave","XboxNetApiSvc")
-if (-not $keepWeb) { $servicesToDisable += @("W3SVC","IISADMIN","SMTPSVC") }
-if (-not $keepFTP) { $servicesToDisable += @("ftpsvc","msftpsvc") }
-if (-not $keepRDP) { $servicesToDisable += @("TermService","SessionEnv","UmRdpService") }
+if (-not $keepWeb)  { $servicesToDisable += @("W3SVC","IISADMIN") }
+if (-not $keepMail) { $servicesToDisable += @("SMTPSVC") }
+if (-not $keepFTP)  { $servicesToDisable += @("ftpsvc","msftpsvc") }
+if (-not $keepRDP)  { $servicesToDisable += @("TermService","SessionEnv","UmRdpService") }
 
 # One Get-Service call, then only touch services that actually exist - the original
 # ran `sc stop`/`sc config` blindly for ~25 services (2 processes each, most erroring).
 $existingServices = Get-Service -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name
 foreach ($svc in $servicesToDisable) {
+    # Never touch README-critical services (stopping one = scoring penalty) or the
+    # CyberPatriot CCS scoring client (tampering kills scoring feedback entirely).
+    if ($criticalServices | Where-Object { $svc -like $_ -or $_ -like $svc }) { log "Skipping README-critical service: $svc"; continue }
+    if ($svc -match "CCS|CyberPatriot") { continue }
     if ($existingServices -contains $svc) {
         Try-Step "disable $svc" {
             Stop-Service -Name $svc -Force -ErrorAction SilentlyContinue
@@ -569,8 +605,10 @@ foreach ($svc in $servicesToDisable) {
     }
 }
 
-# Scored as ENABLED in keys: Event Log, Windows Update, DHCP client, Server, Firewall, Defender.
-$servicesToEnable = @("EventLog","wuauserv","Dhcp","LanmanServer","mpssvc","WinDefend")
+# Scored as ENABLED in keys: Event Log, Windows Update, DHCP client, Server, Firewall,
+# Defender. wscsvc = Security Center ("Action Center should be enabled and monitoring").
+# README-critical services are also ensured running - uptime of critical services is scored.
+$servicesToEnable = @("EventLog","wuauserv","Dhcp","LanmanServer","mpssvc","WinDefend","wscsvc") + $criticalServices
 foreach ($svc in $servicesToEnable) {
     if ($existingServices -contains $svc) {
         Try-Step "enable $svc" {
@@ -723,6 +761,34 @@ log "`n--- hosts file entries (malware sometimes redirects update/AV domains): -
 Get-Content "$env:SystemRoot\System32\drivers\etc\hosts" -ErrorAction SilentlyContinue |
     Where-Object { $_ -match '^\s*\d' } | ForEach-Object { log "  $_" Yellow }
 
+##### DEFENDER EXCLUSIONS (sabotage check - exclusions silently override every policy) #####
+log "`n--- Windows Defender exclusions (planted exclusions hide malware from scans): ---" Yellow
+Try-Step "Defender exclusions" {
+    $mp = Get-MpPreference -ErrorAction Stop
+    $exclusions = @($mp.ExclusionPath) + @($mp.ExclusionExtension) + @($mp.ExclusionProcess) | Where-Object { $_ }
+    if ($exclusions) {
+        foreach ($e in $exclusions) { log "  EXCLUSION FOUND: $e" Red }
+        Write-Host "Remove planted exclusions with: Remove-MpPreference -ExclusionPath/<type> '<value>'" -ForegroundColor Red
+    } else { log "  No Defender exclusions configured." }
+}
+
+##### ADMIN TOOL LOCKOUT SABOTAGE (images sometimes disable cmd/regedit/Task Manager) #####
+Try-Step "tool lockout keys" {
+    $lockouts = @(
+        @{P="HKCU:\Software\Policies\Microsoft\Windows\System";                          N="DisableCMD"},
+        @{P="HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\System";           N="DisableTaskMgr"},
+        @{P="HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\System";           N="DisableRegistryTools"},
+        @{P="HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System";           N="DisableTaskMgr"},
+        @{P="HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System";           N="DisableRegistryTools"}
+    )
+    foreach ($l in $lockouts) {
+        if ((Get-ItemProperty -Path $l.P -Name $l.N -ErrorAction SilentlyContinue).($l.N)) {
+            Set-ItemProperty -Path $l.P -Name $l.N -Value 0 -Force
+            log "  SABOTAGE FIXED: $($l.P)\$($l.N) was set - admin tool re-enabled." Red
+        }
+    }
+}
+
 ##### INSTALLED PROGRAM AUDIT (new - scored every round: "Removed Wireshark/CCleaner/TeamViewer/...") #####
 log "`n--- Installed programs flagged as commonly-prohibited: ---" Red
 $badPatterns = "wireshark|nmap|zenmap|netstumbler|ccleaner|pc cleaner|teamviewer|anydesk|tightvnc|ultravnc|realvnc|bittorrent|utorrent|qbittorrent|deluge|amule|emule|ophcrack|cain|john the ripper|hydra|aircrack|kismet|netcat|ncat|hashcat|l0phtcrack|brutus|keylogger|tftp|metasploit|armitage|burp|angry ip|advanced port scanner|mcafee|tor browser|cursor|tini"
@@ -735,12 +801,19 @@ Try-Step "program inventory" {
     log_info "`nFull installed program list:"
     foreach ($a in $apps) { log_info "  $($a.DisplayName)  [$($a.DisplayVersion)]" }
     $flagged = $apps | Where-Object { $_.DisplayName -match $badPatterns }
-    if ($flagged) {
-        foreach ($f in $flagged) {
+    foreach ($f in $flagged) {
+        # A "hacking tool" on one image is required business software on another
+        # (e.g. one Server 2022 README required Wireshark to stay installed and
+        # up-to-date). README exemptions always win.
+        $isRequired = $requiredSoftware | Where-Object { $f.DisplayName -match [regex]::Escape($_) }
+        if ($isRequired) {
+            log "  KEEP (README-required): $($f.DisplayName) - keep it UPDATED instead ('X has been updated' is scored)" Green
+        } else {
             log "  FLAGGED: $($f.DisplayName)  -> uninstall via Settings/Apps or: $($f.UninstallString)" Red
         }
-        Write-Host "`nUninstall flagged programs manually (or with winget) UNLESS the README lists them as required." -ForegroundColor Red
-    } else { log "  No known-prohibited programs matched. Full inventory is in the log - review it against the README." }
+    }
+    if (-not $flagged) { log "  No known-prohibited programs matched. Full inventory is in the log - review it against the README." }
+    else { Write-Host "`nUninstall FLAGGED programs manually (or with winget) - the README list has already been applied." -ForegroundColor Red }
 }
 
 # ====================================================================================
@@ -793,16 +866,25 @@ Write-Host @"
 MANUAL CHECKLIST (things a script cannot safely do for you):
   1. ANSWER THE FORENSICS QUESTIONS FIRST - they are the highest-value items.
   2. Read the README again: required users, groups ('Created group X / Added users
-     to group X' is scored), required services, allowed software.
+     to group X' is scored), required services, allowed software. Penalties come
+     from acting against the README and are recovered by reverting the action.
   3. Create/populate any README-specified groups:  net localgroup "GroupName" /add
   4. Update third-party apps (Firefox, Chrome, Notepad++, 7-Zip, LibreOffice...) -
-     'X has been updated' is scored in nearly every round.
+     'X has been updated' is scored in nearly every round. README-required software
+     (even tools like Wireshark) must be UPDATED, never removed.
   5. Run Windows Update from Settings ('majority of Windows updates installed').
-  6. Uninstall the FLAGGED programs listed above (unless README requires them).
+     Quality/security updates only - READMEs forbid Feature Updates / Insider
+     builds / 'Reset this PC'.
+  6. Uninstall the FLAGGED programs listed above.
   7. Review the persistence report (Run keys, scheduled tasks, listening ports,
-     shares, hosts file) printed above / in the log.
+     shares, hosts file, Defender exclusions) printed above / in the log.
+     Do NOT delete shares the README/scenario depends on.
   8. Check Task Manager > Startup tab, and services.msc for anything odd.
-  9. Reboot when convenient (several settings need it). Script no longer force-restarts.
+     NEVER stop or touch the CyberPatriot CCS scoring client.
+  9. If the image hosts scenario apps (mail/web), check their own security settings
+     (SSL required, no plaintext auth, protected data directories) - READMEs call
+     these out and they are scored.
+ 10. Reboot when convenient (several settings need it). Script no longer force-restarts.
 
 Log file: $LOGFILE
 "@ -ForegroundColor Cyan
